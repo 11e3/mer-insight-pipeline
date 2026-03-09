@@ -1,0 +1,66 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ─── DB ───────────────────────────────────────────────────────────────────────
+DATABASE_URL = os.environ["DATABASE_URL"]
+
+# ─── Claude API ───────────────────────────────────────────────────────────────
+ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+
+MODEL_SONNET = "claude-sonnet-4-6"
+MODEL_HAIKU  = "claude-haiku-4-5-20251001"
+
+# ─── Telegram ─────────────────────────────────────────────────────────────────
+TELEGRAM_BOT_TOKEN     = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_TIER1_CHAT_ID = os.environ.get("TELEGRAM_TIER1_CHAT_ID", "")  # 무료 채널
+TELEGRAM_TIER2_CHAT_ID = os.environ.get("TELEGRAM_TIER2_CHAT_ID", "")  # 프리미엄 채널
+
+# ─── 외부 API ─────────────────────────────────────────────────────────────────
+FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
+BOK_API_KEY  = os.environ.get("BOK_API_KEY", "")
+
+# 한국은행 기준금리 시리즈 코드
+BOK_BASE_RATE_URL = (
+    "https://ecos.bok.or.kr/api/StatisticSearch"
+    "/{api_key}/json/kr/1/1000/722Y001/D/{start}/{end}/0101000"
+)
+
+# ─── 블로그 ──────────────────────────────────────────────────────────────────
+BLOG_ID  = "ranto28"
+BLOG_RSS = f"https://rss.blog.naver.com/{BLOG_ID}.xml"
+
+# ─── 매크로 임계값 (급변 알림) ────────────────────────────────────────────────
+MACRO_ALERT_THRESHOLDS = {
+    "kospi":          0.02,
+    "usd_krw":        0.015,
+    "vix":            0.15,
+    "btc_usd":        0.05,
+    "wti":            0.05,
+    "us_cpi_yoy":     0.003,   # CPI 0.3%p 이상 변화
+    "us_unemployment": 0.002,  # 실업률 0.2%p 이상 변화
+}
+
+# ─── 임베딩 ───────────────────────────────────────────────────────────────────
+EMBEDDING_MODEL    = "intfloat/multilingual-e5-large"
+EMBEDDING_DIM      = 1024
+EMBEDDING_BATCH_SIZE = 32
+
+# ─── 데이터 경로 ──────────────────────────────────────────────────────────────
+DATA_DIR     = os.path.join(os.path.dirname(__file__), "..", "data")
+RAW_JSON_DIR = os.path.join(DATA_DIR, "raw", "json")
+
+# ─── 신규 데이터 소스 API ──────────────────────────────────────────────────────
+BLS_API_KEY   = os.environ.get("BLS_API_KEY", "")       # 미국 노동통계국
+MOLIT_API_KEY = os.environ.get("MOLIT_API_KEY", "")     # 국토교통부 공공데이터
+KOSIS_API_KEY = os.environ.get("KOSIS_API_KEY", "")     # 통계청 KOSIS (관세청 수출입)
+
+# ─── RSS 소스 URL ─────────────────────────────────────────────────────────────
+FED_RSS_URL   = "https://www.federalreserve.gov/feeds/press_all.xml"
+BOK_RSS_URL   = "https://www.bok.or.kr/portal/bbs/B0000011/rss.xml?menuNo=200059"
+NEWS_RSS_URLS = [
+    "https://news.google.com/rss/search?q=FOMC+금리+연준&hl=ko&gl=KR&ceid=KR:ko",
+    "https://news.google.com/rss/search?q=한국은행+금통위+기준금리&hl=ko&gl=KR&ceid=KR:ko",
+    "https://news.google.com/rss/search?q=geopolitics+sanctions+trade+war&hl=en&gl=US&ceid=US:en",
+]

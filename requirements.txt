@@ -1,0 +1,38 @@
+# DB
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Claude API
+anthropic==0.40.0
+
+# 매크로 데이터
+yfinance==0.2.36
+pandas==2.2.0
+fredapi==0.5.1
+requests==2.31.0
+
+# 벡터 임베딩
+sentence-transformers==3.0.1
+torch==2.3.0
+
+# 스케줄러
+APScheduler==3.10.4
+
+# 텔레그램
+python-telegram-bot==21.3
+
+# 웹 스크래핑 (메르 신규글 감지)
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# 대시보드
+streamlit==1.36.0
+plotly==5.22.0
+
+# 시각화 (대시보드)
+matplotlib==3.9.0
+
+# 유틸
+python-dotenv==1.0.1
+pydantic==2.7.4
+tqdm==4.66.4
