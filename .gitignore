@@ -12,3 +12,15 @@ data/
 .idea/
 .vscode/
 output.txt
+
+# Prompt engineering (proprietary)
+config/prompts.py
+
+# Raw scraped data
+scraped_posts/json/
+scraped_posts/txt/
+scraped_posts/done.txt
+
+# Batch results & embeddings
+data/raw/
+data/batches/
