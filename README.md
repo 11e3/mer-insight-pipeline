@@ -8,7 +8,7 @@ LLM batch processing + Hybrid RAG pipeline for unstructured text analysis
 
 ```mermaid
 flowchart TD
-    A[Naver Blog\n(Korean finance blog)] -->|RSS / scrape| B[mer_monitor]
+    A[Naver Blog\nKorean finance blog] -->|RSS / scrape| B[mer_monitor]
     B --> C[(PostgreSQL\n+ pgvector)]
 
     subgraph Batch Pipeline
