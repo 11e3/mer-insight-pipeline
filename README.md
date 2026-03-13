@@ -8,34 +8,31 @@ LLM batch processing + Hybrid RAG pipeline for unstructured text analysis
 
 ```mermaid
 flowchart TD
-    A[Naver Blog\nKorean finance blog] -->|RSS / scrape| B[mer_monitor]
-    B --> C[(PostgreSQL\n+ pgvector)]
-
+    A[Naver Blog<br>Korean finance blog] -->|RSS / scrape| B[mer_monitor]
+    B --> C[(PostgreSQL<br>+ pgvector)]
     subgraph Batch Pipeline
-        C -->|2,193 posts| D[Claude Batch API\nbatch_api.py]
+        C -->|2,193 posts| D[Claude Batch API<br>batch_api.py]
         D -->|JSONL results| E[parse_results.py]
-        E -->|rules / predictions\nevaluations / macro_views| C
-        C --> F[embeddings.py\nmultilingual-e5-large]
+        E -->|rules / predictions<br>evaluations / macro_views| C
+        C --> F[embeddings.py<br>multilingual-e5-large]
         F -->|1024-dim vectors| C
     end
-
     subgraph Real-time Pipeline
-        G[event_dispatcher.py\nAPScheduler] --> B
-        G --> H[dart_collector\nKorean filings]
-        G --> I[news_collector\nFed · BOK RSS]
-        G --> J[load_macro\nFRED · BOK · yfinance]
+        G[event_dispatcher.py<br>APScheduler] --> B
+        G --> H[dart_collector<br>Korean filings]
+        G --> I[news_collector<br>Fed · BOK RSS]
+        G --> J[load_macro<br>FRED · BOK · yfinance]
         H --> K[context_assembler]
         I --> K
         J --> K
-        K -->|top-k similar rules| L[Hybrid RAG\nvector + keyword]
+        K -->|top-k similar rules| L[Hybrid RAG<br>vector + keyword]
         C --> L
-        L --> M[analysis_generator\nClaude Sonnet]
-        M --> N[report_generator\nhierarchical 5-level]
+        L --> M[analysis_generator<br>Claude Sonnet]
+        M --> N[report_generator<br>hierarchical 5-level]
     end
-
     N -->|Tier 1 summary| O[Telegram Free Channel]
     M -->|Tier 2 full analysis| P[Telegram Premium Channel]
-    C --> Q[Streamlit Dashboard\nport 8501]
+    C --> Q[Streamlit Dashboard<br>port 8501]
 ```
 
 ---
