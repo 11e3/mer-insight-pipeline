@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: mer_pipeline
       POSTGRES_USER: mer
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-merpass}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -26,7 +26,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://mer:${DB_PASSWORD:-merpass}@db:5432/mer_pipeline
+      DATABASE_URL: postgresql://mer:${DB_PASSWORD}@db:5432/mer_pipeline
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_TIER1_CHAT_ID: ${TELEGRAM_TIER1_CHAT_ID}
@@ -43,7 +43,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://mer:${DB_PASSWORD:-merpass}@db:5432/mer_pipeline
+      DATABASE_URL: postgresql://mer:${DB_PASSWORD}@db:5432/mer_pipeline
     ports:
       - "8501:8501"
     command: streamlit run src/dashboard/app.py --server.address=0.0.0.0
