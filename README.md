@@ -1,6 +1,10 @@
 # mer-insight-pipeline
 
-LLM Agent · Hybrid RAG · Observability pipeline for automated Korean finance blog analysis
+**mer-insight-pipeline** monitors [Mer's Korean finance blog](https://blog.naver.com/ranto28), extracts structured insights from 2,193 posts using the Claude Batch API, and delivers citation-grounded analysis to Telegram subscribers within minutes of each new post.
+
+Every component is production-wired: a hybrid retriever backed by 25,090 indexed insights, an LLM agent loop that decides its own tool calls, a hallucination guard that blocks uncited claims, per-call cost/latency tracing, and an eval harness with an LLM judge — all running on PostgreSQL + pgvector with no vector-DB vendor lock-in.
+
+**~$0.15 per post** (4 agent iterations avg) · **$4.50/month** at 30 posts/month
 
 [한국어 README](README_KR.md)
 
@@ -87,6 +91,8 @@ Combining BM25 (keyword) and vector (embedding) retrieval via RRF significantly 
 | BM25 only | 0.44 | 0.44 | 0.80 |
 | **Hybrid (RRF)** | **1.00** | **1.00** | **1.00** |
 
+paired t-test: t=4.707, **p=0.0093** (statistically significant)
+
 **Why they differ**
 
 - **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
@@ -116,42 +122,44 @@ New post received
 - `max_iterations=5`; Hallucination Guard failure triggers up to 2 automatic re-generations
 - Falls back to `analysis_generator.py` on agent error
 
-**Analysis output structure**
+**Analysis output — example**
 
-Each analysis is grounded in past insights retrieved from the 25,090-insight DB and cited inline:
+Each analysis is grounded in past insights retrieved from the 25,090-insight DB and cited inline. Example from a post about Hormuz Strait supply chain risk (2026-03-08):
 
 ```
 *핵심 요약* (Core summary)
 
-🎯 The real threat from a Hormuz closure isn't oil/LNG — it's the urea supply chain
+🎯 The real threat from a Hormuz closure isn't oil/LNG — it's urea supply chain
    collapse. [ref: ins_2316]
-   Korea has zero domestic production capacity and only 15 days of public stockpile.
+   Korea has zero domestic production and only 15 days of public stockpile.
    [ref: ins_15390]
 
 *과거 발언과의 비교* (vs. past statements)
 
-- Mer has warned since Dec 2023 that the 2021 urea shortage was never structurally
+- Mer warned since Dec 2023 that the 2021 urea shortage was never structurally
   resolved. [ref: ins_7022]
-- Then: China-only risk. Now: simultaneous multi-country supply cut — the crisis
+- Then: China-only risk. Now: simultaneous multi-country supply cut — crisis
   layer has expanded. [ref: ins_2316]
-- China dependency fell to 67% post-2021, then quietly rose back to 91.8% by 2023.
+- Dependency fell to 67% post-2021, quietly rose back to 91.8% by 2023.
   [ref: ins_15390, ins_23520]
-- New angle absent from past insights: Egypt sources Israeli natural gas → converts
-  to urea. [ref: none]
+- New angle not in past insights: Egypt sources Israeli gas → converts to urea.
+  [ref: none]
 
 *시장 시사점* (Market implications)
 
-- Lotte Fine Chemical: short-term price pass-through upside, offset by import cost
-  risk. [ref: ins_15391]
-- Logistics/trucking: urea shortage → mandatory truck shutdowns → freight spike
-  across construction, cement, retail. [ref: ins_2308]
+- Lotte Fine Chemical: price pass-through upside, offset by import cost risk.
+  [ref: ins_15391]
+- Logistics/trucking: urea shortage → truck shutdowns → freight spike across
+  construction, cement, retail. [ref: ins_2308]
 - Agri inflation: urea is fertiliser feedstock, not just AdBlue. [ref: ins_2316]
 
-💬 "In 2021 it was China alone. In 2026 multiple producers drop simultaneously —
-    the urea supply chain is already dangerously exposed." [ref: ins_2316]
+💬 "In 2021 it was China alone. In 2026 multiple producers drop simultaneously."
+   [ref: ins_2316]
 ```
 
-Citations are verified against the `mer_insights` table by the Hallucination Guard before delivery.
+Citations are verified by the Hallucination Guard before delivery.
+
+![Telegram delivery example](docs/telegram_demo.png)
 
 ---
 
@@ -160,14 +168,12 @@ Citations are verified against the `mer_insights` table by the Hallucination Gua
 Rather than generating a single flat summary, reports are produced in a **5-level hierarchy** where each level's output becomes the raw material for the next.
 
 ```
-Annual   (Jan 1)          ← synthesises 4 quarterly reports   (2 Claude calls)
-  └─ Quarterly (Q start)  ← synthesises 3 monthly reports
-       └─ Monthly (1st)   ← synthesises 4 weekly reports
+Annual   (Jan 1)           ← synthesises 4 quarterly reports  (2 Claude calls)
+  └─ Quarterly (Q start)   ← synthesises 3 monthly reports
+       └─ Monthly (1st)    ← synthesises 4 weekly reports
             └─ Weekly (Mon 08:00) ← synthesises 7 daily reports
                  └─ Daily (21:00) ← summarises that day's agent analyses
 ```
-
-**Why this matters**
 
 Each level is instructed to find **patterns invisible at the level below** — not to copy-paste or re-list:
 
@@ -177,20 +183,18 @@ Monthly → "What structural shift happened across weeks?"
 Annual  → "What were the two defining themes of the year?"
 ```
 
-When sub-reports are missing (e.g., no daily report on a quiet day), the generator falls back to raw macro data (KOSPI, rates, VIX, trade balance) and produces commentary directly.
+When sub-reports are missing, the generator falls back to raw macro data (KOSPI, rates, VIX, trade balance) and produces commentary directly.
 
-**Prompt design — `_synthesis` vs `_commentary`**
-
-| Mode | Input | Instruction |
-|------|-------|-------------|
-| `_commentary` | Raw macro numbers | Fill in the [COMMENTARY] slot — no invented figures |
-| `_synthesis` | Sub-reports (text) | Find cross-level connections — no copy-paste allowed |
+| Mode | Input | Constraint |
+|------|-------|------------|
+| `_commentary` | Raw macro numbers | No invented figures |
+| `_synthesis` | Sub-reports (text) | No copy-paste — find cross-level connections only |
 
 ---
 
 ## Hallucination Guard
 
-Automatically detects **unsupported claims** in the agent's output and requests re-generation.
+Automatically detects **uncited claims** in the agent's output and triggers re-generation.
 
 **Required output format** (instructed in system prompt):
 ```
@@ -203,36 +207,50 @@ Inflation re-acceleration risk remains, however.   [ref: none]
 
 | Verdict | Condition |
 |---------|-----------|
-| `GROUNDED` | `[ref: ins_ID]` present and source content matches |
-| `UNGROUNDED` | Ref ID does not exist or content mismatches |
+| `GROUNDED` | `[ref: ins_ID]` present and ID exists in `mer_insights` |
+| `UNGROUNDED` | Cited ID does not exist in DB |
 | `UNSUPPORTED` | No citation tag at all |
-| `NONE_DECLARED` | Explicitly tagged `[ref: none]` |
+| `NONE_DECLARED` | Explicitly tagged `[ref: none]` — accepted |
 
-UNGROUNDED + UNSUPPORTED ratio > 20% → re-generation triggered
+UNGROUNDED + UNSUPPORTED ratio > 20% → re-generation triggered (max 2 retries)
 
 ---
 
 ## Observability
 
-Records per-call cost and latency to PostgreSQL and visualises with Streamlit.
+Every Claude call is wrapped in a `Tracer` context manager that records cost and latency to PostgreSQL and surfaces them in a Streamlit dashboard.
 
 ```python
 async with Tracer(conn, trace_name="agent_run") as tracer:
     resp = await tracer.call(
         client.messages.create,
-        span_name="tool_step",
-        model=...,
+        span_name="agent_step_1",
+        model=MODEL_SONNET,
         messages=...,
     )
 ```
 
-**Tracked per span**: `trace_id`, `span_id`, `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
+**Tracked per span**: `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
 
 **Token pricing** (claude-sonnet-4-6): $3/1M input · $15/1M output
 
+Example trace from a real agent run (4 iterations):
+
+| Span | Input tokens | Output tokens | Cost | Latency |
+|------|-------------|--------------|------|---------|
+| agent_step_1 | 5,330 | 293 | $0.0204 | 6.1s |
+| agent_step_2 | 7,763 | 406 | $0.0294 | 9.1s |
+| agent_step_3 | 9,584 | 687 | $0.0391 | 12.5s |
+| agent_step_4 | 11,571 | 1,958 | $0.0641 | 40.3s |
+| **Total** | **34,248** | **3,344** | **$0.153** | **~2 min** |
+
+Context grows each iteration as tool results accumulate — visible in the token progression.
+
 ```bash
-streamlit run src/dashboard/observability.py
+streamlit run src/dashboard/observability.py   # http://localhost:8501
 ```
+
+![Observability dashboard](docs/dashboard.png)
 
 ---
 
@@ -246,29 +264,34 @@ python -m src.eval.eval_runner --mode retrieval_only --k 5
 python -m src.eval.eval_runner --mode full --k 5
 ```
 
-**Metrics**
+**Retrieval results** (gold dataset, K=5):
+
+| Metric | Score |
+|--------|-------|
+| Precision@5 | 1.00 |
+| Recall@5 | 1.00 |
+| MRR | 1.00 |
+
+**LLM Judge metrics** (Claude Sonnet as judge, 1–5 scale normalised to 0–1):
 
 | Metric | Description |
 |--------|-------------|
-| Precision@K | Fraction of retrieved results that are relevant |
-| Recall@K | Fraction of relevant insights retrieved |
-| MRR | Mean Reciprocal Rank |
-| Context Relevance | LLM judge: retrieved context vs. query relevance (1–5) |
-| Faithfulness | LLM judge: analysis grounded in sources (inverse hallucination) |
-| Answer Relevance | LLM judge: analysis answers the original question (1–5) |
+| Context Relevance | Retrieved context vs. query relevance |
+| Faithfulness | Analysis grounded in sources (inverse hallucination) |
+| Answer Relevance | Analysis answers the original question |
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
+|-------|------------|
 | LLM | Claude Sonnet 4.6 / Haiku 4.5 (Anthropic) |
 | Batch API | Anthropic Batch API |
 | Embeddings | `intfloat/multilingual-e5-large` (1024 dims) |
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
-| Hybrid Fusion | Reciprocal Rank Fusion (RRF) |
+| Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.4) |
 | Scheduler | APScheduler 3.10 |
 | Delivery | python-telegram-bot 21 |
 | Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, yfinance |
@@ -280,7 +303,7 @@ python -m src.eval.eval_runner --mode full --k 5
 ## Metrics
 
 | Metric | Value |
-|---|---|
+|--------|-------|
 | Processed posts | 2,193 |
 | Extracted insights | 25,090 |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
@@ -288,6 +311,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | BM25 index size | 16,126 canonical documents |
 | Scheduled jobs | 7 |
 | Report hierarchy levels | 5 |
+| Cost per post (agent) | ~$0.15 |
 | Macro indicators tracked | KOSPI, USD/KRW, VIX, BTC, WTI, CPI, unemployment |
 
 ---
@@ -354,7 +378,7 @@ python -m src.search.experiment --k 5
 See [.env.example](.env.example) for all required variables.
 
 | Variable | Description |
-|---|---|
+|----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
@@ -402,7 +426,7 @@ mer-insight-pipeline/
 │   │   ├── batch_api.py          # Claude Batch API orchestration
 │   │   ├── embeddings.py         # Vector embedding generation
 │   │   ├── parse_results.py      # Batch result parsing → DB
-│   │   └── realtime_extractor.py
+│   │   └── realtime_extractor.py # Real-time insight extraction (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
 │   │   ├── load_macro.py         # FRED / BOK / yfinance
@@ -415,7 +439,7 @@ mer-insight-pipeline/
 │   │   ├── dart_collector.py     # DART filings (Korean stock exchange)
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
 │   │   ├── context_assembler.py  # RAG context builder
-│   │   ├── analysis_generator.py # Claude analysis
+│   │   ├── analysis_generator.py # Claude analysis (fallback)
 │   │   └── report_generator.py   # 5-level hierarchical synthesis
 │   ├── delivery/
 │   │   ├── telegram_bot.py       # Two-tier Telegram delivery
