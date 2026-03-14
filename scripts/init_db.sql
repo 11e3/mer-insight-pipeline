@@ -52,7 +52,9 @@ CREATE TABLE IF NOT EXISTS macro_daily (
     wti           FLOAT,
     btc_usd       FLOAT,
     vix           FLOAT,
-    fed_funds_rate FLOAT
+    fed_funds_rate  FLOAT,
+    us_cpi_yoy      FLOAT,   -- 미국 CPI YoY
+    us_unemployment FLOAT    -- 미국 실업률
 );
 
 -- ─── 예측 트래킹 ────────────────────────────────────────────────────────────────
