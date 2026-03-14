@@ -140,7 +140,12 @@ class EventDispatcher:
         self.scheduler.add_job(
             self._check_news, "interval", minutes=30, id="news"
         )
-        # 예측 검증: 매일 20:00 (일간 리포트 전)
+        # 예측 초벌 검증: 10:00, 15:00 (낮 시간대 분산 처리)
+        self.scheduler.add_job(
+            self._verify_predictions, "cron",
+            hour="10,15", minute=0, id="verify_predictions_daytime"
+        )
+        # 예측 최종 검증: 20:00 (일간 리포트 전)
         self.scheduler.add_job(
             self._verify_predictions, "cron",
             hour=20, minute=0, id="verify_predictions"

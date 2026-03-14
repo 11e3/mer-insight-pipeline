@@ -168,6 +168,26 @@ class PredictionVerifier:
                 )
             parts.append("\n\n".join(lines))
 
+        # 4. DART 공시 + 뉴스 (기업 이벤트 검증용)
+        event_rows = await self.conn.fetch("""
+            SELECT event_type, title, content, event_date
+            FROM events
+            WHERE event_type IN ('dart', 'news')
+              AND event_date::date BETWEEN $1 AND $2
+            ORDER BY event_date DESC
+            LIMIT 50
+        """, since, until)
+
+        if event_rows:
+            lines = [f"[DART 공시 · 뉴스: {since} ~ {until}]"]
+            for r in event_rows:
+                tag = "DART" if r["event_type"] == "dart" else "뉴스"
+                lines.append(
+                    f"[{r['event_date'].strftime('%Y-%m-%d')} {tag}] {r['title']}\n"
+                    f"{(r['content'] or '')[:150]}"
+                )
+            parts.append("\n\n".join(lines))
+
         return "\n\n".join(parts) if parts else "(컨텍스트 없음)"
 
     def _fetch_stock_context(self, since: date, until: date) -> str:
