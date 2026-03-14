@@ -16,7 +16,7 @@ data/
 output.txt
 
 # Prompt engineering (proprietary)
-config/prompts.py
+# config/prompts.py  ← 민감 정보 없음, 빌드에 포함 필요
 
 # Raw scraped data
 scraped_posts/json/
