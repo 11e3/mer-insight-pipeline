@@ -131,13 +131,30 @@ class PredictionVerifier:
         """, since, until)
 
         if macro_rows:
-            lines = [f"[월별 매크로: {since} ~ {until}]"]
+            lines = [f"[월별 매크로 (고/저/평균): {since} ~ {until}]"]
             for r in macro_rows:
                 lines.append(
                     f"{r['ym']}: KOSPI={r['kospi_avg']}(고{r['kospi_max']}/저{r['kospi_min']}) "
                     f"USD/KRW={r['krw_avg']}(고{r['krw_max']}) "
                     f"WTI={r['wti_avg']}(고{r['wti_max']}) "
                     f"US10Y={r['us10y_avg']}% Fed={r['fed_avg']}% VIX={r['vix_avg']} BTC={r['btc_avg']}"
+                )
+            parts.append("\n".join(lines))
+
+        # 1-1. 최근 30일 일간 매크로
+        recent_rows = await self.conn.fetch("""
+            SELECT date, kospi, usd_krw, wti, us_10y, vix, btc_usd
+            FROM macro_daily
+            WHERE date BETWEEN CURRENT_DATE - INTERVAL '30 days' AND $1
+            ORDER BY date
+        """, until)
+        if recent_rows:
+            lines = ["[최근 30일 일간 매크로]"]
+            for r in recent_rows:
+                lines.append(
+                    f"{r['date']}: KOSPI={r['kospi'] and int(r['kospi'])} "
+                    f"KRW={r['usd_krw'] and int(r['usd_krw'])} "
+                    f"WTI={r['wti']} US10Y={r['us_10y']} VIX={r['vix']} BTC={r['btc_usd'] and int(r['btc_usd'])}"
                 )
             parts.append("\n".join(lines))
 
@@ -191,11 +208,19 @@ class PredictionVerifier:
         return "\n\n".join(parts) if parts else "(컨텍스트 없음)"
 
     def _fetch_stock_context(self, since: date, until: date) -> str:
-        """네이버 금융에서 주요 종목 월별 평균 종가 수집."""
+        """네이버 금융에서 주요 종목 주가 수집.
+
+        - 최근 90일: 일간 종가
+        - 이전: 월별 고/저/말일 종가 (H/L/C)
+        """
         days = (until - since).days
         count = min(days + 30, 1800)  # 최대 약 5년치
+        cutoff = date(until.year, until.month, until.day)
+        # 최근 90일 기준일
+        from datetime import timedelta
+        recent_since = until - timedelta(days=90)
 
-        lines = ["[주요 한국 주식 월별 종가]"]
+        lines = ["[주요 한국 주식 주가]"]
         fetched = 0
 
         for name, code in KR_STOCKS.items():
@@ -207,11 +232,12 @@ class PredictionVerifier:
                 resp = requests.get(url, headers=_HEADERS, timeout=10)
                 root = ET.fromstring(resp.content.decode("euc-kr", errors="replace"))
 
-                # 월별 종가 집계
-                by_month: dict[str, list[int]] = {}
+                by_month: dict[str, list[int]] = {}  # ym -> [closes]
+                daily_recent: list[str] = []          # 최근 90일 일간
+
                 for item in root.findall(".//item"):
-                    data = item.get("data", "")
-                    parts = data.split("|")
+                    raw = item.get("data", "")
+                    parts = raw.split("|")
                     if len(parts) < 5:
                         continue
                     dt, close = parts[0], parts[4]
@@ -219,22 +245,36 @@ class PredictionVerifier:
                         continue
                     try:
                         d = date(int(dt[:4]), int(dt[4:6]), int(dt[6:8]))
+                        c = int(close)
                     except ValueError:
                         continue
                     if d < since or d > until:
                         continue
-                    ym = dt[:6]  # "YYYYMM"
-                    by_month.setdefault(ym, []).append(int(close))
 
-                if not by_month:
-                    continue
+                    if d >= recent_since:
+                        daily_recent.append(f"{d}={c:,}")
+                    else:
+                        ym = dt[:6]
+                        by_month.setdefault(ym, []).append(c)
 
-                monthly = " ".join(
-                    f"{ym[:4]}-{ym[4:]}={int(sum(v)/len(v)):,}"
-                    for ym, v in sorted(by_month.items())
-                )
-                lines.append(f"{name}: {monthly}")
-                fetched += 1
+                parts_line: list[str] = []
+
+                # 월별 H/L/C (90일 이전)
+                if by_month:
+                    monthly = " ".join(
+                        f"{ym[:4]}-{ym[4:]}(H={max(v):,}/L={min(v):,}/C={v[-1]:,})"
+                        for ym, v in sorted(by_month.items())
+                    )
+                    parts_line.append(monthly)
+
+                # 최근 90일 일간 종가
+                if daily_recent:
+                    parts_line.append("최근90일:" + " ".join(daily_recent))
+
+                if parts_line:
+                    lines.append(f"{name}: " + " | ".join(parts_line))
+                    fetched += 1
+
             except Exception as e:
                 log.debug(f"주가 수집 실패 ({name}): {e}")
 
