@@ -1,7 +1,6 @@
 """
 텔레그램 발송 모듈.
-tier1: 메르 글 요약 + 매크로 알림 (무료 채널)
-tier2: AI 분석 (프리미엄 채널)
+tier1: 모든 메시지 (단일 채널)
 """
 
 import logging
@@ -14,7 +13,6 @@ from telegram.error import TelegramError
 from config.settings import (
     TELEGRAM_BOT_TOKEN,
     TELEGRAM_TIER1_CHAT_ID,
-    TELEGRAM_TIER2_CHAT_ID,
 )
 from src.delivery.formatters import format_message
 from src.pipeline.event_types import EventType
@@ -23,7 +21,6 @@ log = logging.getLogger(__name__)
 
 CHANNEL_MAP = {
     "tier1": TELEGRAM_TIER1_CHAT_ID,
-    "tier2": TELEGRAM_TIER2_CHAT_ID,
 }
 
 MAX_MESSAGE_LEN = 4096  # 텔레그램 메시지 최대 길이

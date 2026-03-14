@@ -74,9 +74,6 @@ echo -n "YOUR_BOT_TOKEN" \
 echo -n "YOUR_CHAT_ID" \
   | gcloud secrets create TELEGRAM_TIER1_CHAT_ID --data-file=-
 
-echo -n "YOUR_CHAT_ID" \
-  | gcloud secrets create TELEGRAM_TIER2_CHAT_ID --data-file=-
-
 # 선택적
 echo -n "YOUR_FRED_KEY" | gcloud secrets create FRED_API_KEY --data-file=-
 echo -n "YOUR_BOK_KEY"  | gcloud secrets create BOK_API_KEY  --data-file=-
@@ -139,7 +136,7 @@ COMMON_ARGS="
   --set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
   --set-secrets=TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN:latest
   --set-secrets=TELEGRAM_TIER1_CHAT_ID=TELEGRAM_TIER1_CHAT_ID:latest
-  --set-secrets=TELEGRAM_TIER2_CHAT_ID=TELEGRAM_TIER2_CHAT_ID:latest
+
   --set-env-vars=GCP_PROJECT_ID=YOUR_PROJECT_ID
   --add-cloudsql-instances=YOUR_PROJECT_ID:asia-northeast3:mer-db
   --memory=512Mi
@@ -254,6 +251,5 @@ python -m scripts.reembed_all
 | `GCP_LOCATION` | - | Vertex AI 리전 (기본: us-central1) |
 | `TELEGRAM_BOT_TOKEN` | ✓ | 텔레그램 봇 토큰 |
 | `TELEGRAM_TIER1_CHAT_ID` | ✓ | 무료 채널 ID |
-| `TELEGRAM_TIER2_CHAT_ID` | - | 프리미엄 채널 ID |
 | `FRED_API_KEY` | - | FRED 거시경제 데이터 |
 | `BOK_API_KEY` | - | 한국은행 ECOS API |

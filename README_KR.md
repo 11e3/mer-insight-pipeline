@@ -383,7 +383,6 @@ python -m src.search.experiment --k 5
 | `ANTHROPIC_API_KEY` | Claude API 키 |
 | `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 |
 | `TELEGRAM_TIER1_CHAT_ID` | 무료 채널 채팅 ID |
-| `TELEGRAM_TIER2_CHAT_ID` | 프리미엄 채널 채팅 ID |
 | `FRED_API_KEY` | FRED 경제 데이터 (무료) |
 | `BOK_API_KEY` | 한국은행 ECOS API (무료) |
 | `BLS_API_KEY` | 미국 노동통계국 (무료) |

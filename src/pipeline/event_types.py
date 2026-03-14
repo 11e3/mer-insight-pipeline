@@ -15,7 +15,7 @@ class AnalysisConfig:
     max_rules:       int
     include_macro:   bool
     output_format:   str   # "summary" | "full_analysis" | "alert"
-    telegram_channel: str  # "tier1" | "tier2"
+    telegram_channel: str  # "tier1"
 
 
 ANALYSIS_CONFIGS: dict[EventType, AnalysisConfig] = {
@@ -31,20 +31,20 @@ ANALYSIS_CONFIGS: dict[EventType, AnalysisConfig] = {
         max_rules=10,
         include_macro=True,
         output_format="full_analysis",
-        telegram_channel="tier2",
+        telegram_channel="tier1",
     ),
     EventType.NEWS_ARTICLE: AnalysisConfig(
         event_type=EventType.NEWS_ARTICLE,
         max_rules=8,
         include_macro=True,
         output_format="full_analysis",
-        telegram_channel="tier2",
+        telegram_channel="tier1",
     ),
     EventType.MACRO_ALERT: AnalysisConfig(
         event_type=EventType.MACRO_ALERT,
         max_rules=5,
         include_macro=True,
         output_format="alert",
-        telegram_channel="tier2",
+        telegram_channel="tier1",
     ),
 }

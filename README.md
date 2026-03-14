@@ -383,7 +383,6 @@ See [.env.example](.env.example) for all required variables.
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
 | `TELEGRAM_TIER1_CHAT_ID` | Free channel chat ID |
-| `TELEGRAM_TIER2_CHAT_ID` | Premium channel chat ID |
 | `FRED_API_KEY` | FRED economic data (free) |
 | `BOK_API_KEY` | Bank of Korea ECOS API (free) |
 | `BLS_API_KEY` | US Bureau of Labor Statistics (free) |

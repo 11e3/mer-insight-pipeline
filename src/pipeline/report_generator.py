@@ -234,7 +234,7 @@ class ReportGenerator:
         )
         title = "*📝 일간 메르 인사이트*"
         text  = f"{title}\n_{today.strftime('%Y.%m.%d')}_\n\n{summary}"
-        await self.telegram.send_raw("tier2", text)
+        await self.telegram.send_raw("tier1", text)
         await self._save("report_daily", title, text)
 
     async def generate_weekly(self):
@@ -279,7 +279,7 @@ class ReportGenerator:
             f"*이번 주 메르 관심 토픽*\n"
             f"{_topic_line(data.get('topics') or [])}"
         )
-        await self.telegram.send_raw("tier2", text)
+        await self.telegram.send_raw("tier1", text)
         await self._save("report_weekly", title, text)
 
     async def generate_monthly(self):
@@ -332,7 +332,7 @@ class ReportGenerator:
             lines2.append(f"\n*이달 많이 언급된 기업/자산*\n{top5}")
         msg2 = "\n".join(lines2)
 
-        await self._send_parts("tier2", [msg1, msg2])
+        await self._send_parts("tier1", [msg1, msg2])
         await self._save("report_monthly", header, f"{msg1}\n\n{msg2}")
 
     async def generate_quarterly(self):
@@ -395,7 +395,7 @@ class ReportGenerator:
             lines2.append(f"\n*예측 적중률* {correct}/{len(preds)}")
         msg2 = "\n".join(lines2)
 
-        await self._send_parts("tier2", [msg1, msg2])
+        await self._send_parts("tier1", [msg1, msg2])
         await self._save("report_quarterly", title, f"{msg1}\n\n{msg2}")
 
     async def generate_annual(self):
@@ -472,7 +472,7 @@ class ReportGenerator:
         msg3 = "\n\n".join(lines3) if lines3 else ""
 
         parts = [p for p in [msg1, msg2, msg3] if p.strip()]
-        await self._send_parts("tier2", parts)
+        await self._send_parts("tier1", parts)
         await self._save("report_annual", title, "\n\n".join(parts))
 
     # ─── 데이터 수집 ──────────────────────────────────────────────────────────

@@ -2,11 +2,11 @@
 예시 발송 스크립트 — 6가지 메시지 타입을 각각 한 번씩 실제 채널로 전송.
 
   1. 메르 글 요약      (tier1)
-  2. 이벤트 분석       (tier2)
-  3. 주간 리포트       (tier2)
-  4. 월간 리포트       (tier2)
-  5. 분기별 리포트     (tier2)
-  6. 연간 리포트       (tier2)
+  2. 이벤트 분석       (tier1)
+  3. 주간 리포트       (tier1)
+  4. 월간 리포트       (tier1)
+  5. 분기별 리포트     (tier1)
+  6. 연간 리포트       (tier1)
 
 Usage:
     python scripts/send_examples.py
@@ -75,7 +75,7 @@ async def send_mer_summary(conn, assembler, generator, telegram):
 
 
 async def send_event_analysis(conn, assembler, generator, telegram):
-    """2. 최근 이벤트 AI 분석 → tier2."""
+    """2. 최근 이벤트 AI 분석 → tier1."""
     log.info("=== [2/6] 이벤트 분석 ===")
 
     # 기존 분석이 있는 뉴스/DART 이벤트 우선, 없으면 최신 macro_alert 신규 분석
@@ -99,8 +99,8 @@ async def send_event_analysis(conn, assembler, generator, telegram):
             etype = EventType.NEWS_ARTICLE
         text = format_message(etype, event, event["analysis_text"],
                               len(event["rules_used"] or []))
-        sent = await telegram.send_raw("tier2", text)
-        log.info(f"  → tier2 발송: {'완료' if sent else '실패'}")
+        sent = await telegram.send_raw("tier1", text)
+        log.info(f"  → tier1 발송: {'완료' if sent else '실패'}")
         return
 
     # macro_alert 이벤트로 신규 분석 생성
@@ -124,12 +124,12 @@ async def send_event_analysis(conn, assembler, generator, telegram):
     analysis = await generator.generate(context, config)
 
     text = format_message(EventType.MACRO_ALERT, event, analysis, len(context["rules"]))
-    sent = await telegram.send_raw("tier2", text)
-    log.info(f"  → tier2 발송: {'완료' if sent else '실패'}")
+    sent = await telegram.send_raw("tier1", text)
+    log.info(f"  → tier1 발송: {'완료' if sent else '실패'}")
 
 
 async def send_reports(conn, telegram, only=None):
-    """3~7. 일간/주간/월간/분기/연간 리포트 → tier2."""
+    """3~7. 일간/주간/월간/분기/연간 리포트 → tier1."""
     reporter = ReportGenerator(conn, telegram)
 
     tasks = [
