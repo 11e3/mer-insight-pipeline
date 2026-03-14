@@ -251,7 +251,7 @@ UNGROUNDED + UNSUPPORTED ratio > 20% → re-generation triggered (max 2 retries)
 
 ## Observability
 
-Every Claude call is wrapped in a `Tracer` context manager that records cost and latency to PostgreSQL and surfaces them in a Streamlit dashboard.
+Agent loop iterations are wrapped in a `Tracer` context manager that records cost and latency to PostgreSQL and surfaces them in a Streamlit dashboard. (Report generation and prediction verification calls are not currently traced.)
 
 ```python
 async with Tracer(conn, trace_name="agent_run") as tracer:

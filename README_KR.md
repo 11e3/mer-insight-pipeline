@@ -250,7 +250,7 @@ UNGROUNDED + UNSUPPORTED 비율 > 20% → 자동 재생성 트리거 (최대 2�
 
 ## 옵저버빌리티
 
-모든 Claude 호출을 `Tracer` 컨텍스트 매니저로 감싸 비용과 지연 시간을 PostgreSQL에 기록하고 Streamlit으로 시각화합니다.
+에이전트 루프 반복 호출을 `Tracer` 컨텍스트 매니저로 감싸 비용과 지연 시간을 PostgreSQL에 기록하고 Streamlit으로 시각화합니다. (리포트 생성·예측 검증 호출은 현재 미추적)
 
 ```python
 async with Tracer(conn, trace_name="agent_run") as tracer:
