@@ -116,6 +116,43 @@ New post received
 - `max_iterations=5`; Hallucination Guard failure triggers up to 2 automatic re-generations
 - Falls back to `analysis_generator.py` on agent error
 
+**Analysis output structure**
+
+Each analysis is grounded in past insights retrieved from the 25,090-insight DB and cited inline:
+
+```
+*핵심 요약* (Core summary)
+
+🎯 The real threat from a Hormuz closure isn't oil/LNG — it's the urea supply chain
+   collapse. [ref: ins_2316]
+   Korea has zero domestic production capacity and only 15 days of public stockpile.
+   [ref: ins_15390]
+
+*과거 발언과의 비교* (vs. past statements)
+
+- Mer has warned since Dec 2023 that the 2021 urea shortage was never structurally
+  resolved. [ref: ins_7022]
+- Then: China-only risk. Now: simultaneous multi-country supply cut — the crisis
+  layer has expanded. [ref: ins_2316]
+- China dependency fell to 67% post-2021, then quietly rose back to 91.8% by 2023.
+  [ref: ins_15390, ins_23520]
+- New angle absent from past insights: Egypt sources Israeli natural gas → converts
+  to urea. [ref: none]
+
+*시장 시사점* (Market implications)
+
+- Lotte Fine Chemical: short-term price pass-through upside, offset by import cost
+  risk. [ref: ins_15391]
+- Logistics/trucking: urea shortage → mandatory truck shutdowns → freight spike
+  across construction, cement, retail. [ref: ins_2308]
+- Agri inflation: urea is fertiliser feedstock, not just AdBlue. [ref: ins_2316]
+
+💬 "In 2021 it was China alone. In 2026 multiple producers drop simultaneously —
+    the urea supply chain is already dangerously exposed." [ref: ins_2316]
+```
+
+Citations are verified against the `mer_insights` table by the Hallucination Guard before delivery.
+
 ---
 
 ## Hierarchical Report Pipeline
