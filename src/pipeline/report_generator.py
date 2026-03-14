@@ -188,7 +188,11 @@ def _render_predictions_block(preds: list[dict]) -> str:
         asset  = p.get("target_asset", "")
         pred   = (p.get("prediction_text") or "")[:80]
         actual = (p.get("actual_outcome") or "")[:60]
-        line   = f"{mark} [{asset}] {pred}"
+        url    = p.get("post_url") or ""
+        if url:
+            line = f"{mark} [{asset}] [{pred}]({url})"
+        else:
+            line = f"{mark} [{asset}] {pred}"
         if actual:
             line += f"\n   → 실제: {actual}"
         lines.append(line)
@@ -304,29 +308,26 @@ class ReportGenerator:
         log.info(f"주간 리포트: {since} ~ {today}")
 
         sub_reports = await self._fetch_sub_reports("report_daily", since, today)
-        data        = await self._collect_data(since, today, "weekly")
+        topics      = await self._fetch_topics(since, today)
 
         if sub_reports:
             narrative = await self._synthesis(
                 sub_reports,
-                "일간 리포트들에서 이번 주 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 5개 항목. 존댓말 금지. 단순 나열 금지. 각 항목은 인과관계 포함.\n"
-                "수치 반드시 포함. 200자 이내.",
+                "일간 리포트들에서 이번 주 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 5개 항목. 존댓말 금지. 일반 시황 나열 금지. 메르만의 해석 중심. 200자 이내.",
                 200,
             )
         else:
-            ctx = (
-                f"=== 주간 매크로 변화 ===\n"
-                f"{_render_macro_block(data.get('macro_start') or {}, data.get('macro_end') or {})}\n\n"
-                f"=== 메르 관심 토픽 ===\n"
-                f"{_render_topics_block(data.get('topics') or [])}"
-            )
+            ctx = await self._analyses_ctx(since, today)
+            if not ctx:
+                log.info("이번 주 메르 글 없음 — 주간 리포트 미발송")
+                return
             narrative = await self._commentary(
                 ctx,
-                "이번 주 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 5개 항목. 존댓말 금지. 수치 반드시 포함. 200자 이내.",
+                "이번 주 메르가 쓴 분석들에서 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 5개 항목. 존댓말 금지. 일반 시황 나열 금지. 200자 이내.",
                 200,
             )
 
@@ -335,7 +336,7 @@ class ReportGenerator:
             f"{title}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {today.strftime('%Y.%m.%d')}_\n\n"
             f"{narrative}\n\n"
-            f"이번 주 관심 토픽: {_topic_line(data.get('topics') or [])}"
+            f"이번 주 관심 토픽: {_topic_line(topics)}"
         )
         await self.telegram.send_raw("tier1", text)
         await self._save("report_weekly", title, text)
@@ -351,47 +352,36 @@ class ReportGenerator:
         log.info(f"월간 리포트: {since} ~ {until}")
 
         sub_reports = await self._fetch_sub_reports("report_weekly", since, until)
-        data        = await self._collect_data(since, until, "monthly")
+        topics      = await self._fetch_topics(since, until)
+        entities    = await self._fetch_entities(since, until, 5)
 
         if sub_reports:
             narrative = await self._synthesis(
                 sub_reports,
-                "주간 리포트들에서 이달 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 6개 항목. 존댓말 금지. 주간 단위에서 안 보이던 구조적 변화·테마 이동 중심.\n"
-                "수치 반드시 포함. 300자 이내.",
+                "주간 리포트들에서 이달 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 6개 항목. 존댓말 금지. 일반 시황 나열 금지. 메르만의 해석 중심. 300자 이내.",
                 300,
             )
         else:
-            ctx = (
-                f"=== {since.strftime('%Y년 %m월')} 매크로 변화 ===\n"
-                f"{_render_macro_block(data.get('macro_start') or {}, data.get('macro_end') or {})}\n\n"
-                f"=== 메르 관심 토픽 ===\n"
-                f"{_render_topics_block(data.get('topics') or [])}\n\n"
-                f"=== 많이 언급된 기업/자산 ===\n"
-                f"{_render_entities_block(data.get('top_entities') or [], 10)}"
-            )
+            ctx = await self._analyses_ctx(since, until)
+            if not ctx:
+                log.info("이달 메르 글 없음 — 월간 리포트 미발송")
+                return
             narrative = await self._commentary(
                 ctx,
-                "이달 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 6개 항목. 존댓말 금지. 수치 반드시 포함. 300자 이내.",
+                "이달 메르가 쓴 분석들에서 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 6개 항목. 존댓말 금지. 일반 시황 나열 금지. 300자 이내.",
                 300,
             )
 
-        topics   = data.get("topics") or []
-        entities = data.get("top_entities") or []
-
         header = f"*📅 {since.strftime('%Y년 %m월')} 메르 인사이트*"
-        msg1   = (
-            f"{header}\n"
-            f"_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n"
-            f"{narrative}"
-        )
+        msg1   = f"{header}\n_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n{narrative}"
 
         lines2 = [f"이달 관심 토픽: {_topic_line(topics, 5)}"]
         if entities:
-            top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:5])
+            top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities)
             lines2.append(f"많이 언급된 기업/자산: {top5}")
         msg2 = "\n".join(lines2)
 
@@ -409,49 +399,45 @@ class ReportGenerator:
         until = today
         log.info(f"분기 리포트: {since} ~ {until}")
 
-        sub_reports = await self._fetch_sub_reports("report_monthly", since, until)
-        data        = await self._collect_data(since, until, "quarterly")
+        sub_reports   = await self._fetch_sub_reports("report_monthly", since, until)
+        topics        = await self._fetch_topics(since, until)
+        entities      = await self._fetch_entities(since, until, 5)
+        preds         = await self._fetch_predictions(since, until)
+        monthly_flow  = await _fetch_monthly_topics(self.conn, since, until)
 
         if sub_reports:
             synthesis = await self._synthesis(
                 sub_reports,
-                "월간 리포트들에서 이번 분기 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 6개 항목. 존댓말 금지. 엇갈리는 지표 반드시 포함 (예: '수출 호조인데 환율 상승 = 금리차 자본 유출').\n"
-                "수치 반드시 포함. 400자 이내.",
+                "월간 리포트들에서 이번 분기 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 6개 항목. 존댓말 금지. 일반 시황 나열 금지. 메르만의 해석 중심. 400자 이내.",
                 400,
             )
         else:
-            ctx = (
-                f"=== 분기 매크로 변화 ===\n"
-                f"{_render_macro_block(data.get('macro_start') or {}, data.get('macro_end') or {})}\n\n"
-                f"=== 메르 관심 토픽 ===\n"
-                f"{_render_topics_block(data.get('topics') or [])}"
-            )
+            ctx = await self._analyses_ctx(since, until)
+            if not ctx:
+                log.info("이번 분기 메르 글 없음 — 분기 리포트 미발송")
+                return
             synthesis = await self._commentary(
                 ctx,
-                "이번 분기 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 6개 항목. 존댓말 금지. 수치 반드시 포함. 400자 이내.",
+                "이번 분기 메르가 쓴 분석들에서 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 6개 항목. 존댓말 금지. 일반 시황 나열 금지. 400자 이내.",
                 400,
             )
-
-        topics        = data.get("topics") or []
-        entities      = data.get("top_entities") or []
-        preds         = data.get("predictions") or []
-        monthly_flow  = await _fetch_monthly_topics(self.conn, since, until)
 
         title = "*📈 분기 메르 인사이트*"
         msg1  = (
             f"{title}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n"
             f"{synthesis}\n\n"
-            f"관심사 흐름: {monthly_flow}"
+            f"관심사 흐름: {monthly_flow}\n"
+            f"이번 분기 관심 토픽: {_topic_line(topics, 6)}"
         )
 
         lines2 = []
         if entities:
-            top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:5])
+            top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities)
             lines2.append(f"많이 언급된 기업/자산: {top5}")
         msg2 = "\n".join(lines2) if lines2 else ""
 
@@ -467,51 +453,44 @@ class ReportGenerator:
         until = today
         log.info(f"연간 리포트: {since} ~ {until}")
 
-        sub_reports = await self._fetch_sub_reports("report_quarterly", since, until)
-        data        = await self._collect_data(since, until, "annual")
+        sub_reports    = await self._fetch_sub_reports("report_quarterly", since, until)
+        topics         = await self._fetch_topics(since, until)
+        entities       = await self._fetch_entities(since, until, 10)
+        preds          = await self._fetch_predictions(since, until)
+        quarterly_flow = await _fetch_quarterly_topics(self.conn, since, until)
 
         if sub_reports:
-            # Claude 호출 1: 연간 흐름 분석
             macro_commentary = await self._synthesis(
                 sub_reports,
-                "분기 리포트들에서 올 한 해 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 7개 항목. 존댓말 금지. 엇갈리는 지표 반드시 포함. 수치 반드시 포함. 400자 이내.",
+                "분기 리포트들에서 올 한 해 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 7개 항목. 존댓말 금지. 일반 시황 나열 금지. 메르만의 해석 중심. 400자 이내.",
                 400,
             )
-            # Claude 호출 2: 총평 & 전망
             outlook_commentary = await self._synthesis(
                 sub_reports,
-                "한 해 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개를 구체적 근거와 함께 제시.\n"
-                "근거는 하위 리포트 내용에서만. 존댓말 금지. 300자 이내.",
+                "메르의 분석을 바탕으로 올해 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개 제시.\n"
+                "근거는 메르가 실제로 언급한 것만. 존댓말 금지. 300자 이내.",
                 300,
             )
         else:
-            ctx = (
-                f"=== 연간 매크로 변화 ===\n"
-                f"{_render_macro_block(data.get('macro_start') or {}, data.get('macro_end') or {})}\n\n"
-                f"=== 메르 관심 토픽 ===\n"
-                f"{_render_topics_block(data.get('topics') or [])}\n\n"
-                f"=== 기업/자산 언급 ===\n"
-                f"{_render_entities_block(data.get('top_entities') or [], 10)}"
-            )
+            ctx = await self._analyses_ctx(since, until)
+            if not ctx:
+                log.info("올해 메르 글 없음 — 연간 리포트 미발송")
+                return
             macro_commentary = await self._commentary(
                 ctx,
-                "올 한 해 핵심 흐름을 주제별 불릿으로 정리.\n"
-                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
-                "최대 7개 항목. 존댓말 금지. 수치 반드시 포함. 400자 이내.",
+                "올 한 해 메르가 쓴 분석들에서 메르의 시각·판단을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 메르가 본 핵심 + 왜 중요한지\n"
+                "최대 7개 항목. 존댓말 금지. 일반 시황 나열 금지. 400자 이내.",
                 400,
             )
             outlook_commentary = await self._commentary(
                 ctx,
-                "한 해 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개 제시. 존댓말 금지. 300자 이내.",
+                "메르의 분석을 바탕으로 올해 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개 제시.\n"
+                "근거는 메르가 실제로 언급한 것만. 존댓말 금지. 300자 이내.",
                 300,
             )
-
-        topics        = data.get("topics") or []
-        entities      = data.get("top_entities") or []
-        preds         = data.get("predictions") or []
-        quarterly_flow = await _fetch_quarterly_topics(self.conn, since, until)
 
         title = "*🗓 연간 메르 인사이트*"
         msg1  = (
@@ -526,7 +505,7 @@ class ReportGenerator:
             f"올해 관심 토픽: {_topic_line(topics, 7)}"
         )
         if entities:
-            top10 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:10])
+            top10 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities)
             msg2 += f"\n많이 언급된 기업/자산: {top10}"
 
         msg3 = _render_predictions_block(preds) if preds else ""
@@ -683,6 +662,77 @@ class ReportGenerator:
         for part in parts:
             if part.strip():
                 await self.telegram.send_raw(channel, part)
+
+    async def _analyses_ctx(self, since: date, until: date, limit: int = 20) -> str:
+        """auto_analyses에서 메르의 실제 분석 텍스트를 조합해 반환."""
+        rows = await self.conn.fetch("""
+            SELECT e.title, aa.analysis_text
+            FROM events e
+            JOIN auto_analyses aa ON aa.event_id = e.id
+            WHERE e.event_date::date BETWEEN $1 AND $2
+              AND e.event_type = 'mer_new_post'
+              AND aa.analysis_text IS NOT NULL
+            ORDER BY e.event_date DESC
+            LIMIT $3
+        """, since, until, limit)
+        if not rows:
+            return ""
+        return "\n\n".join(
+            f"[{r['title']}]\n{(r['analysis_text'] or '')[:400]}"
+            for r in rows
+        )
+
+    async def _fetch_topics(self, since: date, until: date) -> list[dict]:
+        """mer_insights에서 토픽별 빈도 조회."""
+        rows = await self.conn.fetch("""
+            SELECT mi.structured_data->>'applicable_domain' AS topic,
+                   COUNT(*) AS cnt
+            FROM mer_insights mi
+            JOIN mer_posts mp ON mi.post_id = mp.id
+            WHERE mp.date BETWEEN $1 AND $2
+              AND mi.structured_data->>'applicable_domain' IS NOT NULL
+              AND mi.insight_type IN ('rule', 'macro_view')
+            GROUP BY topic
+            ORDER BY cnt DESC
+            LIMIT 10
+        """, since, until)
+        return [dict(r) for r in rows]
+
+    async def _fetch_entities(self, since: date, until: date, limit: int = 5) -> list[dict]:
+        """mer_insights에서 엔티티(기업·자산) 빈도 조회."""
+        rows = await self.conn.fetch("""
+            SELECT mi.structured_data->>'entity_name' AS entity,
+                   COUNT(*) AS cnt
+            FROM mer_insights mi
+            JOIN mer_posts mp ON mi.post_id = mp.id
+            WHERE mp.date BETWEEN $1 AND $2
+              AND mi.structured_data->>'entity_name' IS NOT NULL
+              AND mi.insight_type = 'evaluation'
+            GROUP BY entity
+            ORDER BY cnt DESC
+            LIMIT $3
+        """, since, until, limit)
+        return [dict(r) for r in rows]
+
+    async def _fetch_predictions(self, since: date, until: date) -> list[dict]:
+        """mer_predictions에서 검증된 예측 조회 (원본 글 URL 포함)."""
+        rows = await self.conn.fetch("""
+            SELECT
+                mp2.prediction_text,
+                mp2.predicted_direction,
+                mp2.target_asset,
+                mp2.is_correct,
+                mp2.actual_outcome,
+                p.url AS post_url
+            FROM mer_predictions mp2
+            LEFT JOIN mer_insights mi ON mi.id = mp2.insight_id
+            LEFT JOIN mer_posts p     ON p.id  = mi.post_id
+            WHERE mp2.verification_date BETWEEN $1 AND $2
+              AND mp2.is_correct IS NOT NULL
+            ORDER BY mp2.verification_date DESC
+            LIMIT 30
+        """, since, until)
+        return [dict(r) for r in rows]
 
     async def _save(self, event_type: str, title: str, content: str):
         await self.conn.execute("""
