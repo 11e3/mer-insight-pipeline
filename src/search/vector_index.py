@@ -5,17 +5,14 @@ Returns: [(insight_id, similarity_score), ...] top_k 개
 """
 
 import asyncpg
-from sentence_transformers import SentenceTransformer
 
-
-def _vec_str(vec: list[float]) -> str:
-    return "[" + ",".join(f"{v:.8f}" for v in vec) + "]"
+from src.extract.vertex_embedder import VertexEmbedder, vec_str
 
 
 class VectorIndex:
     """pgvector HNSW 코사인 유사도 검색."""
 
-    def __init__(self, conn: asyncpg.Connection, embedder: SentenceTransformer):
+    def __init__(self, conn: asyncpg.Connection, embedder: VertexEmbedder):
         self.conn = conn
         self.embedder = embedder
 
@@ -26,12 +23,7 @@ class VectorIndex:
         Returns:
             [(insight_id, cosine_similarity), ...] top_k 개, 유사도 내림차순
         """
-        vec = _vec_str(
-            self.embedder.encode(
-                [f"query: {query[:500]}"],
-                normalize_embeddings=True,
-            )[0].tolist()
-        )
+        vec = vec_str(await self.embedder.embed_query(query[:500]))
 
         rows = await self.conn.fetch("""
             SELECT id,

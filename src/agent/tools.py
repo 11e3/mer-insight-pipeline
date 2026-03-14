@@ -9,8 +9,8 @@ import logging
 from datetime import date
 
 import asyncpg
-from sentence_transformers import SentenceTransformer
 
+from src.extract.vertex_embedder import VertexEmbedder
 from src.search.bm25_index import BM25Index
 from src.search.hybrid import HybridSearcher
 
@@ -132,7 +132,7 @@ class ToolExecutor:
     def __init__(
         self,
         conn: asyncpg.Connection,
-        embedder: SentenceTransformer,
+        embedder: VertexEmbedder,
         bm25_index: BM25Index,
     ):
         self._conn = conn
