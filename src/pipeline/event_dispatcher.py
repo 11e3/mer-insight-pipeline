@@ -183,13 +183,7 @@ class EventDispatcher:
                     # 경제 관련 → 에이전트 루프 분석 + 텔레그램 발송
                     await self._process_mer_post_with_agent(post)
                 else:
-                    # 비경제 (건강/라이프/기타) → 짧은 요약만 발송
-                    log.info(f"  비경제 포스팅 ({topic}) — 짧은 포맷 발송")
-                    msg = format_short_post(post, topic, summary)
-                    await self.telegram.send_raw(
-                        channel="tier1",
-                        text=msg,
-                    )
+                    log.info(f"  비경제 포스팅 ({topic}) — 알림 스킵")
         except Exception as e:
             log.error(f"메르 신규 글 체크 오류: {e}")
 
