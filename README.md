@@ -288,15 +288,15 @@ python -m src.eval.eval_runner --mode full --k 5
 |-------|------------|
 | LLM | Claude Sonnet 4.6 / Haiku 4.5 (Anthropic) |
 | Batch API | Anthropic Batch API |
-| Embeddings | `intfloat/multilingual-e5-large` (1024 dims) |
-| Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
+| Embeddings | Vertex AI `text-multilingual-embedding-002` (768 dims) |
+| Vector DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.4) |
-| Scheduler | APScheduler 3.10 |
+| Scheduler | GCP Cloud Scheduler + Cloud Run Jobs |
 | Delivery | python-telegram-bot 21 |
 | Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, yfinance |
-| Dashboard | Streamlit + Plotly |
-| Infra | Docker Compose |
+| Dashboard | Streamlit (Cloud Run Service) |
+| Infra | GCP Cloud Run Jobs + Cloud SQL |
 
 ---
 
@@ -307,7 +307,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | Processed posts | 2,193 |
 | Extracted insights | 25,090 |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
-| Embedding dimensions | 1,024 |
+| Embedding dimensions | 768 |
 | BM25 index size | 16,126 canonical documents |
 | Scheduled jobs | 7 |
 | Report hierarchy levels | 5 |
@@ -319,12 +319,18 @@ python -m src.eval.eval_runner --mode full --k 5
 ## Setup
 
 ### Prerequisites
+
+**Local dev**
 - Docker & Docker Compose
 - Anthropic API key
-- Telegram bot token (optional — for delivery)
-- External API keys (FRED, BOK, BLS, MOLIT — all free)
+- Telegram bot token
 
-### Quick Start
+**Production (GCP)**
+- GCP account + `gcloud` CLI
+- Anthropic API key, Telegram bot token
+- See [docs/gcp_setup.md](docs/gcp_setup.md) for full GCP setup
+
+### Local Quick Start
 
 ```bash
 # 1. Clone and configure
@@ -354,14 +360,38 @@ async def build():
 asyncio.run(build())
 "
 
-# 5. Start real-time dispatcher
-python -m src.pipeline.event_dispatcher
+# 5. Run a job once (or start the always-on dispatcher)
+python -m scripts.run_job --job mer_check
+python -m src.pipeline.event_dispatcher   # always-on mode (local only)
 ```
+
+### Production Deploy (GCP Cloud Run)
+
+```bash
+# Build & push image
+IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT/mer-pipeline/app:latest"
+docker build -t $IMAGE . && docker push $IMAGE
+
+# Deploy jobs + scheduler
+# → full instructions in docs/gcp_setup.md
+```
+
+Cloud Scheduler triggers each Cloud Run Job on its own schedule:
+
+| Job | Schedule |
+|-----|----------|
+| `mer_check` | every 5 min |
+| `dart_check` | every 10 min, weekdays 8–18h |
+| `macro_check` | every 30 min |
+| `report` (daily/weekly/…) | cron per report type |
 
 ### Observability Dashboard
 
 ```bash
+# Local
 streamlit run src/dashboard/observability.py   # http://localhost:8501
+
+# Production: Cloud Run Service (see docs/gcp_setup.md)
 ```
 
 ### Run Eval
@@ -382,7 +412,8 @@ See [.env.example](.env.example) for all required variables.
 | `DATABASE_URL` | PostgreSQL connection string |
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
-| `TELEGRAM_TIER1_CHAT_ID` | Free channel chat ID |
+| `GCP_PROJECT_ID` | GCP project ID (production) |
+| `TELEGRAM_TIER1_CHAT_ID` | Telegram channel chat ID |
 | `FRED_API_KEY` | FRED economic data (free) |
 | `BOK_API_KEY` | Bank of Korea ECOS API (free) |
 | `BLS_API_KEY` | US Bureau of Labor Statistics (free) |

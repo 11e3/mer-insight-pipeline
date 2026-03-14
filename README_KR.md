@@ -285,15 +285,15 @@ python -m src.eval.eval_runner --mode full --k 5
 |--------|------|
 | LLM | Claude Sonnet 4.6 / Haiku 4.5 (Anthropic) |
 | 배치 API | Anthropic Batch API |
-| 임베딩 | `intfloat/multilingual-e5-large` (1024차원) |
-| 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
+| 임베딩 | Vertex AI `text-multilingual-embedding-002` (768차원) |
+| 벡터 DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.4) |
-| 스케줄러 | APScheduler 3.10 |
+| 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
 | 전송 | python-telegram-bot 21 |
 | 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, yfinance |
-| 대시보드 | Streamlit + Plotly |
-| 인프라 | Docker Compose |
+| 대시보드 | Streamlit (Cloud Run Service) |
+| 인프라 | GCP Cloud Run Jobs + Cloud SQL |
 
 ---
 
@@ -304,7 +304,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 처리된 포스트 | 2,193개 |
 | 추출된 인사이트 | 25,090개 |
 | 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
-| 임베딩 차원 | 1,024 |
+| 임베딩 차원 | 768 |
 | BM25 인덱스 크기 | 정규 문서 16,126개 |
 | 스케줄된 작업 | 7개 |
 | 리포트 계층 단계 | 5단계 |
@@ -316,30 +316,31 @@ python -m src.eval.eval_runner --mode full --k 5
 ## 시작하기
 
 ### 사전 준비
-- Docker & Docker Compose
-- Anthropic API 키
-- 텔레그램 봇 토큰 (선택 — 전송 기능 사용 시)
-- 외부 API 키 (FRED, 한국은행, BLS, 국토부 — 모두 무료)
 
-### 빠른 시작
+**로컬 개발**
+- Docker & Docker Compose
+- Anthropic API 키, 텔레그램 봇 토큰
+
+**운영 (GCP)**
+- GCP 계정 + `gcloud` CLI
+- 전체 설정은 [docs/gcp_setup.md](docs/gcp_setup.md) 참조
+
+### 로컬 빠른 시작
 
 ```bash
 # 1. 클론 및 설정
 git clone https://github.com/11e3/mer-insight-pipeline.git
 cd mer-insight-pipeline
-cp .env.example .env
-# → .env 파일에 API 키 입력
-
-# 2. 프롬프트 설정
+cp .env.example .env          # API 키 입력
 cp config/prompts.example.py config/prompts.py
 
-# 3. 서비스 시작
+# 2. DB 시작
 docker compose up -d db
 
-# 4. 배치 추출 실행 (포스트 2,193개 → 인사이트 25,090개)
+# 3. 배치 추출 (포스트 2,193개 → 인사이트 25,090개)
 python scripts/run_batch.py all
 
-# 5. BM25 인덱스 캐시 빌드
+# 4. BM25 인덱스 캐시 빌드
 python -c "
 import asyncio, asyncpg, os
 from src.search.bm25_index import BM25Index
@@ -354,14 +355,35 @@ async def build():
 asyncio.run(build())
 "
 
-# 6. 실시간 디스패처 시작
-python -m src.pipeline.event_dispatcher
+# 5. 단일 잡 실행 또는 상시 디스패처
+python -m scripts.run_job --job mer_check
+python -m src.pipeline.event_dispatcher   # 상시 실행 (로컬 전용)
 ```
+
+### 운영 배포 (GCP Cloud Run)
+
+```bash
+IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT/mer-pipeline/app:latest"
+docker build -t $IMAGE . && docker push $IMAGE
+# 전체 배포 절차: docs/gcp_setup.md 참조
+```
+
+Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
+
+| 잡 | 스케줄 |
+|----|--------|
+| `mer_check` | 5분마다 |
+| `dart_check` | 평일 8–18시, 10분마다 |
+| `macro_check` | 30분마다 |
+| `report` (일/주/월/…) | 리포트 유형별 cron |
 
 ### 옵저버빌리티 대시보드
 
 ```bash
+# 로컬
 streamlit run src/dashboard/observability.py   # http://localhost:8501
+
+# 운영: Cloud Run Service (docs/gcp_setup.md 참조)
 ```
 
 ### 평가 실행
@@ -382,7 +404,8 @@ python -m src.search.experiment --k 5
 | `DATABASE_URL` | PostgreSQL 연결 문자열 |
 | `ANTHROPIC_API_KEY` | Claude API 키 |
 | `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 |
-| `TELEGRAM_TIER1_CHAT_ID` | 무료 채널 채팅 ID |
+| `GCP_PROJECT_ID` | GCP 프로젝트 ID (운영) |
+| `TELEGRAM_TIER1_CHAT_ID` | 텔레그램 채널 채팅 ID |
 | `FRED_API_KEY` | FRED 경제 데이터 (무료) |
 | `BOK_API_KEY` | 한국은행 ECOS API (무료) |
 | `BLS_API_KEY` | 미국 노동통계국 (무료) |
