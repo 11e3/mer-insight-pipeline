@@ -12,6 +12,7 @@ COPY . .
 
 ENV PYTHONPATH=/app
 ENV TZ=Asia/Seoul
-# Cloud Run Jobs: run_job.py --job <name>
-# Cloud Run Service (Streamlit): streamlit run src/dashboard/observability.py
-CMD ["python", "-m", "scripts.run_job", "--job", "mer_check"]
+# Cloud Run Jobs: ENTRYPOINT + --args="--job,<name>"
+# Cloud Run Service (Streamlit): override command
+ENTRYPOINT ["python", "-m", "scripts.run_job"]
+CMD ["--job", "mer_check"]
