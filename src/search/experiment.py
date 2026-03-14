@@ -121,7 +121,8 @@ async def run_experiment(dataset_path: Path, k: int = 10):
     print(f"\n{'─'*60}")
     print("통계 검증 (Hybrid vs Vector, Precision@K, paired t-test)")
     t_stat, p_val = stats.ttest_rel(results["hybrid"]["p"], results["vector"]["p"])
-    print(f"  t={t_stat:.3f}, p={p_val:.4f}  {'✓ 유의 (p<0.05)' if p_val < 0.05 else '✗ 유의하지 않음'}")
+    sig = "OK 유의 (p<0.05)" if p_val < 0.05 else "NG 유의하지 않음"
+    print(f"  t={t_stat:.3f}, p={p_val:.4f}  {sig}")
 
     corr, corr_p = stats.spearmanr(results["hybrid"]["p"], results["hybrid"]["mrr"])
     print(f"  Spearman(Precision, MRR): ρ={corr:.3f}, p={corr_p:.4f}")

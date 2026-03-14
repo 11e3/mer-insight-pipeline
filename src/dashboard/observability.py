@@ -7,7 +7,12 @@ Usage:
 
 import asyncio
 import os
+import sys
+from pathlib import Path
 from datetime import datetime
+
+# 프로젝트 루트를 sys.path에 추가 (streamlit run 시 cwd가 달라질 수 있음)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import asyncpg
 import pandas as pd

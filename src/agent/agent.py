@@ -10,6 +10,7 @@ Usage:
 """
 
 import logging
+from typing import TYPE_CHECKING
 
 import anthropic
 import asyncpg
@@ -21,6 +22,9 @@ from src.agent.prompts import AGENT_SYSTEM_PROMPT
 from src.agent.state import AgentState
 from src.agent.tools import TOOL_SPECS, ToolExecutor
 from src.guard.self_correct import verify_and_correct
+
+if TYPE_CHECKING:
+    from src.observability.tracer import Tracer
 
 log = logging.getLogger(__name__)
 
@@ -41,12 +45,13 @@ class MerAgent:
         self._executor = ToolExecutor(conn, embedder, bm25_index)
         self._max_iterations = max_iterations
 
-    async def run(self, post: dict) -> str:
+    async def run(self, post: dict, tracer: "Tracer | None" = None) -> str:
         """
         새 포스트를 받아 에이전트 루프를 실행하고 최종 분석을 반환.
 
         Args:
-            post: {"title": str, "content_text": str, "url": str, "date": str}
+            post:   {"title": str, "content_text": str, "url": str, "date": str}
+            tracer: Tracer 인스턴스 (None이면 추적 안 함)
 
         Returns:
             최종 분석 텍스트 (citation 태그 포함)
@@ -60,13 +65,22 @@ class MerAgent:
             state.increment()
             log.info(f"  iteration {state.iteration}/{self._max_iterations}")
 
-            resp = await _client.messages.create(
+            create_kwargs = dict(
                 model=MODEL_SONNET,
                 max_tokens=4096,
                 system=AGENT_SYSTEM_PROMPT,
                 tools=TOOL_SPECS,
                 messages=state.messages,
             )
+
+            if tracer is not None:
+                resp = await tracer.call(
+                    _client.messages.create,
+                    span_name=f"agent_step_{state.iteration}",
+                    **create_kwargs,
+                )
+            else:
+                resp = await _client.messages.create(**create_kwargs)
 
             # assistant 메시지 히스토리에 추가
             state.add_assistant(resp.content)

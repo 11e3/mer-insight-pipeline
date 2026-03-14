@@ -31,6 +31,7 @@ from src.delivery.formatters import format_short_post
 from src.pipeline.report_generator import ReportGenerator
 from src.agent.agent import MerAgent
 from src.search.bm25_index import BM25Index
+from src.observability.tracer import Tracer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -170,9 +171,14 @@ class EventDispatcher:
         """, event["event_type"].value, event["source"], event["title"],
             event["content"], event["event_date"], vec)
 
-        # 에이전트 루프 실행 (실패 시 fallback)
+        # 에이전트 루프 실행 (Tracer로 감싸서 비용/지연 기록, 실패 시 fallback)
         try:
-            analysis = await self.mer_agent.run(post)
+            async with Tracer(
+                self.conn,
+                trace_name="agent_run",
+                metadata={"post_id": post.get("id"), "title": post.get("title", "")[:80]},
+            ) as tracer:
+                analysis = await self.mer_agent.run(post, tracer=tracer)
             log.info("  에이전트 분석 완료")
         except Exception as e:
             log.warning(f"  에이전트 실패, fallback 실행: {e}")
