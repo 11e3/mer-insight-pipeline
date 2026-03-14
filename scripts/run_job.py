@@ -12,6 +12,7 @@ Usage (로컬):
     python -m scripts.run_job --job monthly
     python -m scripts.run_job --job quarterly
     python -m scripts.run_job --job annual
+    python -m scripts.run_job --job verify_predictions
 
 Cloud Run Job 배포 시 --args 에 해당 값 전달.
 """
@@ -30,6 +31,7 @@ logging.basicConfig(
 VALID_JOBS = {
     "mer_check", "dart_check", "macro_check",
     "daily", "weekly", "monthly", "quarterly", "annual",
+    "verify_predictions",
 }
 
 
