@@ -1,6 +1,10 @@
 # mer-insight-pipeline
 
-LLM 에이전트 · 하이브리드 RAG · 옵저버빌리티 파이프라인 — 한국 경제 블로그 자동 분석
+**mer-insight-pipeline**은 [메르(ranto28) 한국 경제 블로그](https://blog.naver.com/ranto28)를 모니터링하고, Claude Batch API로 포스트 2,193개에서 인사이트를 추출하며, 새 글이 올라오면 수분 내에 인용 근거가 명시된 분석을 텔레그램 구독자에게 전송합니다.
+
+모든 컴포넌트가 실운영 수준으로 연결됩니다: 25,090개 인사이트를 인덱싱한 하이브리드 검색, 스스로 도구 호출을 결정하는 LLM 에이전트 루프, 미인용 주장을 차단하는 환각 방지 가드, 호출별 비용·지연 추적, LLM 심판을 포함한 평가 파이프라인 — 모두 벤더 종속 없이 PostgreSQL + pgvector 위에서 동작합니다.
+
+**포스트당 약 $0.15** (평균 4 iteration) · **월 30개 기준 약 $4.50**
 
 [English README](README.md)
 
@@ -77,7 +81,7 @@ flowchart TD
 
 ## 하이브리드 검색 — 실험 결과
 
-BM25(키워드) + 벡터(임베딩) 를 RRF로 결합하면 단일 방식 대비 검색 품질이 유의미하게 향상됩니다.
+BM25(키워드) + 벡터(임베딩)를 RRF로 결합하면 단일 방식 대비 검색 품질이 유의미하게 향상됩니다.
 
 **골드 데이터셋**: 5개 경제 쿼리 × 관련 인사이트 5개씩, K=5
 
@@ -86,6 +90,8 @@ BM25(키워드) + 벡터(임베딩) 를 RRF로 결합하면 단일 방식 대비
 | 벡터 단독 | 0.52 | 0.52 | 0.90 |
 | BM25 단독 | 0.44 | 0.44 | 0.80 |
 | **하이브리드 (RRF)** | **1.00** | **1.00** | **1.00** |
+
+paired t-test: t=4.707, **p=0.0093** (통계적으로 유의)
 
 **왜 차이가 나는가**
 
@@ -117,9 +123,9 @@ python -m src.search.experiment --k 5
 - `max_iterations=5`, 환각 방지 가드 실패 시 최대 2회 자동 재생성
 - 에이전트 오류 발생 시 기존 `analysis_generator.py`로 폴백
 
-**분석 출력 구조**
+**분석 출력 예시**
 
-각 분석은 25,090개 인사이트 DB에서 검색한 과거 발언을 인용하며 작성됩니다.
+각 분석은 25,090개 인사이트 DB에서 검색한 과거 발언을 인용하며 작성됩니다. 아래는 2026-03-08 호르무즈해협 공급망 관련 포스트 분석 예시입니다.
 
 ```
 *핵심 요약*
@@ -152,6 +158,8 @@ python -m src.search.experiment --k 5
 
 인용된 ref ID는 전송 전에 환각 방지 가드가 `mer_insights` 테이블에서 검증합니다.
 
+![텔레그램 전송 예시](docs/telegram_demo.png)
+
 ---
 
 ## 계층형 리포트 파이프라인
@@ -159,14 +167,12 @@ python -m src.search.experiment --k 5
 단순한 요약 하나를 만드는 것이 아니라, **5단계 계층 구조**로 리포트를 생성합니다. 각 단계의 출력이 다음 단계의 원재료가 됩니다.
 
 ```
-연간 (1월 1일)          ← 분기 리포트 4개를 합성   (Claude 2회)
-  └─ 분기 (분기 첫날)   ← 월간 리포트 3개를 합성
+연간 (1월 1일)            ← 분기 리포트 4개를 합성  (Claude 2회)
+  └─ 분기 (분기 첫날)     ← 월간 리포트 3개를 합성
        └─ 월간 (매월 1일) ← 주간 리포트 4개를 합성
             └─ 주간 (월요일 08:00) ← 일간 리포트 7개를 합성
                  └─ 일간 (매일 21:00) ← 그날 에이전트 분석들을 요약
 ```
-
-**왜 계층 구조인가**
 
 각 단계는 **하위 단계에서는 보이지 않는 패턴**을 찾도록 지시받습니다. 단순 나열·복붙은 금지입니다.
 
@@ -176,20 +182,18 @@ python -m src.search.experiment --k 5
 연간  → "올해를 정의하는 두 가지 키워드는?"
 ```
 
-하위 리포트가 없을 때(조용한 날 일간 리포트가 없는 경우 등)는 매크로 원시 데이터(KOSPI, 금리, VIX, 무역수지)를 직접 받아 코멘터리를 생성하는 것으로 폴백합니다.
+하위 리포트가 없을 때는 매크로 원시 데이터(KOSPI, 금리, VIX, 무역수지)를 직접 받아 코멘터리를 생성합니다.
 
-**프롬프트 설계 — `_synthesis` vs `_commentary`**
-
-| 모드 | 입력 | 지시 |
+| 모드 | 입력 | 제약 |
 |------|------|------|
-| `_commentary` | 매크로 수치 원본 | [COMMENTARY] 슬롯 채우기 — 수치 조작 금지 |
-| `_synthesis` | 하위 리포트(텍스트) | 상위 레벨 연결고리 발견 — 복붙·나열 금지 |
+| `_commentary` | 매크로 수치 원본 | 수치 조작 금지 |
+| `_synthesis` | 하위 리포트(텍스트) | 복붙·나열 금지 — 상위 레벨 연결고리만 |
 
 ---
 
 ## 환각 방지 가드
 
-에이전트가 생성한 분석에서 **원본 인사이트에 근거하지 않은 주장**을 자동 탐지하고 재생성을 요청합니다.
+에이전트 분석에서 **미인용 주장**을 자동 탐지하고 재생성을 요청합니다.
 
 **출력 형식** (에이전트 시스템 프롬프트에 지시):
 ```
@@ -202,32 +206,48 @@ python -m src.search.experiment --k 5
 
 | 판정 | 조건 |
 |------|------|
-| `GROUNDED` | `[ref: ins_ID]` 있고 원본 내용과 키워드 일치 |
-| `UNGROUNDED` | ref ID가 존재하지 않거나 원본과 불일치 |
+| `GROUNDED` | `[ref: ins_ID]` 있고 ID가 `mer_insights`에 존재 |
+| `UNGROUNDED` | ref ID가 DB에 없음 |
 | `UNSUPPORTED` | citation 태그 자체 없음 |
-| `NONE_DECLARED` | `[ref: none]` 명시 |
+| `NONE_DECLARED` | `[ref: none]` 명시 — 허용 |
 
-UNGROUNDED + UNSUPPORTED 비율 > 20% → 자동 재생성 트리거
+UNGROUNDED + UNSUPPORTED 비율 > 20% → 자동 재생성 트리거 (최대 2회)
 
 ---
 
 ## 옵저버빌리티
 
-LLM 호출별 비용·지연 시간을 PostgreSQL에 기록하고 Streamlit으로 시각화합니다.
+모든 Claude 호출을 `Tracer` 컨텍스트 매니저로 감싸 비용과 지연 시간을 PostgreSQL에 기록하고 Streamlit으로 시각화합니다.
 
 ```python
-# 사용 예시
 async with Tracer(conn, trace_name="agent_run") as tracer:
-    resp = await tracer.call(client.messages.create, span_name="tool_step", model=..., messages=...)
+    resp = await tracer.call(
+        client.messages.create,
+        span_name="agent_step_1",
+        model=MODEL_SONNET,
+        messages=...,
+    )
 ```
 
-**추적 항목**: `trace_id`, `span_id`, `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
+**추적 항목**: `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
 
-**토큰 가격** (claude-sonnet-4-6): 입력 $3/1M · 출력 $15/1M
+실제 에이전트 실행 결과 (4 iteration):
+
+| 스팬 | 입력 토큰 | 출력 토큰 | 비용 | 지연 |
+|------|----------|----------|------|------|
+| agent_step_1 | 5,330 | 293 | $0.0204 | 6.1초 |
+| agent_step_2 | 7,763 | 406 | $0.0294 | 9.1초 |
+| agent_step_3 | 9,584 | 687 | $0.0391 | 12.5초 |
+| agent_step_4 | 11,571 | 1,958 | $0.0641 | 40.3초 |
+| **합계** | **34,248** | **3,344** | **$0.153** | **~2분** |
+
+iteration이 쌓일수록 도구 결과가 누적돼 토큰이 증가하는 패턴이 보입니다.
 
 ```bash
-streamlit run src/dashboard/observability.py
+streamlit run src/dashboard/observability.py   # http://localhost:8501
 ```
+
+![Observability 대시보드](docs/dashboard.png)
 
 ---
 
@@ -241,16 +261,21 @@ python -m src.eval.eval_runner --mode retrieval_only --k 5
 python -m src.eval.eval_runner --mode full --k 5
 ```
 
-**평가 지표**
+**검색 평가 결과** (골드 데이터셋, K=5):
+
+| 지표 | 점수 |
+|------|------|
+| Precision@5 | 1.00 |
+| Recall@5 | 1.00 |
+| MRR | 1.00 |
+
+**LLM 심판 지표** (Claude Sonnet, 1–5점 → 0–1 정규화):
 
 | 지표 | 설명 |
 |------|------|
-| Precision@K | 검색 결과 중 실제 관련 비율 |
-| Recall@K | 관련 인사이트 중 검색으로 찾은 비율 |
-| MRR | 평균 역순위 (Mean Reciprocal Rank) |
-| 컨텍스트 관련성 | LLM 심판: 검색 결과↔쿼리 관련성 (1–5점) |
-| 충실도 | LLM 심판: 분석이 원본에만 근거하는지 (환각의 역수) |
-| 답변 관련성 | LLM 심판: 분석이 질문에 얼마나 답하는지 (1–5점) |
+| 컨텍스트 관련성 | 검색 결과↔쿼리 관련성 |
+| 충실도 | 분석이 원본에만 근거하는지 (환각의 역수) |
+| 답변 관련성 | 분석이 질문에 얼마나 답하는지 |
 
 ---
 
@@ -263,7 +288,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 임베딩 | `intfloat/multilingual-e5-large` (1024차원) |
 | 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
-| 하이브리드 융합 | Reciprocal Rank Fusion (RRF) |
+| 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.4) |
 | 스케줄러 | APScheduler 3.10 |
 | 전송 | python-telegram-bot 21 |
 | 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, yfinance |
@@ -283,6 +308,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | BM25 인덱스 크기 | 정규 문서 16,126개 |
 | 스케줄된 작업 | 7개 |
 | 리포트 계층 단계 | 5단계 |
+| 포스트당 비용 (에이전트) | ~$0.15 |
 | 추적 거시 지표 | KOSPI, 달러/원, VIX, BTC, WTI, CPI, 실업률 |
 
 ---
@@ -306,18 +332,14 @@ cp .env.example .env
 
 # 2. 프롬프트 설정
 cp config/prompts.example.py config/prompts.py
-# → config/prompts.py에 프롬프트 작성
 
 # 3. 서비스 시작
 docker compose up -d db
 
-# 4. DB 스키마 초기화
-docker compose exec db psql -U mer -d mer_pipeline -f /docker-entrypoint-initdb.d/init_db.sql
-
-# 5. 포스트 로드 및 배치 추출 실행
+# 4. 배치 추출 실행 (포스트 2,193개 → 인사이트 25,090개)
 python scripts/run_batch.py all
 
-# 6. BM25 인덱스 캐시 빌드
+# 5. BM25 인덱스 캐시 빌드
 python -c "
 import asyncio, asyncpg, os
 from src.search.bm25_index import BM25Index
@@ -332,15 +354,14 @@ async def build():
 asyncio.run(build())
 "
 
-# 7. 실시간 디스패처 시작
+# 6. 실시간 디스패처 시작
 python -m src.pipeline.event_dispatcher
 ```
 
 ### 옵저버빌리티 대시보드
 
 ```bash
-streamlit run src/dashboard/observability.py
-# → http://localhost:8501
+streamlit run src/dashboard/observability.py   # http://localhost:8501
 ```
 
 ### 평가 실행
@@ -405,7 +426,7 @@ mer-insight-pipeline/
 │   │   ├── batch_api.py          # Claude Batch API 오케스트레이션
 │   │   ├── embeddings.py         # 벡터 임베딩 생성
 │   │   ├── parse_results.py      # 배치 결과 파싱 → DB 저장
-│   │   └── realtime_extractor.py
+│   │   └── realtime_extractor.py # 실시간 인사이트 추출 (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
 │   │   ├── load_macro.py         # FRED / 한국은행 / yfinance
@@ -418,7 +439,7 @@ mer-insight-pipeline/
 │   │   ├── dart_collector.py     # DART 공시 (한국 증권거래소)
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
 │   │   ├── context_assembler.py  # RAG 컨텍스트 빌더
-│   │   ├── analysis_generator.py # Claude 분석 생성
+│   │   ├── analysis_generator.py # Claude 분석 생성 (폴백)
 │   │   └── report_generator.py   # 5단계 계층적 합성
 │   ├── delivery/
 │   │   ├── telegram_bot.py       # 2티어 텔레그램 전송
@@ -426,6 +447,9 @@ mer-insight-pipeline/
 │   └── dashboard/
 │       ├── app.py                # 메인 대시보드
 │       └── observability.py      # LLM 비용 / 지연 / 오류 대시보드
+├── docs/
+│   ├── telegram_demo.png         # 텔레그램 전송 예시
+│   └── dashboard.png             # Observability 대시보드
 ├── eval_data/
 │   └── gold.json                 # 골드 데이터셋: 5개 쿼리 × 관련 인사이트 ID 5개씩
 ├── results/                      # 평가 리포트 & 실험 결과
