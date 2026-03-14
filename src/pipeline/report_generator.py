@@ -3,11 +3,11 @@
 
 각 리포트는 하위 리포트를 원재료로 받아 상위 관점 해석을 새로 생성.
 
-  - 일간  (21:00)            — 그날 메르 글 팩트 요약          (Claude 1회)
-  - 주간  (월요일 08:00)     — 일간 7개 → 주간 흐름 해석       (Claude 1회)
-  - 월간  (매월 1일 08:30)   — 주간 4개 → 월간 패턴·연결고리   (Claude 1회)
-  - 분기  (분기 첫날 09:00)  — 월간 3개 → 분기 관심사 이동     (Claude 1회)
-  - 연간  (1월 1일 10:00)    — 분기 4개 → 연간 총평            (Claude 2회)
+  - 일간  (21:00)             — 그날 메르 글 팩트 요약          (Claude 1회)
+  - 주간  (일요일 21:00)     — 이번 주 흐름 해석               (Claude 1회)
+  - 월간  (월 마지막날 21:00) — 이달 패턴·연결고리             (Claude 1회)
+  - 분기  (분기 마지막날 21:00) — 분기 관심사 이동             (Claude 1회)
+  - 연간  (12월 31일 21:00)  — 연간 총평                       (Claude 2회)
 """
 
 import logging
@@ -25,43 +25,43 @@ client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 # ─── 시스템 프롬프트 ──────────────────────────────────────────────────────────
 
 _COMMENTARY_SYSTEM = """\
-당신은 시장 분석가예요.
-아래 [DATA] 블록의 수치를 바탕으로 [COMMENTARY] 슬롯만 채워요.
+시장 분석가다.
+아래 [DATA] 블록의 수치를 바탕으로 [COMMENTARY] 슬롯만 채운다.
 
 규칙:
-- [DATA]에 없는 수치를 새로 만들거나 추정하지 않아요
-- 해요체("~해요 / ~예요") 사용. "~입니다 / ~합니다" 금지
+- [DATA]에 없는 수치를 새로 만들거나 추정하지 않는다
+- 존댓말 금지. 간결하고 직접적으로 쓴다
 - 한자(漢字) 금지 — 한글로만
-- ⚠️ 구체적 수치를 반드시 해석 문장 안에 포함해요 (예: "KOSPI가 -10.6% 급락하면서 VIX가 29.5까지 치솟았어요")
-- "큰 폭으로", "상당히" 같은 모호한 표현 대신 반드시 수치를 써요
-- 단순 지표 나열 금지 — 지표 간 인과관계·상충 신호를 해석해요
-- 요청한 글자 수를 넘지 않아요
+- 구체적 수치를 반드시 해석 문장 안에 포함 (예: "KOSPI -10.6% 급락하면서 VIX 29.5까지 치솟음")
+- "큰 폭으로", "상당히" 같은 모호한 표현 금지 — 수치로 대체
+- 단순 지표 나열 금지 — 지표 간 인과관계·상충 신호를 해석
+- 요청한 글자 수를 넘지 않는다
 - *굵게* 는 *별표 하나*, 이모지는 문단 첫머리에만
 - 마크다운 표·헤더(##)·수평선(---) 금지
 """
 
 _SYNTHESIS_SYSTEM = """\
-당신은 시장 분석가예요.
-[하위 리포트]들을 원재료(input)로 받아, 상위 관점에서 새로운 해석을 생성해요.
+시장 분석가다.
+[하위 리포트]들을 원재료(input)로 받아, 상위 관점에서 새로운 해석을 생성한다.
 
 절대 금지:
-- 하위 리포트를 그대로 이어붙이거나 단순 요약하는 것
-- 팩트·수치를 단순 반복하는 것
-- 개별 지표를 순서대로 나열하는 것
+- 하위 리포트를 그대로 이어붙이거나 단순 요약
+- 팩트·수치를 단순 반복
+- 개별 지표를 순서대로 나열
 
 해야 할 것:
 - 하위 리포트에서 개별로는 안 보이던 연결고리와 패턴 발견
 - 시간 흐름에 따른 관심사 변화와 구조적 함의 해석
 - 상위 레벨에서만 보이는 흐름 (예: "1주차 부동산 대출 → 3주차 사모펀드 → 4주차 리스크 헤징 = 비은행 신용 리스크 추적 중")
-- ⚠️ 지표 간 엇갈림·모순을 2~3개 찾아 해석 (예: "수출 호조인데 환율이 오히려 오른 건 금리차에 의한 자본 유출 압력", "VIX가 내려갔는데 BTC가 빠진 건 유동성이 전통자산으로만 선별 유입")
-- ⚠️ 구체적 수치를 반드시 해석 문장 안에 포함 (예: "KOSPI -3.2% 급락하며", "VIX 29까지 치솟아")
+- 지표 간 엇갈림·모순 2~3개 해석 (예: "수출 호조인데 환율이 오른 건 금리차 자본 유출 압력")
+- 구체적 수치를 반드시 해석 문장 안에 포함 (예: "KOSPI -3.2% 급락, VIX 29까지 치솟음")
 
 글쓰기 규칙:
-- 해요체("~해요 / ~예요"). "~입니다 / ~합니다" 금지
+- 존댓말 금지. 간결하고 직접적으로 쓴다
 - 한자(漢字) 금지
 - *굵게* = 별표 하나, 이모지는 문단 첫머리에만
 - 마크다운 표·헤더(##)·수평선(---) 금지
-- 요청한 글자 수를 넘지 않아요
+- 요청한 글자 수를 넘지 않는다
 """
 
 
@@ -239,7 +239,7 @@ class ReportGenerator:
 
     async def generate_weekly(self):
         today = date.today()
-        since = today - timedelta(days=7)
+        since = today - timedelta(days=6)
         log.info(f"주간 리포트: {since} ~ {today}")
 
         sub_reports = await self._fetch_sub_reports("report_daily", since, today)
@@ -248,12 +248,10 @@ class ReportGenerator:
         if sub_reports:
             narrative = await self._synthesis(
                 sub_reports,
-                "7개 일간 리포트에서 이번 주 흐름을 3~4문장으로 해석해요.\n"
-                "개별 일간 요약의 단순 나열 금지.\n"
-                "한 주에 걸쳐 발전한 흐름, 주제 간 연결, 눈에 띄는 패턴을 중심으로.\n"
-                "수치를 해석 문장 안에 자연스럽게 써요 (예: 'KOSPI -3.2% 급락하며', 'VIX 29까지 치솟아').\n"
-                "수치만 나열하는 건 금지, 해석 없이 수치만 쓰는 것도 금지.\n"
-                "200자 이내.",
+                "일간 리포트들에서 이번 주 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 5개 항목. 존댓말 금지. 단순 나열 금지. 각 항목은 인과관계 포함.\n"
+                "수치 반드시 포함. 200자 이내.",
                 200,
             )
         else:
@@ -265,28 +263,30 @@ class ReportGenerator:
             )
             narrative = await self._commentary(
                 ctx,
-                "이번 주 시장 흐름을 3~4문장으로 해석해요.\n"
-                "수치를 해석 문장 안에 자연스럽게 써요 (예: 'KOSPI -3.2% 급락하며', 'VIX 29까지 치솟아').\n"
-                "지표 간 인과관계·상충 신호 중심. 수치만 나열하는 건 금지. 200자 이내.",
+                "이번 주 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 5개 항목. 존댓말 금지. 수치 반드시 포함. 200자 이내.",
                 200,
             )
 
-        title = "*📊 주간 시장 리포트*"
+        title = "*📊 주간 메르 인사이트*"
         text  = (
             f"{title}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {today.strftime('%Y.%m.%d')}_\n\n"
             f"{narrative}\n\n"
-            f"*이번 주 메르 관심 토픽*\n"
-            f"{_topic_line(data.get('topics') or [])}"
+            f"이번 주 관심 토픽: {_topic_line(data.get('topics') or [])}"
         )
         await self.telegram.send_raw("tier1", text)
         await self._save("report_weekly", title, text)
 
     async def generate_monthly(self):
-        today          = date.today()
-        first_of_month = today.replace(day=1)
-        since          = (first_of_month - timedelta(days=1)).replace(day=1)
-        until          = first_of_month - timedelta(days=1)
+        today = date.today()
+        last_day = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        if today != last_day:
+            log.info(f"월간 리포트: 오늘({today})은 월 마지막 날 아님 — 스킵")
+            return
+        since = today.replace(day=1)
+        until = today
         log.info(f"월간 리포트: {since} ~ {until}")
 
         sub_reports = await self._fetch_sub_reports("report_weekly", since, until)
@@ -295,9 +295,10 @@ class ReportGenerator:
         if sub_reports:
             narrative = await self._synthesis(
                 sub_reports,
-                "4개 주간 리포트에서 이달 패턴과 연결고리를 4~5문장으로 해석해요.\n"
-                "주간 단위에서는 안 보이던 이달의 구조적 변화·테마 이동에 집중해요.\n"
-                "단순 주별 요약 나열 금지. 300자 이내.",
+                "주간 리포트들에서 이달 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 6개 항목. 존댓말 금지. 주간 단위에서 안 보이던 구조적 변화·테마 이동 중심.\n"
+                "수치 반드시 포함. 300자 이내.",
                 300,
             )
         else:
@@ -311,40 +312,40 @@ class ReportGenerator:
             )
             narrative = await self._commentary(
                 ctx,
-                "이달 시장을 4~5문장 산문으로 해석해요.\n"
-                "토픽 간 연결 의미 포함, 인과관계·구조적 변화 중심, 나열 금지. 300자 이내.",
+                "이달 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 6개 항목. 존댓말 금지. 수치 반드시 포함. 300자 이내.",
                 300,
             )
 
         topics   = data.get("topics") or []
         entities = data.get("top_entities") or []
 
-        header = f"*📅 {since.strftime('%Y년 %m월')} 시장 리포트*"
+        header = f"*📅 {since.strftime('%Y년 %m월')} 메르 인사이트*"
         msg1   = (
             f"{header}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n"
             f"{narrative}"
         )
 
-        lines2 = [f"*이달 메르 관심 토픽*\n{_topic_line(topics, 5)}"]
+        lines2 = [f"이달 관심 토픽: {_topic_line(topics, 5)}"]
         if entities:
             top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:5])
-            lines2.append(f"\n*이달 많이 언급된 기업/자산*\n{top5}")
+            lines2.append(f"많이 언급된 기업/자산: {top5}")
         msg2 = "\n".join(lines2)
 
         await self._send_parts("tier1", [msg1, msg2])
         await self._save("report_monthly", header, f"{msg1}\n\n{msg2}")
 
     async def generate_quarterly(self):
-        today    = date.today()
-        q        = (today.month - 1) // 3
-        q_starts = [date(today.year, m, 1) for m in [1, 4, 7, 10]]
-        if q == 0:
-            since = date(today.year - 1, 10, 1)
-            until = date(today.year, 1, 1) - timedelta(days=1)
-        else:
-            since = q_starts[q - 1]
-            until = q_starts[q] - timedelta(days=1)
+        today = date.today()
+        last_day = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        if today != last_day:
+            log.info(f"분기 리포트: 오늘({today})은 월 마지막 날 아님 — 스킵")
+            return
+        q_start_months = {1: 1, 2: 1, 3: 1, 4: 4, 5: 4, 6: 4, 7: 7, 8: 7, 9: 7, 10: 10, 11: 10, 12: 10}
+        since = date(today.year, q_start_months[today.month], 1)
+        until = today
         log.info(f"분기 리포트: {since} ~ {until}")
 
         sub_reports = await self._fetch_sub_reports("report_monthly", since, until)
@@ -353,11 +354,10 @@ class ReportGenerator:
         if sub_reports:
             synthesis = await self._synthesis(
                 sub_reports,
-                "3개 월간 리포트에서 이번 분기의 흐름 이동과 구조적 변화를 5~6문장으로 해석해요.\n"
-                "월간 단위에서는 안 보이던 분기 레벨 패턴, 관심사 이동, 인과 연결에 집중해요.\n"
-                "엇갈리는 지표를 반드시 짚어요 — 예: '수출 호조인데 환율이 오른 건 금리차 자본 유출', "
-                "'VIX 안정인데 KOSPI 하락은 외국인 이탈 신호'.\n"
-                "수치를 해석 문장 안에 자연스럽게 써요. 단순 월별 요약 나열 금지. 400자 이내.",
+                "월간 리포트들에서 이번 분기 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 6개 항목. 존댓말 금지. 엇갈리는 지표 반드시 포함 (예: '수출 호조인데 환율 상승 = 금리차 자본 유출').\n"
+                "수치 반드시 포함. 400자 이내.",
                 400,
             )
         else:
@@ -369,9 +369,9 @@ class ReportGenerator:
             )
             synthesis = await self._commentary(
                 ctx,
-                "이번 분기 지표 간 연결 관계와 구조적 변화를 5~6문장으로 해석해요.\n"
-                "엇갈리는 지표를 반드시 짚어요 — 예: '수출 호조인데 환율이 오른 건 금리차 자본 유출'.\n"
-                "수치를 해석 문장 안에 자연스럽게 써요. 400자 이내.",
+                "이번 분기 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 6개 항목. 존댓말 금지. 수치 반드시 포함. 400자 이내.",
                 400,
             )
 
@@ -379,20 +379,20 @@ class ReportGenerator:
         entities = data.get("top_entities") or []
         preds    = data.get("predictions") or []
 
-        title = "*📈 분기 시장 리포트*"
+        title = "*📈 분기 메르 인사이트*"
         msg1  = (
             f"{title}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n"
             f"{synthesis}"
         )
 
-        lines2 = [f"*이번 분기 메르 관심 토픽*\n{_topic_line(topics, 6)}"]
+        lines2 = [f"이번 분기 관심 토픽: {_topic_line(topics, 6)}"]
         if entities:
             top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:5])
-            lines2.append(f"\n*많이 언급된 기업/자산*\n{top5}")
+            lines2.append(f"많이 언급된 기업/자산: {top5}")
         if preds:
             correct = sum(1 for p in preds if p.get("is_correct"))
-            lines2.append(f"\n*예측 적중률* {correct}/{len(preds)}")
+            lines2.append(f"예측 적중률: {correct}/{len(preds)}")
         msg2 = "\n".join(lines2)
 
         await self._send_parts("tier1", [msg1, msg2])
@@ -400,8 +400,8 @@ class ReportGenerator:
 
     async def generate_annual(self):
         today = date.today()
-        since = date(today.year - 1, 1, 1)
-        until = date(today.year - 1, 12, 31)
+        since = date(today.year, 1, 1)
+        until = today
         log.info(f"연간 리포트: {since} ~ {until}")
 
         sub_reports = await self._fetch_sub_reports("report_quarterly", since, until)
@@ -411,17 +411,16 @@ class ReportGenerator:
             # Claude 호출 1: 연간 흐름 분석
             macro_commentary = await self._synthesis(
                 sub_reports,
-                "4개 분기 리포트에서 한 해의 흐름·전환점·구조적 변화를 4~5문장으로 해석해요.\n"
-                "분기별 단순 나열 금지. 연간 레벨에서만 보이는 패턴·인과 관계 중심.\n"
-                "엇갈리는 지표(예: 금리 인하인데 환율 상승, 수출 호조인데 주가 부진)를 반드시 짚어요.\n"
-                "수치를 해석 문장 안에 자연스럽게 써요. 300자 이내.",
-                300,
+                "분기 리포트들에서 올 한 해 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 7개 항목. 존댓말 금지. 엇갈리는 지표 반드시 포함. 수치 반드시 포함. 400자 이내.",
+                400,
             )
             # Claude 호출 2: 총평 & 전망
             outlook_commentary = await self._synthesis(
                 sub_reports,
-                "한 해의 핵심 키워드 2개로 총평하고, 내년 주목해야 할 테마 2~3개를 구체적 근거와 함께 제시해요.\n"
-                "근거는 하위 리포트 내용에서만. 300자 이내.",
+                "한 해 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개를 구체적 근거와 함께 제시.\n"
+                "근거는 하위 리포트 내용에서만. 존댓말 금지. 300자 이내.",
                 300,
             )
         else:
@@ -435,12 +434,14 @@ class ReportGenerator:
             )
             macro_commentary = await self._commentary(
                 ctx,
-                "연간 지표 간 상충·연결 신호를 4~5문장으로. 인과 관계 중심. 300자 이내.",
-                300,
+                "올 한 해 핵심 흐름을 주제별 불릿으로 정리.\n"
+                "형식: • 주제 — 핵심 팩트 + 한 줄 의미\n"
+                "최대 7개 항목. 존댓말 금지. 수치 반드시 포함. 400자 이내.",
+                400,
             )
             outlook_commentary = await self._commentary(
                 ctx,
-                "한 해의 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개 제시. 300자 이내.",
+                "한 해 핵심 키워드 2개로 총평, 내년 주목 테마 2~3개 제시. 존댓말 금지. 300자 이내.",
                 300,
             )
 

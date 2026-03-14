@@ -139,25 +139,25 @@ class EventDispatcher:
             self._send_daily_report, "cron",
             hour=21, minute=0, id="report_daily"
         )
-        # 주간 리포트: 매주 월요일 08:00
+        # 주간 리포트: 매주 일요일 21:00
         self.scheduler.add_job(
             self._send_weekly_report, "cron",
-            day_of_week="mon", hour=8, minute=0, id="report_weekly"
+            day_of_week="sun", hour=21, minute=0, id="report_weekly"
         )
-        # 월간 리포트: 매월 1일 08:30
+        # 월간 리포트: 매월 마지막 날 21:00
         self.scheduler.add_job(
             self._send_monthly_report, "cron",
-            day=1, hour=8, minute=30, id="report_monthly"
+            day="last", hour=21, minute=0, id="report_monthly"
         )
-        # 분기 리포트: 1/4/7/10월 1일 09:00
+        # 분기 리포트: 3/6/9/12월 마지막 날 21:00
         self.scheduler.add_job(
             self._send_quarterly_report, "cron",
-            month="1,4,7,10", day=1, hour=9, minute=0, id="report_quarterly"
+            month="3,6,9,12", day="last", hour=21, minute=0, id="report_quarterly"
         )
-        # 연간 리포트: 1월 1일 10:00
+        # 연간 리포트: 12월 31일 21:00
         self.scheduler.add_job(
             self._send_annual_report, "cron",
-            month=1, day=1, hour=10, minute=0, id="report_annual"
+            month=12, day=31, hour=21, minute=0, id="report_annual"
         )
 
         self.scheduler.start()
