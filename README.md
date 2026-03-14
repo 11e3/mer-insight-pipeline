@@ -118,6 +118,39 @@ New post received
 
 ---
 
+## Hierarchical Report Pipeline
+
+Rather than generating a single flat summary, reports are produced in a **5-level hierarchy** where each level's output becomes the raw material for the next.
+
+```
+Annual   (Jan 1)          ← synthesises 4 quarterly reports   (2 Claude calls)
+  └─ Quarterly (Q start)  ← synthesises 3 monthly reports
+       └─ Monthly (1st)   ← synthesises 4 weekly reports
+            └─ Weekly (Mon 08:00) ← synthesises 7 daily reports
+                 └─ Daily (21:00) ← summarises that day's agent analyses
+```
+
+**Why this matters**
+
+Each level is instructed to find **patterns invisible at the level below** — not to copy-paste or re-list:
+
+```
+Weekly  → "What thread connected this week's posts?"
+Monthly → "What structural shift happened across weeks?"
+Annual  → "What were the two defining themes of the year?"
+```
+
+When sub-reports are missing (e.g., no daily report on a quiet day), the generator falls back to raw macro data (KOSPI, rates, VIX, trade balance) and produces commentary directly.
+
+**Prompt design — `_synthesis` vs `_commentary`**
+
+| Mode | Input | Instruction |
+|------|-------|-------------|
+| `_commentary` | Raw macro numbers | Fill in the [COMMENTARY] slot — no invented figures |
+| `_synthesis` | Sub-reports (text) | Find cross-level connections — no copy-paste allowed |
+
+---
+
 ## Hallucination Guard
 
 Automatically detects **unsupported claims** in the agent's output and requests re-generation.
