@@ -21,8 +21,8 @@ flowchart TD
         C -->|2,193개 포스트| D[Claude Batch API<br>batch_api.py]
         D -->|JSONL 결과| E[parse_results.py]
         E -->|규칙 / 예측<br>평가 / 거시 관점| C
-        C --> F[embeddings.py<br>multilingual-e5-large]
-        F -->|1024차원 벡터| C
+        C --> F[embeddings.py<br>text-multilingual-embedding-002]
+        F -->|768차원 벡터| C
         C --> G[cluster_insights.py<br>DBSCAN 중복 제거]
     end
 
@@ -173,7 +173,7 @@ python -m src.search.experiment --k 5
 | 소스 | 내용 |
 |------|------|
 | 월별 매크로 요약 | KOSPI 고/저/평균, 달러/원, WTI, US10Y, Fed 금리, VIX, BTC — FRED + 한국은행 ECOS |
-| 네이버 금융 주가 | 삼성전자, SK하이닉스 등 주요 10개 종목 월별 평균 종가 |
+| 네이버 금융 주가 | 주요 10개 종목 — 과거분 월별 고/저/말일종가(H/L/C) + 최근 90일 일간 종가 |
 | DART 공시 + 뉴스 | 가장 오래된 미검증 예측일 이후 수집된 기업 이벤트 |
 | 자동 분석 | 동일 기간 메르 포스트 분석 내용 |
 
@@ -199,10 +199,10 @@ gcloud run jobs execute report-generator --args="--job,verify_predictions" --reg
 단순한 요약 하나를 만드는 것이 아니라, **5단계 계층 구조**로 리포트를 생성합니다. 각 단계의 출력이 다음 단계의 원재료가 됩니다.
 
 ```
-연간 (1월 1일)            ← 분기 리포트 4개를 합성  (Claude 2회)
-  └─ 분기 (분기 첫날)     ← 월간 리포트 3개를 합성
-       └─ 월간 (매월 1일) ← 주간 리포트 4개를 합성
-            └─ 주간 (월요일 08:00) ← 일간 리포트 7개를 합성
+연간 (12월 31일 21:00)       ← 분기 리포트 4개를 합성  (Claude 2회)
+  └─ 분기 (3/6/9/12월 말일 21:00) ← 월간 리포트 3개를 합성
+       └─ 월간 (매월 말일 21:00)  ← 주간 리포트 4개를 합성
+            └─ 주간 (일요일 21:00) ← 일간 리포트 7개를 합성
                  └─ 일간 (매일 21:00) ← 그날 에이전트 분석들을 요약
 ```
 
@@ -407,9 +407,13 @@ Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 |----|--------|
 | `mer_check` | 5분마다 |
 | `dart_check` | 평일 8–18시, 10분마다 |
-| `macro_check` | 30분마다 |
+| `macro_check` | 매크로 데이터 갱신 1시간마다 · 알림 + 뉴스 30분마다 |
 | `verify_predictions` | 매일 20:00 (일간 리포트 전) |
-| `report` (일/주/월/…) | 리포트 유형별 cron |
+| `report-generator` (일간) | 매일 21:00 |
+| `report-generator` (주간) | 매주 일요일 21:00 |
+| `report-generator` (월간) | 매월 말일 21:00 |
+| `report-generator` (분기) | 3/6/9/12월 말일 21:00 |
+| `report-generator` (연간) | 12월 31일 21:00 |
 
 ### 옵저버빌리티 대시보드
 

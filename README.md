@@ -21,8 +21,8 @@ flowchart TD
         C -->|2,193 posts| D[Claude Batch API<br>batch_api.py]
         D -->|JSONL results| E[parse_results.py]
         E -->|rules / predictions<br>evaluations / macro_views| C
-        C --> F[embeddings.py<br>multilingual-e5-large]
-        F -->|1024-dim vectors| C
+        C --> F[embeddings.py<br>text-multilingual-embedding-002]
+        F -->|768-dim vectors| C
         C --> G[cluster_insights.py<br>DBSCAN dedup]
     end
 
@@ -174,7 +174,7 @@ Every `prediction`-type insight extracted from Mer's posts is stored in `mer_pre
 | Source | What's included |
 |--------|----------------|
 | Monthly macro summary | KOSPI hi/lo/avg, USD/KRW, WTI, US10Y, Fed rate, VIX, BTC — from FRED + BOK ECOS |
-| Naver Finance stocks | Monthly avg close for 10 major Korean equities (삼성전자, SK하이닉스 …) |
+| Naver Finance stocks | Monthly H/L/close for historical data + daily close for recent 90 days (10 major equities) |
 | DART filings + news | Corporate events collected since the oldest pending prediction date |
 | Auto-analyses | Mer post analyses from the same period |
 
@@ -200,10 +200,10 @@ gcloud run jobs execute report-generator --args="--job,verify_predictions" --reg
 Rather than generating a single flat summary, reports are produced in a **5-level hierarchy** where each level's output becomes the raw material for the next.
 
 ```
-Annual   (Jan 1)           ← synthesises 4 quarterly reports  (2 Claude calls)
-  └─ Quarterly (Q start)   ← synthesises 3 monthly reports
-       └─ Monthly (1st)    ← synthesises 4 weekly reports
-            └─ Weekly (Mon 08:00) ← synthesises 7 daily reports
+Annual   (Dec 31 21:00)    ← synthesises 4 quarterly reports  (2 Claude calls)
+  └─ Quarterly (last day of Mar/Jun/Sep/Dec 21:00) ← synthesises 3 monthly reports
+       └─ Monthly (last day 21:00) ← synthesises 4 weekly reports
+            └─ Weekly (Sun 21:00) ← synthesises 7 daily reports
                  └─ Daily (21:00) ← summarises that day's agent analyses
 ```
 
@@ -415,9 +415,13 @@ Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 |-----|----------|
 | `mer_check` | every 5 min |
 | `dart_check` | every 10 min, weekdays 8–18h |
-| `macro_check` | every 30 min |
+| `macro_check` | macro data update every 1h · alerts + news every 30 min |
 | `verify_predictions` | daily 20:00 (before daily report) |
-| `report` (daily/weekly/…) | cron per report type |
+| `report-generator` (daily) | 21:00 |
+| `report-generator` (weekly) | Sunday 21:00 |
+| `report-generator` (monthly) | last day of month 21:00 |
+| `report-generator` (quarterly) | last day of Mar/Jun/Sep/Dec 21:00 |
+| `report-generator` (annual) | Dec 31 21:00 |
 
 ### Observability Dashboard
 
