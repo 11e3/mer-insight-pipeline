@@ -27,7 +27,6 @@ async def main():
             FROM mer_insights mi
             JOIN mer_posts mp ON mi.post_id = mp.id
             WHERE mi.insight_type = 'prediction'
-              AND mp.date >= CURRENT_DATE - INTERVAL '1 year'
               AND NOT EXISTS (
                 SELECT 1 FROM mer_predictions mp2
                 WHERE mp2.insight_id = mi.id
