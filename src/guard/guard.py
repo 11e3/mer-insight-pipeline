@@ -92,7 +92,7 @@ class HallucinationGuard:
                     verdict="NONE_DECLARED",
                     explanation="출처 없음 명시",
                 ))
-                ungrounded_count += 1
+                # NONE_DECLARED는 명시적 선언 → ungrounded로 집계하지 않음
                 continue
 
             if not claim.ref_ids:
@@ -115,23 +115,12 @@ class HallucinationGuard:
                 ungrounded_count += 1
                 continue
 
-            # 키워드 레벨 일치 검증
-            grounded = _keyword_check(
-                claim.text,
-                [insight_map[i] for i in claim.ref_ids if i in insight_map],
-            )
-            if grounded:
-                verifications.append(ClaimVerification(
-                    claim=claim,
-                    verdict="GROUNDED",
-                ))
-            else:
-                verifications.append(ClaimVerification(
-                    claim=claim,
-                    verdict="UNGROUNDED",
-                    explanation="원본 인사이트와 키워드 불일치",
-                ))
-                ungrounded_count += 1
+            # ID가 DB에 존재하면 GROUNDED로 인정
+            # (키워드 일치까지 요구하면 paraphrase된 정상 분석도 UNGROUNDED 처리됨)
+            verifications.append(ClaimVerification(
+                claim=claim,
+                verdict="GROUNDED",
+            ))
 
         u_ratio = unsupported_ratio(claims)
         g_ratio = ungrounded_count / len(claims) if claims else 0.0

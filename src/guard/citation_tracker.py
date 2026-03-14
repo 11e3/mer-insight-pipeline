@@ -42,9 +42,21 @@ def parse_citations(analysis_text: str) -> list[CitedClaim]:
         # 이모지+섹션 제목 줄 (ref 없고 특수문자로만 시작하는 짧은 줄) 제외
         if _REF_PATTERN.search(line) is None and len(line) < 15 and not any(c.isalpha() for c in line):
             continue
+        # 고정 면책 문구 제외 (⚠️ AI 안내 문구)
+        if line.startswith("⚠️") or line.startswith("_AI가"):
+            continue
+        # 에이전트 메타 코멘트 제외 (모순 검증 결과 등 툴 실행 요약)
+        if line.startswith("- 모순 검증") or line.startswith("모순 검증"):
+            continue
 
         match = _REF_PATTERN.search(line)
         if not match:
+            # ref 없는 줄 중 순수 섹션 헤더(볼드 텍스트만 남는 줄)는 제외
+            # 예: "📌 **2021년 이후 경고의 연장선**", "📊 **영향받는 자산·섹터**"
+            content_no_bold = re.sub(r'\*\*[^*]+\*\*', '', line).strip()
+            content_no_bold = re.sub(r'[^\w가-힣a-zA-Z]', '', content_no_bold)
+            if not content_no_bold:
+                continue  # 볼드 제거 후 실질 내용 없음 → 헤더, 건너뜀
             claims.append(CitedClaim(
                 text=line,
                 ref_ids=[],
