@@ -32,6 +32,7 @@ from src.pipeline.report_generator import ReportGenerator
 from src.agent.agent import MerAgent
 from src.search.bm25_index import BM25Index
 from src.observability.tracer import Tracer
+from src.pipeline.post_enricher import PostEnricher
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ class EventDispatcher:
         self.reporter: ReportGenerator | None = None
         self.bm25_index: BM25Index | None = None
         self.mer_agent: MerAgent | None = None
+        self.enricher: PostEnricher | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
     async def _init(self):
@@ -70,6 +72,7 @@ class EventDispatcher:
             await self.bm25_index.build(self.conn)
             self.bm25_index.save(bm25_cache)
         self.mer_agent = MerAgent(self.conn, self.embedder, self.bm25_index)
+        self.enricher = PostEnricher(self.conn, self.embedder)
 
     async def run_job(self, job: str) -> None:
         """
@@ -226,11 +229,14 @@ class EventDispatcher:
             context = await self.assembler.assemble(event, config)
             analysis = await self.generator.generate(context, config)
 
+        enriched = await self.enricher.enrich(post, analysis)
+
         sent = await self.telegram.send_analysis(
             channel="tier1",
             event=event,
             analysis=analysis,
             rules_count=0,
+            enriched=enriched,
         )
         await self.conn.execute("""
             INSERT INTO auto_analyses

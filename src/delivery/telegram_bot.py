@@ -41,6 +41,7 @@ class TelegramBot:
         event: dict,
         analysis: str,
         rules_count: int = 0,
+        enriched: dict | None = None,
     ) -> bool:
         if not self.bot:
             log.info(f"[텔레그램 비활성화] {event.get('title', '')[:40]}")
@@ -52,7 +53,7 @@ class TelegramBot:
             return False
 
         event_type = event.get("event_type", EventType.NEWS_ARTICLE)
-        text = format_message(event_type, event, analysis, rules_count)
+        text = format_message(event_type, event, analysis, rules_count, enriched=enriched)
 
         return await self._send(chat_id, text)
 
