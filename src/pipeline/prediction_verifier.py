@@ -10,7 +10,6 @@ PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증
 import asyncio
 import json
 import logging
-from collections import defaultdict
 
 import anthropic
 import asyncpg
@@ -54,24 +53,17 @@ class PredictionVerifier:
             log.info("검증할 예측 없음")
             return 0
 
-        # 월 단위로 묶어서 컨텍스트 공유
+        # 컨텍스트 한 번만 빌드 (가장 오래된 예측일 ~ 오늘)
+        oldest = min(p["prediction_date"] for p in preds)
+        ctx = await self._build_context(oldest)
+
         resolved = 0
-        by_period: dict[str, list[dict]] = defaultdict(list)
-        for p in preds:
-            period_key = p["prediction_date"].strftime("%Y-%m")
-            by_period[period_key].append(p)
-
-        for period_key, group in by_period.items():
-            # 해당 월의 예측일 기준 컨텍스트
-            pred_date = group[0]["prediction_date"]
-            ctx = await self._build_context(pred_date)
-
-            for i in range(0, len(group), BATCH_SIZE):
-                batch   = group[i: i + BATCH_SIZE]
-                results = await self._verify_batch(batch, ctx)
-                resolved += await self._save_results(results)
-                if len(group) > BATCH_SIZE:
-                    await asyncio.sleep(0.3)
+        for i in range(0, len(preds), BATCH_SIZE):
+            batch   = preds[i: i + BATCH_SIZE]
+            results = await self._verify_batch(batch, ctx)
+            resolved += await self._save_results(results)
+            if len(preds) > BATCH_SIZE:
+                await asyncio.sleep(0.3)
 
         log.info(f"예측 검증 완료: {resolved}/{len(checkable)}건 확정")
         return resolved
@@ -89,10 +81,9 @@ class PredictionVerifier:
         """)
         return [dict(r) for r in rows]
 
-    async def _build_context(self, pred_date: date) -> str:
-        """예측일 이후 ~ 오늘까지 월별 요약 + auto_analyses."""
+    async def _build_context(self, since: date) -> str:
+        """since ~ 오늘까지 월별 요약 + auto_analyses."""
         from datetime import date as date_cls
-        since = pred_date
         until = date_cls.today()
         parts: list[str] = []
 
