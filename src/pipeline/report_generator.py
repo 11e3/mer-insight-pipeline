@@ -179,16 +179,79 @@ def _render_entities_block(entities: list[dict], limit: int = 15) -> str:
 
 def _render_predictions_block(preds: list[dict]) -> str:
     if not preds:
-        return "- (검증된 예측 없음)"
+        return "(검증된 예측 없음)"
     correct = sum(1 for p in preds if p.get("is_correct"))
     total   = len(preds)
-    lines   = [f"적중률: {correct}/{total} ({correct/total*100:.0f}%)"]
-    for p in preds[:10]:
-        mark  = "✅" if p.get("is_correct") else "❌"
-        asset = p.get("target_asset", "")
-        text  = (p.get("prediction_text") or "")[:60]
-        lines.append(f"{mark} [{asset}] {text}")
+    lines   = [f"*예측 적중률: {correct}/{total} ({correct/total*100:.0f}%)*\n"]
+    for p in preds:
+        mark   = "✅" if p.get("is_correct") else "❌"
+        asset  = p.get("target_asset", "")
+        pred   = (p.get("prediction_text") or "")[:80]
+        actual = (p.get("actual_outcome") or "")[:60]
+        line   = f"{mark} [{asset}] {pred}"
+        if actual:
+            line += f"\n   → 실제: {actual}"
+        lines.append(line)
     return "\n".join(lines)
+
+
+async def _fetch_quarterly_topics(conn, since: date, until: date) -> str:
+    """분기별 관심 토픽 흐름: 'Q1: 금리·환율 → Q2: 반도체·유가 → ...'"""
+    rows = await conn.fetch("""
+        SELECT
+            EXTRACT(QUARTER FROM mp.date)::int AS q,
+            mi.structured_data->>'applicable_domain' AS topic,
+            COUNT(*) AS cnt
+        FROM mer_insights mi
+        JOIN mer_posts mp ON mi.post_id = mp.id
+        WHERE mp.date BETWEEN $1 AND $2
+          AND mi.structured_data->>'applicable_domain' IS NOT NULL
+          AND mi.insight_type IN ('rule', 'macro_view')
+        GROUP BY q, topic
+        ORDER BY q, cnt DESC
+    """, since, until)
+
+    from collections import defaultdict
+    by_q: dict = defaultdict(list)
+    for r in rows:
+        by_q[r["q"]].append((r["topic"], r["cnt"]))
+
+    lines = []
+    for q in sorted(by_q):
+        top = [t for t, _ in by_q[q][:3] if not any(kw in t for kw in _NON_ECON_KEYWORDS)]
+        if top:
+            lines.append(f"Q{q}: {' · '.join(top)}")
+    return " → ".join(lines) if lines else "(데이터 없음)"
+
+
+async def _fetch_monthly_topics(conn, since: date, until: date) -> str:
+    """월별 관심 토픽 흐름: '1월: 금리·환율 → 2월: 반도체·유가 → 3월: 부동산·중동'"""
+    rows = await conn.fetch("""
+        SELECT
+            to_char(mp.date, 'YYYY-MM') AS ym,
+            mi.structured_data->>'applicable_domain' AS topic,
+            COUNT(*) AS cnt
+        FROM mer_insights mi
+        JOIN mer_posts mp ON mi.post_id = mp.id
+        WHERE mp.date BETWEEN $1 AND $2
+          AND mi.structured_data->>'applicable_domain' IS NOT NULL
+          AND mi.insight_type IN ('rule', 'macro_view')
+        GROUP BY ym, topic
+        ORDER BY ym, cnt DESC
+    """, since, until)
+
+    from collections import defaultdict
+    by_month: dict = defaultdict(list)
+    for r in rows:
+        by_month[r["ym"]].append((r["topic"], r["cnt"]))
+
+    lines = []
+    for ym in sorted(by_month):
+        top = [t for t, _ in by_month[ym][:3] if not any(kw in t for kw in _NON_ECON_KEYWORDS)]
+        if top:
+            m = ym[5:]  # "03"
+            lines.append(f"{int(m)}월: {' · '.join(top)}")
+    return " → ".join(lines) if lines else "(데이터 없음)"
 
 
 # ─── ReportGenerator ──────────────────────────────────────────────────────────
@@ -225,11 +288,9 @@ class ReportGenerator:
         )
         summary = await self._commentary(
             posts_ctx,
-            "오늘 메르가 쓴 글들을 글별로 정리해요.\n"
-            "각 글마다 📋 *제목* — 핵심 팩트 + 시장에 왜 중요한지 한 줄 해석.\n"
-            "글과 글 사이는 반드시 줄바꿈(\\n)으로 구분해요.\n"
-            "단순 팩트 나열 금지 — '그래서 어떤 의미인지'를 짧게 붙여요.\n"
-            "전체 400자 이내.",
+            "오늘 메르가 쓴 글들을 글별로 정리.\n"
+            "형식: • 글 제목 — 핵심 팩트 + 시장에 왜 중요한지 한 줄 해석\n"
+            "존댓말 금지. 단순 팩트 나열 금지. 전체 400자 이내.",
             400,
         )
         title = "*📝 일간 메르 인사이트*"
@@ -375,28 +436,30 @@ class ReportGenerator:
                 400,
             )
 
-        topics   = data.get("topics") or []
-        entities = data.get("top_entities") or []
-        preds    = data.get("predictions") or []
+        topics        = data.get("topics") or []
+        entities      = data.get("top_entities") or []
+        preds         = data.get("predictions") or []
+        monthly_flow  = await _fetch_monthly_topics(self.conn, since, until)
 
         title = "*📈 분기 메르 인사이트*"
         msg1  = (
             f"{title}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n"
-            f"{synthesis}"
+            f"{synthesis}\n\n"
+            f"관심사 흐름: {monthly_flow}"
         )
 
-        lines2 = [f"이번 분기 관심 토픽: {_topic_line(topics, 6)}"]
+        lines2 = []
         if entities:
             top5 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:5])
             lines2.append(f"많이 언급된 기업/자산: {top5}")
-        if preds:
-            correct = sum(1 for p in preds if p.get("is_correct"))
-            lines2.append(f"예측 적중률: {correct}/{len(preds)}")
-        msg2 = "\n".join(lines2)
+        msg2 = "\n".join(lines2) if lines2 else ""
 
-        await self._send_parts("tier1", [msg1, msg2])
-        await self._save("report_quarterly", title, f"{msg1}\n\n{msg2}")
+        msg3 = _render_predictions_block(preds) if preds else ""
+
+        parts = [p for p in [msg1, msg2, msg3] if p.strip()]
+        await self._send_parts("tier1", parts)
+        await self._save("report_quarterly", title, "\n\n".join(parts))
 
     async def generate_annual(self):
         today = date.today()
@@ -445,32 +508,28 @@ class ReportGenerator:
                 300,
             )
 
-        topics   = data.get("topics") or []
-        entities = data.get("top_entities") or []
-        preds    = data.get("predictions") or []
+        topics        = data.get("topics") or []
+        entities      = data.get("top_entities") or []
+        preds         = data.get("predictions") or []
+        quarterly_flow = await _fetch_quarterly_topics(self.conn, since, until)
 
-        title = "*🗓 연간 시장 리포트*"
+        title = "*🗓 연간 메르 인사이트*"
         msg1  = (
             f"{title}\n"
             f"_{since.strftime('%Y.%m.%d')} ~ {until.strftime('%Y.%m.%d')}_\n\n"
-            f"{macro_commentary}"
+            f"{macro_commentary}\n\n"
+            f"관심사 흐름: {quarterly_flow}"
         )
         msg2  = (
             f"*내년 전망*\n\n"
             f"{outlook_commentary}\n\n"
-            f"*올해 메르 관심 토픽*\n"
-            f"{_topic_line(topics, 7)}"
+            f"올해 관심 토픽: {_topic_line(topics, 7)}"
         )
-        lines3 = []
         if entities:
-            lines3.append(
-                "*기업/자산 언급 TOP10*\n"
-                + "\n".join(f"{i}. {e['entity']} ({e['cnt']}회)" for i, e in enumerate(entities[:10], 1))
-            )
-        if preds:
-            correct = sum(1 for p in preds if p.get("is_correct"))
-            lines3.append(f"*예측 적중률* {correct}/{len(preds)}")
-        msg3 = "\n\n".join(lines3) if lines3 else ""
+            top10 = " · ".join(f"{e['entity']}({e['cnt']})" for e in entities[:10])
+            msg2 += f"\n많이 언급된 기업/자산: {top10}"
+
+        msg3 = _render_predictions_block(preds) if preds else ""
 
         parts = [p for p in [msg1, msg2, msg3] if p.strip()]
         await self._send_parts("tier1", parts)
