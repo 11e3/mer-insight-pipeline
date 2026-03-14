@@ -10,7 +10,6 @@ PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증
 import asyncio
 import json
 import logging
-from datetime import timedelta
 from collections import defaultdict
 
 import anthropic
@@ -20,8 +19,7 @@ from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 
 log = logging.getLogger(__name__)
 
-BATCH_SIZE   = 20   # 한 번에 검증할 예측 수
-CONTEXT_DAYS = 90   # 예측일 이후 몇 일치 데이터를 컨텍스트로 쓸지
+BATCH_SIZE = 20  # 한 번에 검증할 예측 수
 
 _SYSTEM = """\
 너는 경제·금융 예측 검증 전문가다.
@@ -92,36 +90,52 @@ class PredictionVerifier:
         return [dict(r) for r in rows]
 
     async def _build_context(self, pred_date: date) -> str:
-        """예측일 이후 CONTEXT_DAYS일치 macro_daily + 해당 기간 auto_analyses."""
+        """예측일 이후 ~ 오늘까지 월별 요약 + auto_analyses."""
+        from datetime import date as date_cls
         since = pred_date
-        until = pred_date + timedelta(days=CONTEXT_DAYS)
+        until = date_cls.today()
         parts: list[str] = []
 
+        # 월별 평균/최고/최저로 압축 (일별로 넣으면 토큰 초과)
         macro_rows = await self.conn.fetch("""
-            SELECT date, kospi, usd_krw, wti, us_10y, vix,
-                   fed_funds_rate, kr_base_rate, btc_usd
+            SELECT
+                to_char(date, 'YYYY-MM') AS ym,
+                ROUND(AVG(kospi)::numeric, 0)    AS kospi_avg,
+                ROUND(MAX(kospi)::numeric, 0)    AS kospi_max,
+                ROUND(MIN(kospi)::numeric, 0)    AS kospi_min,
+                ROUND(AVG(usd_krw)::numeric, 0)  AS krw_avg,
+                ROUND(MAX(usd_krw)::numeric, 0)  AS krw_max,
+                ROUND(AVG(wti)::numeric, 1)      AS wti_avg,
+                ROUND(MAX(wti)::numeric, 1)      AS wti_max,
+                ROUND(AVG(us_10y)::numeric, 2)   AS us10y_avg,
+                ROUND(AVG(fed_funds_rate)::numeric, 2) AS fed_avg,
+                ROUND(AVG(vix)::numeric, 1)      AS vix_avg,
+                ROUND(AVG(btc_usd)::numeric, 0)  AS btc_avg
             FROM macro_daily
             WHERE date BETWEEN $1 AND $2
-            ORDER BY date ASC
+            GROUP BY ym
+            ORDER BY ym
         """, since, until)
 
         if macro_rows:
-            lines = [f"[매크로 데이터: {since} ~ {until}]"]
+            lines = [f"[월별 매크로 요약: {since} ~ {until}]"]
             for r in macro_rows:
                 lines.append(
-                    f"{r['date']}: KOSPI={r['kospi']} USD/KRW={r['usd_krw']} "
-                    f"WTI={r['wti']} US10Y={r['us_10y']}% VIX={r['vix']} "
-                    f"Fed={r['fed_funds_rate']}% KR={r['kr_base_rate']}% BTC={r['btc_usd']}"
+                    f"{r['ym']}: KOSPI={r['kospi_avg']}(고{r['kospi_max']}/저{r['kospi_min']}) "
+                    f"USD/KRW={r['krw_avg']}(고{r['krw_max']}) "
+                    f"WTI={r['wti_avg']}(고{r['wti_max']}) "
+                    f"US10Y={r['us10y_avg']}% Fed={r['fed_avg']}% VIX={r['vix_avg']} BTC={r['btc_avg']}"
                 )
             parts.append("\n".join(lines))
 
+        # 해당 기간 메르 분석 (최대 10개)
         analysis_rows = await self.conn.fetch("""
             SELECT e.title, aa.analysis_text, e.event_date
             FROM events e
             JOIN auto_analyses aa ON aa.event_id = e.id
             WHERE e.event_type = 'mer_new_post'
               AND e.event_date::date BETWEEN $1 AND $2
-            ORDER BY e.event_date ASC
+            ORDER BY e.event_date DESC
             LIMIT 10
         """, since, until)
 
