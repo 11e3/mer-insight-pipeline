@@ -1,97 +1,97 @@
 # mer-insight-pipeline
 
-LLM Agent · Hybrid RAG · Observability pipeline for automated Korean finance blog analysis
+LLM 에이전트 · 하이브리드 RAG · 옵저버빌리티 파이프라인 — 한국 경제 블로그 자동 분석
 
 [English README](README.md)
 
 ---
 
-## Architecture
+## 아키텍처
 
 ```mermaid
 flowchart TD
-    A[Naver Blog<br>Korean finance blog] -->|RSS / scrape| B[mer_monitor]
+    A[네이버 블로그<br>한국 경제 블로그] -->|RSS / 스크래핑| B[mer_monitor]
     B --> C[(PostgreSQL<br>+ pgvector)]
 
-    subgraph Batch Pipeline
-        C -->|2,193 posts| D[Claude Batch API<br>batch_api.py]
-        D -->|JSONL results| E[parse_results.py]
-        E -->|rules / predictions<br>evaluations / macro_views| C
+    subgraph 배치 파이프라인
+        C -->|2,193개 포스트| D[Claude Batch API<br>batch_api.py]
+        D -->|JSONL 결과| E[parse_results.py]
+        E -->|규칙 / 예측<br>평가 / 거시 관점| C
         C --> F[embeddings.py<br>multilingual-e5-large]
-        F -->|1024-dim vectors| C
-        C --> G[cluster_insights.py<br>DBSCAN dedup]
+        F -->|1024차원 벡터| C
+        C --> G[cluster_insights.py<br>DBSCAN 중복 제거]
     end
 
-    subgraph Agent Loop
-        B -->|new post| AG[MerAgent<br>pure while loop]
-        AG -->|tool_use| T1[search_past_insights<br>Hybrid Search]
+    subgraph 에이전트 루프
+        B -->|새 포스트| AG[MerAgent<br>순수 while 루프]
+        AG -->|tool_use| T1[search_past_insights<br>하이브리드 검색]
         AG -->|tool_use| T2[check_contradiction]
-        AG -->|tool_use| T3[classify_novelty<br>DBSCAN clusters]
+        AG -->|tool_use| T3[classify_novelty<br>DBSCAN 클러스터]
         AG -->|tool_use| T4[get_topic_history]
         T1 & T2 & T3 & T4 --> C
-        AG -->|draft analysis| GD[Hallucination Guard]
-        GD -->|FAIL → retry ×2| AG
-        GD -->|PASS| OUT[final analysis]
+        AG -->|분석 초안| GD[환각 방지 가드]
+        GD -->|실패 → 최대 2회 재생성| AG
+        GD -->|통과| OUT[최종 분석]
     end
 
-    subgraph Hybrid Search
-        HS1[BM25 Index<br>kiwipiepy + rank_bm25]
-        HS2[Vector Index<br>pgvector HNSW]
-        HS1 & HS2 -->|RRF fusion α=0.4| HS3[HybridSearcher]
+    subgraph 하이브리드 검색
+        HS1[BM25 인덱스<br>kiwipiepy + rank_bm25]
+        HS2[벡터 인덱스<br>pgvector HNSW]
+        HS1 & HS2 -->|RRF 융합 α=0.4| HS3[HybridSearcher]
     end
 
     T1 --> HS3
     HS3 --> C
 
-    subgraph Real-time Pipeline
+    subgraph 실시간 파이프라인
         ED[event_dispatcher.py<br>APScheduler] --> B
         ED --> DC[dart_collector]
-        ED --> NC[news_collector<br>Fed · BOK RSS]
-        ED --> LM[load_macro<br>FRED · BOK · yfinance]
+        ED --> NC[news_collector<br>연준 · 한국은행 RSS]
+        ED --> LM[load_macro<br>FRED · 한국은행 · yfinance]
         DC & NC & LM --> CA[context_assembler]
         CA --> HS3
         CA --> AG2[analysis_generator<br>Claude Sonnet]
-        AG2 --> RG[report_generator<br>5-level hierarchy]
+        AG2 --> RG[report_generator<br>5단계 계층 구조]
     end
 
-    OUT --> TG1[Telegram Tier 1<br>Free Channel]
+    OUT --> TG1[텔레그램 1티어<br>무료 채널]
     RG --> TG1
-    AG2 --> TG2[Telegram Tier 2<br>Premium Channel]
+    AG2 --> TG2[텔레그램 2티어<br>프리미엄 채널]
 
-    subgraph Observability
-        TR[Tracer<br>context manager] -->|spans| PG2[(traces / spans<br>PostgreSQL)]
-        PG2 --> DB2[Streamlit Dashboard<br>cost · latency · errors]
+    subgraph 옵저버빌리티
+        TR[Tracer<br>컨텍스트 매니저] -->|스팬| PG2[(traces / spans<br>PostgreSQL)]
+        PG2 --> DB2[Streamlit 대시보드<br>비용 · 지연 · 오류]
     end
 
-    subgraph Eval Pipeline
+    subgraph 평가 파이프라인
         EV[eval_runner.py] --> HS3
         EV --> AG
-        EV --> LJ[LLM Judge<br>Claude Sonnet]
-        EV --> RPT[Markdown Report]
+        EV --> LJ[LLM 심판<br>Claude Sonnet]
+        EV --> RPT[마크다운 리포트]
     end
 
-    C --> Q[Streamlit Dashboard<br>port 8501]
+    C --> Q[Streamlit 대시보드<br>포트 8501]
 ```
 
 ---
 
-## Hybrid Search — Experiment Results
+## 하이브리드 검색 — 실험 결과
 
-BM25(키워드) + Vector(임베딩) 를 RRF로 결합하면 단일 방식 대비 retrieval 품질이 유의미하게 향상됩니다.
+BM25(키워드) + 벡터(임베딩) 를 RRF로 결합하면 단일 방식 대비 검색 품질이 유의미하게 향상됩니다.
 
 **골드 데이터셋**: 5개 경제 쿼리 × 관련 인사이트 5개씩, K=5
 
 | 방식 | Precision@5 | Recall@5 | MRR |
 |------|------------|---------|-----|
-| Vector only | 0.52 | 0.52 | 0.90 |
-| BM25 only | 0.44 | 0.44 | 0.80 |
-| **Hybrid (RRF)** | **1.00** | **1.00** | **1.00** |
+| 벡터 단독 | 0.52 | 0.52 | 0.90 |
+| BM25 단독 | 0.44 | 0.44 | 0.80 |
+| **하이브리드 (RRF)** | **1.00** | **1.00** | **1.00** |
 
 **왜 차이가 나는가**
 
-- **Vector**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
+- **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
 - **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
-- **RRF**로 결합하면 두 방법이 서로 다른 인사이트를 보완해 recall이 극대화됨
+- **RRF**로 결합하면 두 방법이 서로 다른 인사이트를 보완해 재현율이 극대화됨
 
 ```bash
 python -m src.search.experiment --k 5
@@ -99,10 +99,10 @@ python -m src.search.experiment --k 5
 
 ---
 
-## Agent Loop — 왜 고정 프롬프트가 아닌가
+## 에이전트 루프 — 왜 고정 프롬프트가 아닌가
 
-기존 파이프라인은 MER 신규 포스트에 대해 고정된 프롬프트로 분석을 생성했습니다(`max_rules=0`).
-에이전트 루프는 LLM이 **어떤 정보가 필요한지 스스로 판단**하고 tool을 순서대로 호출합니다.
+기존 파이프라인은 새 포스트마다 고정된 프롬프트로 분석을 생성했습니다.
+에이전트 루프는 LLM이 **어떤 정보가 필요한지 스스로 판단**하고 도구를 순서대로 호출합니다.
 
 ```
 새 포스트 수신
@@ -113,17 +113,17 @@ python -m src.search.experiment --k 5
 ```
 
 **구현 특징**
-- 프레임워크 없이 순수 `while` loop + Claude `tool_use` API
-- `max_iterations=5`, Hallucination Guard 실패 시 최대 2회 자동 재생성
-- 실패 시 기존 `analysis_generator.py` fallback
+- 프레임워크 없이 순수 `while` 루프 + Claude `tool_use` API
+- `max_iterations=5`, 환각 방지 가드 실패 시 최대 2회 자동 재생성
+- 에이전트 오류 발생 시 기존 `analysis_generator.py`로 폴백
 
 ---
 
-## Hallucination Guard
+## 환각 방지 가드
 
 에이전트가 생성한 분석에서 **원본 인사이트에 근거하지 않은 주장**을 자동 탐지하고 재생성을 요청합니다.
 
-**출력 형식** (에이전트 system prompt에 지시):
+**출력 형식** (에이전트 시스템 프롬프트에 지시):
 ```
 미국 국채 금리는 하반기에 하락할 전망이에요. [ref: ins_22737, ins_16440]
 이는 연준의 금리 인하 신호와 일치해요. [ref: ins_16433]
@@ -143,9 +143,9 @@ UNGROUNDED + UNSUPPORTED 비율 > 20% → 자동 재생성 트리거
 
 ---
 
-## Observability
+## 옵저버빌리티
 
-LLM 호출별 비용·latency를 PostgreSQL에 기록하고 Streamlit으로 시각화합니다.
+LLM 호출별 비용·지연 시간을 PostgreSQL에 기록하고 Streamlit으로 시각화합니다.
 
 ```python
 # 사용 예시
@@ -155,7 +155,7 @@ async with Tracer(conn, trace_name="agent_run") as tracer:
 
 **추적 항목**: `trace_id`, `span_id`, `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
 
-**토큰 가격** (claude-sonnet-4-6): input $3/1M · output $15/1M
+**토큰 가격** (claude-sonnet-4-6): 입력 $3/1M · 출력 $15/1M
 
 ```bash
 streamlit run src/dashboard/observability.py
@@ -163,13 +163,13 @@ streamlit run src/dashboard/observability.py
 
 ---
 
-## Eval Pipeline
+## 평가 파이프라인
 
 ```bash
-# Retrieval만 평가 (Claude 호출 없음, 빠름)
+# 검색만 평가 (Claude 호출 없음, 빠름)
 python -m src.eval.eval_runner --mode retrieval_only --k 5
 
-# 전체 평가 (Retrieval + LLM Judge)
+# 전체 평가 (검색 + LLM 심판)
 python -m src.eval.eval_runner --mode full --k 5
 ```
 
@@ -179,77 +179,77 @@ python -m src.eval.eval_runner --mode full --k 5
 |------|------|
 | Precision@K | 검색 결과 중 실제 관련 비율 |
 | Recall@K | 관련 인사이트 중 검색으로 찾은 비율 |
-| MRR | Mean Reciprocal Rank |
-| Context Relevance | LLM judge: 검색 결과↔쿼리 관련성 (1–5) |
-| Faithfulness | LLM judge: 분석이 원본에만 근거하는지 (hallucination 역수) |
-| Answer Relevance | LLM judge: 분석이 질문에 얼마나 답하는지 |
+| MRR | 평균 역순위 (Mean Reciprocal Rank) |
+| 컨텍스트 관련성 | LLM 심판: 검색 결과↔쿼리 관련성 (1–5점) |
+| 충실도 | LLM 심판: 분석이 원본에만 근거하는지 (환각의 역수) |
+| 답변 관련성 | LLM 심판: 분석이 질문에 얼마나 답하는지 (1–5점) |
 
 ---
 
-## Tech Stack
+## 기술 스택
 
-| Layer | Technology |
-|---|---|
+| 레이어 | 기술 |
+|--------|------|
 | LLM | Claude Sonnet 4.6 / Haiku 4.5 (Anthropic) |
-| Batch API | Anthropic Batch API |
-| Embeddings | `intfloat/multilingual-e5-large` (1024 dims) |
-| Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
-| Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
-| Hybrid Fusion | Reciprocal Rank Fusion (RRF) |
-| Scheduler | APScheduler 3.10 |
-| Delivery | python-telegram-bot 21 |
-| Data | FRED, BOK ECOS, BLS, MOLIT, DART, yfinance |
-| Dashboard | Streamlit + Plotly |
-| Infra | Docker Compose |
+| 배치 API | Anthropic Batch API |
+| 임베딩 | `intfloat/multilingual-e5-large` (1024차원) |
+| 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
+| 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
+| 하이브리드 융합 | Reciprocal Rank Fusion (RRF) |
+| 스케줄러 | APScheduler 3.10 |
+| 전송 | python-telegram-bot 21 |
+| 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, yfinance |
+| 대시보드 | Streamlit + Plotly |
+| 인프라 | Docker Compose |
 
 ---
 
-## Metrics
+## 주요 수치
 
-| Metric | Value |
-|---|---|
-| Processed posts | 2,193 |
-| Extracted insights | 25,090 |
-| Insight types | 4 (rule, prediction, evaluation, macro_view) |
-| Embedding dimensions | 1,024 |
-| BM25 index size | 16,126 canonical documents |
-| Scheduled jobs | 7 |
-| Report hierarchy levels | 5 |
-| Macro indicators tracked | KOSPI, USD/KRW, VIX, BTC, WTI, CPI, unemployment |
+| 지표 | 값 |
+|------|-----|
+| 처리된 포스트 | 2,193개 |
+| 추출된 인사이트 | 25,090개 |
+| 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
+| 임베딩 차원 | 1,024 |
+| BM25 인덱스 크기 | 정규 문서 16,126개 |
+| 스케줄된 작업 | 7개 |
+| 리포트 계층 단계 | 5단계 |
+| 추적 거시 지표 | KOSPI, 달러/원, VIX, BTC, WTI, CPI, 실업률 |
 
 ---
 
-## Setup
+## 시작하기
 
-### Prerequisites
+### 사전 준비
 - Docker & Docker Compose
-- Anthropic API key
-- Telegram bot token (optional — for delivery)
-- External API keys (FRED, BOK, BLS, MOLIT — all free)
+- Anthropic API 키
+- 텔레그램 봇 토큰 (선택 — 전송 기능 사용 시)
+- 외부 API 키 (FRED, 한국은행, BLS, 국토부 — 모두 무료)
 
-### Quick Start
+### 빠른 시작
 
 ```bash
-# 1. Clone and configure
+# 1. 클론 및 설정
 git clone https://github.com/11e3/mer-insight-pipeline.git
 cd mer-insight-pipeline
 cp .env.example .env
-# → Fill in your API keys in .env
+# → .env 파일에 API 키 입력
 
-# 2. Set up prompts
+# 2. 프롬프트 설정
 cp config/prompts.example.py config/prompts.py
-# → Write your prompts in config/prompts.py
+# → config/prompts.py에 프롬프트 작성
 
-# 3. Start services
+# 3. 서비스 시작
 docker compose up -d db
 
-# 4. Initialize DB schema
+# 4. DB 스키마 초기화
 docker compose exec db psql -U mer -d mer_pipeline -f /docker-entrypoint-initdb.d/init_db.sql
 
-# 5. Load posts and run batch extraction
+# 5. 포스트 로드 및 배치 추출 실행
 python scripts/run_batch.py all
 
-# 6. Build BM25 index cache
+# 6. BM25 인덱스 캐시 빌드
 python -c "
 import asyncio, asyncpg, os
 from src.search.bm25_index import BM25Index
@@ -264,18 +264,18 @@ async def build():
 asyncio.run(build())
 "
 
-# 7. Start real-time dispatcher
+# 7. 실시간 디스패처 시작
 python -m src.pipeline.event_dispatcher
 ```
 
-### Observability Dashboard
+### 옵저버빌리티 대시보드
 
 ```bash
 streamlit run src/dashboard/observability.py
 # → http://localhost:8501
 ```
 
-### Run Eval
+### 평가 실행
 
 ```bash
 python -m src.eval.eval_runner --mode retrieval_only
@@ -284,85 +284,85 @@ python -m src.search.experiment --k 5
 
 ---
 
-## Environment Variables
+## 환경 변수
 
-See [.env.example](.env.example) for all required variables.
+전체 변수 목록은 [.env.example](.env.example) 참조.
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `ANTHROPIC_API_KEY` | Claude API key |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
-| `TELEGRAM_TIER1_CHAT_ID` | Free channel chat ID |
-| `TELEGRAM_TIER2_CHAT_ID` | Premium channel chat ID |
-| `FRED_API_KEY` | FRED economic data (free) |
-| `BOK_API_KEY` | Bank of Korea ECOS API (free) |
-| `BLS_API_KEY` | US Bureau of Labor Statistics (free) |
-| `MOLIT_API_KEY` | Korea real estate data / data.go.kr (free) |
+| 환경변수 | 설명 |
+|----------|------|
+| `DATABASE_URL` | PostgreSQL 연결 문자열 |
+| `ANTHROPIC_API_KEY` | Claude API 키 |
+| `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 |
+| `TELEGRAM_TIER1_CHAT_ID` | 무료 채널 채팅 ID |
+| `TELEGRAM_TIER2_CHAT_ID` | 프리미엄 채널 채팅 ID |
+| `FRED_API_KEY` | FRED 경제 데이터 (무료) |
+| `BOK_API_KEY` | 한국은행 ECOS API (무료) |
+| `BLS_API_KEY` | 미국 노동통계국 (무료) |
+| `MOLIT_API_KEY` | 국토부 부동산 데이터 / data.go.kr (무료) |
 
 ---
 
-## Project Structure
+## 프로젝트 구조
 
 ```
 mer-insight-pipeline/
 ├── config/
-│   ├── settings.py               # All configuration, loaded from .env
-│   └── prompts.example.py        # Prompt structure template
+│   ├── settings.py               # 전체 설정 (.env에서 로드)
+│   └── prompts.example.py        # 프롬프트 구조 템플릿
 ├── src/
-│   ├── agent/                    # LLM Agent Loop
-│   │   ├── agent.py              # Pure while loop, max_iterations=5
-│   │   ├── tools.py              # 5 tools (search / contradiction / novelty / history / compare)
-│   │   ├── prompts.py            # System prompt with citation tagging instructions
-│   │   └── state.py              # Message history & iteration state
-│   ├── search/                   # Hybrid Search
-│   │   ├── bm25_index.py         # BM25 with kiwipiepy tokenizer + pickle cache
-│   │   ├── vector_index.py       # pgvector HNSW wrapper
-│   │   ├── hybrid.py             # RRF fusion (α=0.4)
-│   │   └── experiment.py         # A/B experiment: vector vs BM25 vs hybrid
-│   ├── guard/                    # Hallucination Guard
-│   │   ├── guard.py              # GROUNDED / UNGROUNDED / UNSUPPORTED verdict
-│   │   ├── citation_tracker.py   # [ref: ins_ID] tag parser
-│   │   └── self_correct.py       # Auto re-generation on FAIL (max 2 retries)
-│   ├── observability/            # LLM Call Tracing
-│   │   ├── tracer.py             # Tracer context manager + @trace_llm_call decorator
+│   ├── agent/                    # LLM 에이전트 루프
+│   │   ├── agent.py              # 순수 while 루프, max_iterations=5
+│   │   ├── tools.py              # 5개 도구 (검색 / 모순 / 신규성 / 이력 / 비교)
+│   │   ├── prompts.py            # citation 태깅 지시 포함 시스템 프롬프트
+│   │   └── state.py              # 메시지 이력 & 반복 상태
+│   ├── search/                   # 하이브리드 검색
+│   │   ├── bm25_index.py         # BM25 + kiwipiepy 토크나이저 + pickle 캐시
+│   │   ├── vector_index.py       # pgvector HNSW 래퍼
+│   │   ├── hybrid.py             # RRF 융합 (α=0.4)
+│   │   └── experiment.py         # A/B 실험: 벡터 vs BM25 vs 하이브리드
+│   ├── guard/                    # 환각 방지 가드
+│   │   ├── guard.py              # GROUNDED / UNGROUNDED / UNSUPPORTED 판정
+│   │   ├── citation_tracker.py   # [ref: ins_ID] 태그 파서
+│   │   └── self_correct.py       # 실패 시 자동 재생성 (최대 2회)
+│   ├── observability/            # LLM 호출 추적
+│   │   ├── tracer.py             # Tracer 컨텍스트 매니저 + @trace_llm_call 데코레이터
 │   │   └── storage.py            # traces / spans PostgreSQL CRUD
-│   ├── eval/                     # Eval Pipeline
-│   │   ├── eval_runner.py        # Main runner (--mode retrieval_only | full)
+│   ├── eval/                     # 평가 파이프라인
+│   │   ├── eval_runner.py        # 메인 실행기 (--mode retrieval_only | full)
 │   │   ├── metrics.py            # Precision@K, Recall@K, MRR
-│   │   ├── llm_judge.py          # Context Relevance / Faithfulness / Answer Relevance
-│   │   ├── eval_dataset.py       # Gold dataset loader
-│   │   └── report.py             # Markdown + JSON report generator
+│   │   ├── llm_judge.py          # 컨텍스트 관련성 / 충실도 / 답변 관련성
+│   │   ├── eval_dataset.py       # 골드 데이터셋 로더
+│   │   └── report.py             # 마크다운 + JSON 리포트 생성기
 │   ├── extract/
-│   │   ├── batch_api.py          # Claude Batch API orchestration
-│   │   ├── embeddings.py         # Vector embedding generation
-│   │   ├── parse_results.py      # Batch result parsing → DB
+│   │   ├── batch_api.py          # Claude Batch API 오케스트레이션
+│   │   ├── embeddings.py         # 벡터 임베딩 생성
+│   │   ├── parse_results.py      # 배치 결과 파싱 → DB 저장
 │   │   └── realtime_extractor.py
 │   ├── ingest/
 │   │   ├── load_posts.py
-│   │   ├── load_macro.py         # FRED / BOK / yfinance
+│   │   ├── load_macro.py         # FRED / 한국은행 / yfinance
 │   │   ├── load_bls.py
 │   │   ├── load_realestate.py
 │   │   └── load_trade.py
 │   ├── pipeline/
-│   │   ├── event_dispatcher.py   # Main runtime (APScheduler) + agent integration
-│   │   ├── mer_monitor.py
-│   │   ├── dart_collector.py
-│   │   ├── news_collector.py
-│   │   ├── context_assembler.py  # RAG context builder
-│   │   ├── analysis_generator.py
-│   │   └── report_generator.py   # 5-level hierarchy
+│   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler) + 에이전트 연동
+│   │   ├── mer_monitor.py        # 블로그 RSS 감시
+│   │   ├── dart_collector.py     # DART 공시 (한국 증권거래소)
+│   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
+│   │   ├── context_assembler.py  # RAG 컨텍스트 빌더
+│   │   ├── analysis_generator.py # Claude 분석 생성
+│   │   └── report_generator.py   # 5단계 계층적 합성
 │   ├── delivery/
-│   │   ├── telegram_bot.py
+│   │   ├── telegram_bot.py       # 2티어 텔레그램 전송
 │   │   └── formatters.py
 │   └── dashboard/
-│       ├── app.py                # Main dashboard
-│       └── observability.py      # Observability dashboard
+│       ├── app.py                # 메인 대시보드
+│       └── observability.py      # LLM 비용 / 지연 / 오류 대시보드
 ├── eval_data/
-│   └── gold.json                 # Gold dataset (5 queries × 5 relevant insight IDs)
-├── results/                      # Eval reports & experiment results
+│   └── gold.json                 # 골드 데이터셋: 5개 쿼리 × 관련 인사이트 ID 5개씩
+├── results/                      # 평가 리포트 & 실험 결과
 ├── scripts/
-│   ├── init_db.sql               # PostgreSQL schema (incl. traces / spans)
+│   ├── init_db.sql               # PostgreSQL 스키마 (traces / spans 포함)
 │   └── run_batch.py
 ├── docker-compose.yml
 ├── Dockerfile
@@ -371,6 +371,6 @@ mer-insight-pipeline/
 
 ---
 
-## License
+## 라이선스
 
 MIT
