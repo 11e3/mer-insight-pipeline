@@ -2,7 +2,7 @@
 
 LLM Agent · Hybrid RAG · Observability pipeline for automated Korean finance blog analysis
 
-[한국어 README](README_KR.md)
+[English README](README.md)
 
 ---
 
@@ -77,21 +77,21 @@ flowchart TD
 
 ## Hybrid Search — Experiment Results
 
-Combining BM25 (keyword) and vector (embedding) retrieval via RRF significantly improves recall over either method alone.
+BM25(키워드) + Vector(임베딩) 를 RRF로 결합하면 단일 방식 대비 retrieval 품질이 유의미하게 향상됩니다.
 
-**Gold dataset**: 5 Korean economic queries × 5 relevant insights each, K=5
+**골드 데이터셋**: 5개 경제 쿼리 × 관련 인사이트 5개씩, K=5
 
-| Method | Precision@5 | Recall@5 | MRR |
-|--------|------------|---------|-----|
+| 방식 | Precision@5 | Recall@5 | MRR |
+|------|------------|---------|-----|
 | Vector only | 0.52 | 0.52 | 0.90 |
 | BM25 only | 0.44 | 0.44 | 0.80 |
 | **Hybrid (RRF)** | **1.00** | **1.00** | **1.00** |
 
-**Why they differ**
+**왜 차이가 나는가**
 
-- **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
-- **BM25** pinpoints specific numbers and proper nouns, but fails on synonyms and varied phrasing
-- **RRF** combines both: each method covers the blind spots of the other, maximising recall
+- **Vector**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
+- **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
+- **RRF**로 결합하면 두 방법이 서로 다른 인사이트를 보완해 recall이 극대화됨
 
 ```bash
 python -m src.search.experiment --k 5
@@ -99,66 +99,63 @@ python -m src.search.experiment --k 5
 
 ---
 
-## Agent Loop — Why Not a Fixed Prompt?
+## Agent Loop — 왜 고정 프롬프트가 아닌가
 
-The original pipeline ran a fixed prompt on every new post. The agent loop lets the LLM **decide what information it needs** and call tools in sequence.
+기존 파이프라인은 MER 신규 포스트에 대해 고정된 프롬프트로 분석을 생성했습니다(`max_rules=0`).
+에이전트 루프는 LLM이 **어떤 정보가 필요한지 스스로 판단**하고 tool을 순서대로 호출합니다.
 
 ```
-New post received
-  → LLM: "Need past insights on interest rates" → search_past_insights("rate cut")
-  → LLM: "Does this contradict prior claims?"  → check_contradiction(...)
-  → LLM: "Is this a new topic?"                → classify_novelty(...)
-  → LLM: "Enough context. Generate analysis."
+새 포스트 수신
+    → LLM: "과거 금리 관련 인사이트가 필요하다" → search_past_insights("금리 인하")
+    → LLM: "이 주장이 과거 발언과 모순되는지 확인해야 한다" → check_contradiction(...)
+    → LLM: "완전히 새로운 토픽인가?" → classify_novelty(...)
+    → LLM: "충분한 정보 확보. 최종 분석 생성"
 ```
 
-**Implementation**
-- Pure `while` loop with Claude `tool_use` API — no frameworks
-- `max_iterations=5`; Hallucination Guard failure triggers up to 2 automatic re-generations
-- Falls back to `analysis_generator.py` on agent error
+**구현 특징**
+- 프레임워크 없이 순수 `while` loop + Claude `tool_use` API
+- `max_iterations=5`, Hallucination Guard 실패 시 최대 2회 자동 재생성
+- 실패 시 기존 `analysis_generator.py` fallback
 
 ---
 
 ## Hallucination Guard
 
-Automatically detects **unsupported claims** in the agent's output and requests re-generation.
+에이전트가 생성한 분석에서 **원본 인사이트에 근거하지 않은 주장**을 자동 탐지하고 재생성을 요청합니다.
 
-**Required output format** (instructed in system prompt):
+**출력 형식** (에이전트 system prompt에 지시):
 ```
-US Treasury yields are expected to decline in H2. [ref: ins_22737, ins_16440]
-This aligns with Fed rate-cut signalling.          [ref: ins_16433]
-Inflation re-acceleration risk remains, however.   [ref: none]
+미국 국채 금리는 하반기에 하락할 전망이에요. [ref: ins_22737, ins_16440]
+이는 연준의 금리 인하 신호와 일치해요. [ref: ins_16433]
+다만 인플레이션 재발 리스크도 존재해요. [ref: none]
 ```
 
-**Verdicts**
+**판정 기준**
 
-| Verdict | Condition |
-|---------|-----------|
-| `GROUNDED` | `[ref: ins_ID]` present and source content matches |
-| `UNGROUNDED` | Ref ID does not exist or content mismatches |
-| `UNSUPPORTED` | No citation tag at all |
-| `NONE_DECLARED` | Explicitly tagged `[ref: none]` |
+| 판정 | 조건 |
+|------|------|
+| `GROUNDED` | `[ref: ins_ID]` 있고 원본 내용과 키워드 일치 |
+| `UNGROUNDED` | ref ID가 존재하지 않거나 원본과 불일치 |
+| `UNSUPPORTED` | citation 태그 자체 없음 |
+| `NONE_DECLARED` | `[ref: none]` 명시 |
 
-UNGROUNDED + UNSUPPORTED ratio > 20% → re-generation triggered
+UNGROUNDED + UNSUPPORTED 비율 > 20% → 자동 재생성 트리거
 
 ---
 
 ## Observability
 
-Records per-call cost and latency to PostgreSQL and visualises with Streamlit.
+LLM 호출별 비용·latency를 PostgreSQL에 기록하고 Streamlit으로 시각화합니다.
 
 ```python
+# 사용 예시
 async with Tracer(conn, trace_name="agent_run") as tracer:
-    resp = await tracer.call(
-        client.messages.create,
-        span_name="tool_step",
-        model=...,
-        messages=...,
-    )
+    resp = await tracer.call(client.messages.create, span_name="tool_step", model=..., messages=...)
 ```
 
-**Tracked per span**: `trace_id`, `span_id`, `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
+**추적 항목**: `trace_id`, `span_id`, `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
 
-**Token pricing** (claude-sonnet-4-6): $3/1M input · $15/1M output
+**토큰 가격** (claude-sonnet-4-6): input $3/1M · output $15/1M
 
 ```bash
 streamlit run src/dashboard/observability.py
@@ -169,23 +166,23 @@ streamlit run src/dashboard/observability.py
 ## Eval Pipeline
 
 ```bash
-# Retrieval only — no Claude calls, fast
+# Retrieval만 평가 (Claude 호출 없음, 빠름)
 python -m src.eval.eval_runner --mode retrieval_only --k 5
 
-# Full — Retrieval + LLM Judge
+# 전체 평가 (Retrieval + LLM Judge)
 python -m src.eval.eval_runner --mode full --k 5
 ```
 
-**Metrics**
+**평가 지표**
 
-| Metric | Description |
-|--------|-------------|
-| Precision@K | Fraction of retrieved results that are relevant |
-| Recall@K | Fraction of relevant insights retrieved |
+| 지표 | 설명 |
+|------|------|
+| Precision@K | 검색 결과 중 실제 관련 비율 |
+| Recall@K | 관련 인사이트 중 검색으로 찾은 비율 |
 | MRR | Mean Reciprocal Rank |
-| Context Relevance | LLM judge: retrieved context vs. query relevance (1–5) |
-| Faithfulness | LLM judge: analysis grounded in sources (inverse hallucination) |
-| Answer Relevance | LLM judge: analysis answers the original question (1–5) |
+| Context Relevance | LLM judge: 검색 결과↔쿼리 관련성 (1–5) |
+| Faithfulness | LLM judge: 분석이 원본에만 근거하는지 (hallucination 역수) |
+| Answer Relevance | LLM judge: 분석이 질문에 얼마나 답하는지 |
 
 ---
 
@@ -201,7 +198,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF) |
 | Scheduler | APScheduler 3.10 |
 | Delivery | python-telegram-bot 21 |
-| Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, yfinance |
+| Data | FRED, BOK ECOS, BLS, MOLIT, DART, yfinance |
 | Dashboard | Streamlit + Plotly |
 | Infra | Docker Compose |
 
@@ -236,16 +233,23 @@ python -m src.eval.eval_runner --mode full --k 5
 # 1. Clone and configure
 git clone https://github.com/11e3/mer-insight-pipeline.git
 cd mer-insight-pipeline
-cp .env.example .env        # fill in your API keys
-cp config/prompts.example.py config/prompts.py
+cp .env.example .env
+# → Fill in your API keys in .env
 
-# 2. Start the database
+# 2. Set up prompts
+cp config/prompts.example.py config/prompts.py
+# → Write your prompts in config/prompts.py
+
+# 3. Start services
 docker compose up -d db
 
-# 3. Run batch extraction (2,193 posts → 25,090 insights)
+# 4. Initialize DB schema
+docker compose exec db psql -U mer -d mer_pipeline -f /docker-entrypoint-initdb.d/init_db.sql
+
+# 5. Load posts and run batch extraction
 python scripts/run_batch.py all
 
-# 4. Build BM25 index cache
+# 6. Build BM25 index cache
 python -c "
 import asyncio, asyncpg, os
 from src.search.bm25_index import BM25Index
@@ -260,14 +264,15 @@ async def build():
 asyncio.run(build())
 "
 
-# 5. Start real-time dispatcher
+# 7. Start real-time dispatcher
 python -m src.pipeline.event_dispatcher
 ```
 
 ### Observability Dashboard
 
 ```bash
-streamlit run src/dashboard/observability.py   # http://localhost:8501
+streamlit run src/dashboard/observability.py
+# → http://localhost:8501
 ```
 
 ### Run Eval
@@ -307,14 +312,14 @@ mer-insight-pipeline/
 ├── src/
 │   ├── agent/                    # LLM Agent Loop
 │   │   ├── agent.py              # Pure while loop, max_iterations=5
-│   │   ├── tools.py              # 5 tools: search / contradiction / novelty / history / compare
+│   │   ├── tools.py              # 5 tools (search / contradiction / novelty / history / compare)
 │   │   ├── prompts.py            # System prompt with citation tagging instructions
 │   │   └── state.py              # Message history & iteration state
 │   ├── search/                   # Hybrid Search
 │   │   ├── bm25_index.py         # BM25 with kiwipiepy tokenizer + pickle cache
 │   │   ├── vector_index.py       # pgvector HNSW wrapper
 │   │   ├── hybrid.py             # RRF fusion (α=0.4)
-│   │   └── experiment.py         # A/B comparison: vector vs BM25 vs hybrid
+│   │   └── experiment.py         # A/B experiment: vector vs BM25 vs hybrid
 │   ├── guard/                    # Hallucination Guard
 │   │   ├── guard.py              # GROUNDED / UNGROUNDED / UNSUPPORTED verdict
 │   │   ├── citation_tracker.py   # [ref: ins_ID] tag parser
@@ -341,23 +346,23 @@ mer-insight-pipeline/
 │   │   └── load_trade.py
 │   ├── pipeline/
 │   │   ├── event_dispatcher.py   # Main runtime (APScheduler) + agent integration
-│   │   ├── mer_monitor.py        # Blog RSS watcher
-│   │   ├── dart_collector.py     # DART filings (Korean stock exchange)
-│   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
+│   │   ├── mer_monitor.py
+│   │   ├── dart_collector.py
+│   │   ├── news_collector.py
 │   │   ├── context_assembler.py  # RAG context builder
-│   │   ├── analysis_generator.py # Claude analysis
-│   │   └── report_generator.py   # 5-level hierarchical synthesis
+│   │   ├── analysis_generator.py
+│   │   └── report_generator.py   # 5-level hierarchy
 │   ├── delivery/
-│   │   ├── telegram_bot.py       # Two-tier Telegram delivery
+│   │   ├── telegram_bot.py
 │   │   └── formatters.py
 │   └── dashboard/
 │       ├── app.py                # Main dashboard
-│       └── observability.py      # LLM cost / latency / error dashboard
+│       └── observability.py      # Observability dashboard
 ├── eval_data/
-│   └── gold.json                 # Gold dataset: 5 queries × 5 relevant insight IDs
-├── results/                      # Eval reports & experiment outputs
+│   └── gold.json                 # Gold dataset (5 queries × 5 relevant insight IDs)
+├── results/                      # Eval reports & experiment results
 ├── scripts/
-│   ├── init_db.sql               # PostgreSQL schema (includes traces / spans)
+│   ├── init_db.sql               # PostgreSQL schema (incl. traces / spans)
 │   └── run_batch.py
 ├── docker-compose.yml
 ├── Dockerfile
