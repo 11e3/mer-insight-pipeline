@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS mer_predictions (
     verification_date   DATE,
     actual_outcome      TEXT,
     is_correct          BOOLEAN,
+    skipped_at          DATE,
     created_at          TIMESTAMP DEFAULT NOW()
 );
 
