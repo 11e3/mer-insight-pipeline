@@ -56,7 +56,7 @@ def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> s
         related = enriched.get("related_posts")
         if related:
             links = "\n".join(
-                f"• [{r['date']}] [{_esc(r['title'][:35])}]({r['url']}) _{r['similarity']}%_"
+                f"• [{r['date']}] [{_esc(r['title'][:35])}]({r['url']})"
                 for r in related
             )
             parts.append(f"\n📌 *관련 과거 글*\n{links}")
