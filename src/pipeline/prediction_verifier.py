@@ -10,6 +10,7 @@ PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증
 import asyncio
 import json
 import logging
+from datetime import date
 
 import anthropic
 import asyncpg
@@ -83,8 +84,7 @@ class PredictionVerifier:
 
     async def _build_context(self, since: date) -> str:
         """since ~ 오늘까지 월별 요약 + auto_analyses."""
-        from datetime import date as date_cls
-        until = date_cls.today()
+        until = date.today()
         parts: list[str] = []
 
         # 월별 평균/최고/최저로 압축 (일별로 넣으면 토큰 초과)
