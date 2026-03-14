@@ -9,6 +9,8 @@ venv/
 data/
 *.sql
 *.sql.gz
+!scripts/init_db.sql
+!scripts/migrate_vector_dim.sql
 .idea/
 .vscode/
 output.txt
