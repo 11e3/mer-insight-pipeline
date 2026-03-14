@@ -24,3 +24,4 @@ scraped_posts/done.txt
 # Batch results & embeddings
 data/raw/
 data/batches/
+eval_data/gold_review.txt
