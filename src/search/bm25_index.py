@@ -57,7 +57,11 @@ class BM25Index:
 
         self._doc_ids = [r["id"] for r in rows]
         corpus = [_tokenize(r["content"]) for r in rows]
-        self._bm25 = BM25Okapi(corpus)
+        if not corpus:
+            log.warning("BM25 인덱스: 인사이트 데이터 없음 — 빈 인덱스로 초기화")
+            self._bm25 = None
+        else:
+            self._bm25 = BM25Okapi(corpus)
         log.info(f"BM25 인덱스 완료: {len(self._doc_ids)}개 문서")
 
     # ─── 저장/로드 ─────────────────────────────────────────────────────────
@@ -90,7 +94,7 @@ class BM25Index:
             [(insight_id, bm25_score), ...] top_k 개, 점수 내림차순
         """
         if self._bm25 is None:
-            raise RuntimeError("인덱스가 빌드/로드되지 않았습니다.")
+            return []
 
         tokens = _tokenize(query)
         scores = self._bm25.get_scores(tokens)

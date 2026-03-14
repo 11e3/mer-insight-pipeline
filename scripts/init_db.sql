@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS mer_insights (
     structured_data JSONB,
     confidence      FLOAT CHECK (confidence BETWEEN 0 AND 1),
     embedding       vector(768),
+    cluster_id      INTEGER,
+    is_canonical    BOOLEAN,
     created_at      TIMESTAMP DEFAULT NOW()
 );
 
