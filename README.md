@@ -316,9 +316,11 @@ python -m src.eval.eval_runner --mode full --k 5
 
 ## Tech Stack
 
+<!-- AUTO:tech_stack -->
 | Layer | Technology |
 |-------|------------|
-| LLM | Claude Sonnet 4.6 / Haiku 4.5 (Anthropic) |
+| LLM (analysis · agent) | `claude-sonnet-4-6` |
+| LLM (extraction · verification) | `claude-haiku-4-5-20251001` |
 | Batch API | Anthropic Batch API |
 | Embeddings | Vertex AI `text-multilingual-embedding-002` (768 dims) |
 | Vector DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW index) |
@@ -329,6 +331,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, Naver Finance |
 | Dashboard | Streamlit (Cloud Run Service) |
 | Infra | GCP Cloud Run Jobs + Cloud SQL |
+<!-- END:tech_stack -->
 
 ---
 
@@ -413,15 +416,21 @@ Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 
 | Job | Schedule |
 |-----|----------|
-| `mer_check` | every 5 min |
-| `dart_check` | every 10 min, weekdays 8–18h |
-| `macro_check` | macro data update every 1h · alerts + news every 30 min |
-| `verify_predictions` | daily 20:00 (before daily report) |
-| `report-generator` (daily) | 21:00 |
-| `report-generator` (weekly) | Sunday 21:00 |
-| `report-generator` (monthly) | last day of month 21:00 |
-| `report-generator` (quarterly) | last day of Mar/Jun/Sep/Dec 21:00 |
-| `report-generator` (annual) | Dec 31 21:00 |
+<!-- AUTO:jobs -->
+| Job | Schedule |
+|-----|----------|
+| `mer` | every 5 min |
+| `dart` | every 10 min, 8-18h |
+| `macro_update` | every 1h |
+| `macro_alert` | every 30 min |
+| `news` | every 30 min |
+| `verify_predictions` | 20:00 |
+| `report_daily` | 21:00 |
+| `report_weekly` | Sun 21:00 |
+| `report_monthly` | last day 21:00 |
+| `report_quarterly` | 3/6/9/12 last day 21:00 |
+| `report_annual` | 12/31 21:00 |
+<!-- END:jobs -->
 
 ### Observability Dashboard
 

@@ -313,9 +313,11 @@ python -m src.eval.eval_runner --mode full --k 5
 
 ## 기술 스택
 
+<!-- AUTO:tech_stack -->
 | 레이어 | 기술 |
 |--------|------|
-| LLM | Claude Sonnet 4.6 / Haiku 4.5 (Anthropic) |
+| LLM (분석 · 에이전트) | `claude-sonnet-4-6` |
+| LLM (추출 · 검증) | `claude-haiku-4-5-20251001` |
 | 배치 API | Anthropic Batch API |
 | 임베딩 | Vertex AI `text-multilingual-embedding-002` (768차원) |
 | 벡터 DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW 인덱스) |
@@ -326,6 +328,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, 네이버 금융 |
 | 대시보드 | Streamlit (Cloud Run Service) |
 | 인프라 | GCP Cloud Run Jobs + Cloud SQL |
+<!-- END:tech_stack -->
 
 ---
 
@@ -405,15 +408,21 @@ Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 
 | 잡 | 스케줄 |
 |----|--------|
-| `mer_check` | 5분마다 |
-| `dart_check` | 평일 8–18시, 10분마다 |
-| `macro_check` | 매크로 데이터 갱신 1시간마다 · 알림 + 뉴스 30분마다 |
-| `verify_predictions` | 매일 20:00 (일간 리포트 전) |
-| `report-generator` (일간) | 매일 21:00 |
-| `report-generator` (주간) | 매주 일요일 21:00 |
-| `report-generator` (월간) | 매월 말일 21:00 |
-| `report-generator` (분기) | 3/6/9/12월 말일 21:00 |
-| `report-generator` (연간) | 12월 31일 21:00 |
+<!-- AUTO:jobs -->
+| 잡 | 스케줄 |
+|----|--------|
+| `mer` | 매 5분마다 |
+| `dart` | 매 10분, 8-18시 |
+| `macro_update` | 매 1시간마다 |
+| `macro_alert` | 매 30분마다 |
+| `news` | 매 30분마다 |
+| `verify_predictions` | 20:00 |
+| `report_daily` | 21:00 |
+| `report_weekly` | 매주 일요일 21:00 |
+| `report_monthly` | 말일 21:00 |
+| `report_quarterly` | 3/6/9/12월 말일 21:00 |
+| `report_annual` | 12월 31일 21:00 |
+<!-- END:jobs -->
 
 ### 옵저버빌리티 대시보드
 
