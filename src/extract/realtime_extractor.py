@@ -8,9 +8,9 @@ import logging
 
 import anthropic
 import asyncpg
-from sentence_transformers import SentenceTransformer
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
+from src.extract.vertex_embedder import VertexEmbedder, vec_str
 from config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
 
 log = logging.getLogger(__name__)
@@ -40,8 +40,6 @@ def _extract_content(item: dict, insight_type: str) -> str:
     return json.dumps(item, ensure_ascii=False)[:200]
 
 
-def _vec_str(vec: list[float]) -> str:
-    return "[" + ",".join(f"{v:.8f}" for v in vec) + "]"
 
 
 ECONOMIC_TOPICS = {
@@ -74,7 +72,7 @@ def is_economic(primary_topic: str, title: str = "", content: str = "") -> bool:
 
 async def extract_and_save(
     conn: asyncpg.Connection,
-    embedder: SentenceTransformer,
+    embedder: VertexEmbedder,
     post: dict,
 ) -> dict:
     """
@@ -136,10 +134,8 @@ async def extract_and_save(
         for item in items:
             content = _extract_content(item, insight_type)
 
-            vec = _vec_str(embedder.encode(
-                [f"passage: {content}"],
-                normalize_embeddings=True,
-            )[0].tolist())
+            vecs = await embedder.embed_passages([content])
+            vec = vec_str(vecs[0])
 
             await conn.execute("""
                 INSERT INTO mer_insights

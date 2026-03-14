@@ -13,12 +13,12 @@ from datetime import datetime, date
 import asyncpg
 import requests
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sentence_transformers import SentenceTransformer
 
 from config.settings import (
     DATABASE_URL, MACRO_ALERT_THRESHOLDS,
-    EMBEDDING_MODEL, BLOG_RSS,
+    BLOG_RSS,
 )
+from src.extract.vertex_embedder import VertexEmbedder, vec_str
 from src.pipeline.event_types import EventType, ANALYSIS_CONFIGS
 from src.pipeline.context_assembler import ContextAssembler
 from src.pipeline.analysis_generator import AnalysisGenerator
@@ -41,7 +41,7 @@ class EventDispatcher:
 
     def __init__(self):
         self.conn: asyncpg.Connection | None = None
-        self.embedder: SentenceTransformer | None = None
+        self.embedder: VertexEmbedder | None = None
         self.assembler: ContextAssembler | None = None
         self.generator = AnalysisGenerator()
         self.telegram  = TelegramBot()
@@ -56,7 +56,7 @@ class EventDispatcher:
     async def start(self):
         log.info("EventDispatcher 시작 중...")
         self.conn = await asyncpg.connect(DATABASE_URL)
-        self.embedder = SentenceTransformer(EMBEDDING_MODEL)
+        self.embedder = VertexEmbedder()
         self.assembler = ContextAssembler(self.conn, self.embedder)
         self.mer_monitor = MerMonitor(self.conn)
         self.dart = DartCollector(self.conn)
@@ -159,17 +159,15 @@ class EventDispatcher:
         }
 
         # events 테이블 저장
-        raw_vec = self.embedder.encode(
-            [f"passage: {post['title']} {post.get('content_text', '')[:300]}"],
-            normalize_embeddings=True,
-        )[0].tolist()
-        vec = "[" + ",".join(f"{v:.8f}" for v in raw_vec) + "]"
+        embed_text = f"{post['title']} {post.get('content_text', '')[:300]}"
+        vecs = await self.embedder.embed_passages([embed_text])
+        event_vec = vec_str(vecs[0])
         event_id = await self.conn.fetchval("""
             INSERT INTO events (event_type, source, title, content, event_date, embedding)
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id
         """, event["event_type"].value, event["source"], event["title"],
-            event["content"], event["event_date"], vec)
+            event["content"], event["event_date"], event_vec)
 
         # 에이전트 루프 실행 (Tracer로 감싸서 비용/지연 기록, 실패 시 fallback)
         try:
@@ -317,11 +315,9 @@ class EventDispatcher:
         log.info(f"이벤트 처리: {event_type.value} — {event.get('title', '')[:50]}")
 
         # events 테이블 저장 + embedding
-        raw_vec = self.embedder.encode(
-            [f"passage: {event.get('title', '')} {event.get('content', '')[:300]}"],
-            normalize_embeddings=True
-        )[0].tolist()
-        vec = "[" + ",".join(f"{v:.8f}" for v in raw_vec) + "]"
+        embed_text = f"{event.get('title', '')} {event.get('content', '')[:300]}"
+        vecs = await self.embedder.embed_passages([embed_text])
+        vec = vec_str(vecs[0])
 
         event_id = await self.conn.fetchval("""
             INSERT INTO events (event_type, source, title, content, event_date, embedding)

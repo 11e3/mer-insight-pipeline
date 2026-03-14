@@ -11,9 +11,9 @@ pandas==2.2.0
 fredapi==0.5.1
 requests==2.31.0
 
-# 벡터 임베딩
-sentence-transformers==3.0.1
-torch==2.3.0
+# 벡터 임베딩 (Vertex AI)
+google-cloud-aiplatform==1.60.0
+vertexai==1.60.0
 
 # 스케줄러
 APScheduler==3.10.4

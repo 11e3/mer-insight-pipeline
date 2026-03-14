@@ -7,23 +7,18 @@ from datetime import date
 
 import asyncpg
 import anthropic
-from sentence_transformers import SentenceTransformer
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from config.prompts import ENTITY_EXTRACT_PROMPT
+from src.extract.vertex_embedder import VertexEmbedder, vec_str
 from src.pipeline.event_types import AnalysisConfig
-
-
-def _vec_str(vec: list[float]) -> str:
-    """asyncpg용 pgvector 문자열 변환."""
-    return "[" + ",".join(f"{v:.8f}" for v in vec) + "]"
 
 client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
 
 class ContextAssembler:
 
-    def __init__(self, conn: asyncpg.Connection, embedder: SentenceTransformer):
+    def __init__(self, conn: asyncpg.Connection, embedder: VertexEmbedder):
         self.conn = conn
         self.embedder = embedder
 
@@ -89,10 +84,7 @@ class ContextAssembler:
         """벡터 유사도 + 키워드 하이브리드 검색 + 시간 가중치 re-rank."""
 
         # 1. 벡터 검색
-        vec = _vec_str(self.embedder.encode(
-            [f"query: {event_text[:500]}"],
-            normalize_embeddings=True
-        )[0].tolist())
+        vec = vec_str(await self.embedder.embed_query(event_text[:500]))
 
         vector_rows = await self.conn.fetch("""
             SELECT mi.id, mi.content, mi.structured_data, mi.insight_type,
@@ -159,10 +151,7 @@ class ContextAssembler:
 
     async def _find_similar_past(self, event_text: str, limit: int) -> list[dict]:
         """과거 유사 이벤트에 대한 분석 결과 검색."""
-        vec = _vec_str(self.embedder.encode(
-            [f"query: {event_text[:500]}"],
-            normalize_embeddings=True
-        )[0].tolist())
+        vec = vec_str(await self.embedder.embed_query(event_text[:500]))
 
         rows = await self.conn.fetch("""
             SELECT e.title, e.event_type, e.event_date,

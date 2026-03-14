@@ -42,10 +42,14 @@ MACRO_ALERT_THRESHOLDS = {
     "us_unemployment": 0.002,  # 실업률 0.2%p 이상 변화
 }
 
+# ─── GCP ──────────────────────────────────────────────────────────────────────
+GCP_PROJECT_ID = os.environ["GCP_PROJECT_ID"]
+GCP_LOCATION   = os.environ.get("GCP_LOCATION", "us-central1")
+
 # ─── 임베딩 ───────────────────────────────────────────────────────────────────
-EMBEDDING_MODEL    = "intfloat/multilingual-e5-large"
-EMBEDDING_DIM      = 1024
-EMBEDDING_BATCH_SIZE = 32
+VERTEX_EMBEDDING_MODEL = "text-multilingual-embedding-002"
+EMBEDDING_DIM          = 768
+EMBEDDING_BATCH_SIZE   = 32
 
 # ─── 데이터 경로 ──────────────────────────────────────────────────────────────
 DATA_DIR     = os.path.join(os.path.dirname(__file__), "..", "data")
