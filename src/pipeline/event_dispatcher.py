@@ -33,6 +33,7 @@ from src.agent.agent import MerAgent
 from src.search.bm25_index import BM25Index
 from src.observability.tracer import Tracer
 from src.pipeline.post_enricher import PostEnricher
+from src.pipeline.prediction_verifier import PredictionVerifier
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ class EventDispatcher:
         self.bm25_index: BM25Index | None = None
         self.mer_agent: MerAgent | None = None
         self.enricher: PostEnricher | None = None
+        self.verifier: PredictionVerifier | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
     async def _init(self):
@@ -73,6 +75,7 @@ class EventDispatcher:
             self.bm25_index.save(bm25_cache)
         self.mer_agent = MerAgent(self.conn, self.embedder, self.bm25_index)
         self.enricher = PostEnricher(self.conn, self.embedder)
+        self.verifier = PredictionVerifier(self.conn)
 
     async def run_job(self, job: str) -> None:
         """
@@ -98,7 +101,10 @@ class EventDispatcher:
                 await self._update_macro_data()
                 await self._check_macro_alerts()
                 await self._check_news()
+            elif job == "verify_predictions":
+                await self._verify_predictions()
             elif job == "daily":
+                await self._verify_predictions()
                 await self._send_daily_report()
             elif job == "weekly":
                 await self._send_weekly_report()
@@ -133,6 +139,11 @@ class EventDispatcher:
         )
         self.scheduler.add_job(
             self._check_news, "interval", minutes=30, id="news"
+        )
+        # 예측 검증: 매일 20:00 (일간 리포트 전)
+        self.scheduler.add_job(
+            self._verify_predictions, "cron",
+            hour=20, minute=0, id="verify_predictions"
         )
         # 일간 리포트: 매일 21:00
         self.scheduler.add_job(
@@ -318,6 +329,13 @@ class EventDispatcher:
             log.error(f"매크로 알림 체크 오류: {e}")
 
     # ─── 주기 리포트 ─────────────────────────────────────────────────────────
+
+    async def _verify_predictions(self):
+        try:
+            resolved = await self.verifier.run()
+            log.info(f"예측 검증 완료: {resolved}건 확정")
+        except Exception as e:
+            log.error(f"예측 검증 오류: {e}")
 
     async def _send_daily_report(self):
         try:

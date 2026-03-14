@@ -137,11 +137,12 @@ async def extract_and_save(
             vecs = await embedder.embed_passages([content])
             vec = vec_str(vecs[0])
 
-            await conn.execute("""
+            insight_id = await conn.fetchval("""
                 INSERT INTO mer_insights
                     (post_id, insight_type, content, structured_data, embedding)
                 VALUES ($1, $2, $3, $4, $5::vector)
                 ON CONFLICT DO NOTHING
+                RETURNING id
             """,
                 post_id,
                 insight_type,
@@ -149,6 +150,21 @@ async def extract_and_save(
                 json.dumps(item, ensure_ascii=False),
                 vec,
             )
+            # prediction 타입이면 mer_predictions에도 삽입
+            if insight_type == "prediction" and insight_id and item.get("verifiable"):
+                await conn.execute("""
+                    INSERT INTO mer_predictions
+                        (insight_id, prediction_text, predicted_direction,
+                         target_asset, prediction_date)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT DO NOTHING
+                """,
+                    insight_id,
+                    item.get("prediction", content),
+                    item.get("direction", "neutral"),
+                    item.get("target_asset", ""),
+                    post.get("date"),
+                )
             count += 1
 
     result["count"] = count
