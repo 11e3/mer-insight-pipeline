@@ -33,15 +33,6 @@ def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> s
     ]
 
     if enriched:
-        # 2. 현재 시장 스냅샷
-        snap = enriched.get("market_snapshot")
-        if snap:
-            parts.append(
-                f"\n📊 *현재 시장* ({snap['date']})\n"
-                f"KOSPI {snap['kospi']} | USD/KRW {snap['usd_krw']} | "
-                f"WTI {snap['wti']} | VIX {snap['vix']} | US10Y {snap['us_10y']}"
-            )
-
         # 4. 행동 시그널
         signal = enriched.get("action_signal")
         if signal:
@@ -61,16 +52,6 @@ def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> s
             )
             parts.append(f"\n📌 *관련 과거 글*\n{links}")
 
-        # 5. 유사 이슈 후 시장 반응
-        react = enriched.get("market_reaction")
-        if react and react.get("n", 0) >= 2:
-            d3 = react["d3"]
-            d7 = react["d7"]
-            parts.append(
-                f"\n📈 *유사 이슈 후 시장 반응* (과거 {react['n']}회 평균)\n"
-                f"3일: KOSPI {d3['kospi']} | WTI {d3['wti']} | USD/KRW {d3['usd_krw']}\n"
-                f"7일: KOSPI {d7['kospi']} | WTI {d7['wti']} | USD/KRW {d7['usd_krw']}"
-            )
 
     return "\n".join(parts)
 
