@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline**은 [메르(ranto28) 한국 경제 블로그](https://blog.naver.com/ranto28)를 모니터링하고, Claude Batch API로 포스트 2,193개에서 인사이트를 추출하며, 새 글이 올라오면 수분 내에 인용 근거가 명시된 분석을 텔레그램 구독자에게 전송합니다.
 
-모든 컴포넌트가 실운영 수준으로 연결됩니다: 25,090개 인사이트를 인덱싱한 하이브리드 검색, 스스로 도구 호출을 결정하는 LLM 에이전트 루프, 미인용 주장을 차단하는 환각 방지 가드, 호출별 비용·지연 추적, LLM 심판을 포함한 평가 파이프라인 — 모두 벤더 종속 없이 PostgreSQL + pgvector 위에서 동작합니다.
+모든 컴포넌트가 실운영 수준으로 연결됩니다: 25,090개 인사이트를 인덱싱한 하이브리드 검색, 스스로 도구 호출을 결정하는 LLM 에이전트 루프, 미인용 주장을 차단하는 환각 방지 가드, Claude Haiku를 심판으로 사용하는 예측 자동 검증 파이프라인(5,368개 추적 중), 호출별 비용·지연 추적, LLM 심판을 포함한 평가 파이프라인 — 모두 벤더 종속 없이 PostgreSQL + pgvector 위에서 동작합니다.
 
 **포스트당 약 $0.15** (평균 4 iteration) · **월 30개 기준 약 $4.50**
 
@@ -51,11 +51,13 @@ flowchart TD
         ED[event_dispatcher.py<br>APScheduler] --> B
         ED --> DC[dart_collector]
         ED --> NC[news_collector<br>연준 · 한국은행 RSS]
-        ED --> LM[load_macro<br>FRED · 한국은행 · yfinance]
+        ED --> LM[load_macro<br>FRED · 한국은행 ECOS]
+        ED --> PV[prediction_verifier<br>Claude Haiku 심판]
         DC & NC & LM --> CA[context_assembler]
         CA --> HS3
         CA --> AG2[analysis_generator<br>Claude Sonnet]
         AG2 --> RG[report_generator<br>5단계 계층 구조]
+        PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
     OUT --> TG1[텔레그램 1티어<br>무료 채널]
@@ -159,6 +161,36 @@ python -m src.search.experiment --k 5
 인용된 ref ID는 전송 전에 환각 방지 가드가 `mer_insights` 테이블에서 검증합니다.
 
 ![텔레그램 전송 예시](docs/telegram_demo.png)
+
+---
+
+## 예측 자동 검증 파이프라인
+
+메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Haiku가 자동 심판을 수행합니다.
+
+**배치당 Claude에 제공되는 컨텍스트:**
+
+| 소스 | 내용 |
+|------|------|
+| 월별 매크로 요약 | KOSPI 고/저/평균, 달러/원, WTI, US10Y, Fed 금리, VIX, BTC — FRED + 한국은행 ECOS |
+| 네이버 금융 주가 | 삼성전자, SK하이닉스 등 주요 10개 종목 월별 평균 종가 |
+| DART 공시 + 뉴스 | 가장 오래된 미검증 예측일 이후 수집된 기업 이벤트 |
+| 자동 분석 | 동일 기간 메르 포스트 분석 내용 |
+
+**판정 기준**
+
+| 판정 | 조건 |
+|------|------|
+| `CORRECT` | 컨텍스트 또는 Claude 지식으로 예측 내용 확인됨 |
+| `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
+| `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
+
+만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 일간 리포트 생성 전에 전체 미검증 예측을 검증합니다.
+
+```bash
+# 과거 적체 1회 소급 처리
+gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
+```
 
 ---
 
@@ -291,7 +323,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.4) |
 | 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
 | 전송 | python-telegram-bot 21 |
-| 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, yfinance |
+| 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, 네이버 금융 |
 | 대시보드 | Streamlit (Cloud Run Service) |
 | 인프라 | GCP Cloud Run Jobs + Cloud SQL |
 
@@ -303,13 +335,14 @@ python -m src.eval.eval_runner --mode full --k 5
 |------|-----|
 | 처리된 포스트 | 2,193개 |
 | 추출된 인사이트 | 25,090개 |
+| 추적 중인 예측 | 5,368개 |
 | 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
 | 임베딩 차원 | 768 |
 | BM25 인덱스 크기 | 정규 문서 16,126개 |
-| 스케줄된 작업 | 7개 |
+| 스케줄된 작업 | 8개 |
 | 리포트 계층 단계 | 5단계 |
 | 포스트당 비용 (에이전트) | ~$0.15 |
-| 추적 거시 지표 | KOSPI, 달러/원, VIX, BTC, WTI, CPI, 실업률 |
+| 추적 거시 지표 | KOSPI, 달러/원, WTI, VIX, BTC, US10Y, Fed 금리, CPI, 실업률 |
 
 ---
 
@@ -375,6 +408,7 @@ Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 | `mer_check` | 5분마다 |
 | `dart_check` | 평일 8–18시, 10분마다 |
 | `macro_check` | 30분마다 |
+| `verify_predictions` | 매일 20:00 (일간 리포트 전) |
 | `report` (일/주/월/…) | 리포트 유형별 cron |
 
 ### 옵저버빌리티 대시보드
@@ -451,7 +485,7 @@ mer-insight-pipeline/
 │   │   └── realtime_extractor.py # 실시간 인사이트 추출 (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
-│   │   ├── load_macro.py         # FRED / 한국은행 / yfinance
+│   │   ├── load_macro.py         # FRED / 한국은행 ECOS (yfinance 제거 — GCP 차단)
 │   │   ├── load_bls.py
 │   │   ├── load_realestate.py
 │   │   └── load_trade.py
@@ -462,6 +496,7 @@ mer-insight-pipeline/
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
 │   │   ├── context_assembler.py  # RAG 컨텍스트 빌더
 │   │   ├── analysis_generator.py # Claude 분석 생성 (폴백)
+│   │   ├── prediction_verifier.py # 매일 Claude Haiku 배치 검증
 │   │   └── report_generator.py   # 5단계 계층적 합성
 │   ├── delivery/
 │   │   ├── telegram_bot.py       # 2티어 텔레그램 전송
@@ -477,6 +512,7 @@ mer-insight-pipeline/
 ├── results/                      # 평가 리포트 & 실험 결과
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL 스키마 (traces / spans 포함)
+│   ├── migrate_predictions.py    # 1회성: mer_insights → mer_predictions 소급 적재
 │   └── run_batch.py
 ├── docker-compose.yml
 ├── Dockerfile

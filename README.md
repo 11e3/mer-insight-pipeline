@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline** monitors [Mer's Korean finance blog](https://blog.naver.com/ranto28), extracts structured insights from 2,193 posts using the Claude Batch API, and delivers citation-grounded analysis to Telegram subscribers within minutes of each new post.
 
-Every component is production-wired: a hybrid retriever backed by 25,090 indexed insights, an LLM agent loop that decides its own tool calls, a hallucination guard that blocks uncited claims, per-call cost/latency tracing, and an eval harness with an LLM judge — all running on PostgreSQL + pgvector with no vector-DB vendor lock-in.
+Every component is production-wired: a hybrid retriever backed by 25,090 indexed insights, an LLM agent loop that decides its own tool calls, a hallucination guard that blocks uncited claims, a daily prediction verification pipeline (Claude Haiku as judge, 5,368 tracked predictions), per-call cost/latency tracing, and an eval harness with an LLM judge — all running on PostgreSQL + pgvector with no vector-DB vendor lock-in.
 
 **~$0.15 per post** (4 agent iterations avg) · **$4.50/month** at 30 posts/month
 
@@ -51,11 +51,13 @@ flowchart TD
         ED[event_dispatcher.py<br>APScheduler] --> B
         ED --> DC[dart_collector]
         ED --> NC[news_collector<br>Fed · BOK RSS]
-        ED --> LM[load_macro<br>FRED · BOK · yfinance]
+        ED --> LM[load_macro<br>FRED · BOK ECOS]
+        ED --> PV[prediction_verifier<br>Claude Haiku judge]
         DC & NC & LM --> CA[context_assembler]
         CA --> HS3
         CA --> AG2[analysis_generator<br>Claude Sonnet]
         AG2 --> RG[report_generator<br>5-level hierarchy]
+        PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
     OUT --> TG1[Telegram Tier 1<br>Free Channel]
@@ -160,6 +162,36 @@ Each analysis is grounded in past insights retrieved from the 25,090-insight DB 
 Citations are verified by the Hallucination Guard before delivery.
 
 ![Telegram delivery example](docs/telegram_demo.png)
+
+---
+
+## Prediction Verification Pipeline
+
+Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge.
+
+**Context fed to Claude per batch:**
+
+| Source | What's included |
+|--------|----------------|
+| Monthly macro summary | KOSPI hi/lo/avg, USD/KRW, WTI, US10Y, Fed rate, VIX, BTC — from FRED + BOK ECOS |
+| Naver Finance stocks | Monthly avg close for 10 major Korean equities (삼성전자, SK하이닉스 …) |
+| DART filings + news | Corporate events collected since the oldest pending prediction date |
+| Auto-analyses | Mer post analyses from the same period |
+
+**Verdicts**
+
+| Verdict | Condition |
+|---------|-----------|
+| `CORRECT` | Predicted outcome confirmed by context or Claude's knowledge |
+| `INCORRECT` | Predicted outcome contradicted by evidence |
+| `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
+
+Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predictions per Haiku call; the daily 20:00 run processes all open predictions before the daily report is generated.
+
+```bash
+# One-time backlog clearance
+gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
+```
 
 ---
 
@@ -294,7 +326,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.4) |
 | Scheduler | GCP Cloud Scheduler + Cloud Run Jobs |
 | Delivery | python-telegram-bot 21 |
-| Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, yfinance |
+| Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, Naver Finance |
 | Dashboard | Streamlit (Cloud Run Service) |
 | Infra | GCP Cloud Run Jobs + Cloud SQL |
 
@@ -306,13 +338,14 @@ python -m src.eval.eval_runner --mode full --k 5
 |--------|-------|
 | Processed posts | 2,193 |
 | Extracted insights | 25,090 |
+| Tracked predictions | 5,368 |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 768 |
 | BM25 index size | 16,126 canonical documents |
-| Scheduled jobs | 7 |
+| Scheduled jobs | 8 |
 | Report hierarchy levels | 5 |
 | Cost per post (agent) | ~$0.15 |
-| Macro indicators tracked | KOSPI, USD/KRW, VIX, BTC, WTI, CPI, unemployment |
+| Macro indicators tracked | KOSPI, USD/KRW, WTI, VIX, BTC, US10Y, Fed rate, CPI, unemployment |
 
 ---
 
@@ -383,6 +416,7 @@ Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 | `mer_check` | every 5 min |
 | `dart_check` | every 10 min, weekdays 8–18h |
 | `macro_check` | every 30 min |
+| `verify_predictions` | daily 20:00 (before daily report) |
 | `report` (daily/weekly/…) | cron per report type |
 
 ### Observability Dashboard
@@ -459,7 +493,7 @@ mer-insight-pipeline/
 │   │   └── realtime_extractor.py # Real-time insight extraction (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
-│   │   ├── load_macro.py         # FRED / BOK / yfinance
+│   │   ├── load_macro.py         # FRED / BOK ECOS (yfinance removed — GCP blocked)
 │   │   ├── load_bls.py
 │   │   ├── load_realestate.py
 │   │   └── load_trade.py
@@ -470,6 +504,7 @@ mer-insight-pipeline/
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
 │   │   ├── context_assembler.py  # RAG context builder
 │   │   ├── analysis_generator.py # Claude analysis (fallback)
+│   │   ├── prediction_verifier.py # Daily Claude Haiku batch verification
 │   │   └── report_generator.py   # 5-level hierarchical synthesis
 │   ├── delivery/
 │   │   ├── telegram_bot.py       # Two-tier Telegram delivery
@@ -482,6 +517,7 @@ mer-insight-pipeline/
 ├── results/                      # Eval reports & experiment outputs
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL schema (includes traces / spans)
+│   ├── migrate_predictions.py    # One-time: mer_insights → mer_predictions backfill
 │   └── run_batch.py
 ├── docker-compose.yml
 ├── Dockerfile
