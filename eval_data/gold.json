@@ -1,0 +1,95 @@
+{
+  "_comment": "relevant_insight_ids를 실제 mer_insights 테이블의 PK로 채워주세요.",
+  "test_cases": [
+    {
+      "id": "eval_001",
+      "query": "미국 국채 금리 전망에 대한 메르의 분석",
+      "relevant_insight_ids": [
+        22737,
+        16440,
+        16433,
+        16928,
+        15946
+      ],
+      "expected_topics": [
+        "미국 국채",
+        "금리",
+        "연준"
+      ],
+      "expected_stance": "금리 인하 지연 전망",
+      "difficulty": "medium"
+    },
+    {
+      "id": "eval_002",
+      "query": "한국 부동산 시장 전망과 금리 관계",
+      "relevant_insight_ids": [
+        18022,
+        15659,
+        18983,
+        16843,
+        21536
+      ],
+      "expected_topics": [
+        "부동산",
+        "아파트",
+        "금리"
+      ],
+      "expected_stance": "",
+      "difficulty": "easy"
+    },
+    {
+      "id": "eval_003",
+      "query": "반도체 산업 사이클과 삼성전자 전망",
+      "relevant_insight_ids": [
+        11842,
+        24774,
+        6023,
+        20906,
+        2513
+      ],
+      "expected_topics": [
+        "반도체",
+        "삼성전자",
+        "메모리"
+      ],
+      "expected_stance": "",
+      "difficulty": "medium"
+    },
+    {
+      "id": "eval_004",
+      "query": "인플레이션 재발 리스크와 연준 정책",
+      "relevant_insight_ids": [
+        3414,
+        4929,
+        4787,
+        19634,
+        13520
+      ],
+      "expected_topics": [
+        "인플레이션",
+        "연준",
+        "기준금리"
+      ],
+      "expected_stance": "",
+      "difficulty": "hard"
+    },
+    {
+      "id": "eval_005",
+      "query": "달러 강세와 신흥국 환율 리스크",
+      "relevant_insight_ids": [
+        23479,
+        19768,
+        20850,
+        20700,
+        4164
+      ],
+      "expected_topics": [
+        "달러",
+        "환율",
+        "신흥국"
+      ],
+      "expected_stance": "",
+      "difficulty": "medium"
+    }
+  ]
+}

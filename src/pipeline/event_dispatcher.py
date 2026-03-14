@@ -29,6 +29,8 @@ from src.delivery.telegram_bot import TelegramBot
 from src.extract.realtime_extractor import extract_and_save, is_economic
 from src.delivery.formatters import format_short_post
 from src.pipeline.report_generator import ReportGenerator
+from src.agent.agent import MerAgent
+from src.search.bm25_index import BM25Index
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -46,6 +48,8 @@ class EventDispatcher:
         self.dart: DartCollector | None = None
         self.news_collector: NewsCollector | None = None
         self.reporter: ReportGenerator | None = None
+        self.bm25_index: BM25Index | None = None
+        self.mer_agent: MerAgent | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
     async def start(self):
@@ -57,6 +61,15 @@ class EventDispatcher:
         self.dart = DartCollector(self.conn)
         self.news_collector = NewsCollector(self.conn)
         self.reporter = ReportGenerator(self.conn, self.telegram)
+
+        # BM25 인덱스 로드 (없으면 빌드)
+        from pathlib import Path
+        bm25_cache = Path("data/bm25_cache.pkl")
+        self.bm25_index = BM25Index()
+        if not self.bm25_index.load(bm25_cache):
+            await self.bm25_index.build(self.conn)
+            self.bm25_index.save(bm25_cache)
+        self.mer_agent = MerAgent(self.conn, self.embedder, self.bm25_index)
 
         # 스케줄 등록
         self.scheduler.add_job(
@@ -121,14 +134,8 @@ class EventDispatcher:
                 summary = extracted["post_summary"]
 
                 if is_economic(topic, post.get("title", ""), post.get("content_text", "")):
-                    # 경제 관련 → Sonnet 전체 분석 + 텔레그램 발송
-                    await self._process_event({
-                        "event_type": EventType.MER_NEW_POST,
-                        "title":      post["title"],
-                        "content":    post["content_text"],
-                        "source":     post["url"],
-                        "event_date": datetime.now(),
-                    })
+                    # 경제 관련 → 에이전트 루프 분석 + 텔레그램 발송
+                    await self._process_mer_post_with_agent(post)
                 else:
                     # 비경제 (건강/라이프/기타) → 짧은 요약만 발송
                     log.info(f"  비경제 포스팅 ({topic}) — 짧은 포맷 발송")
@@ -139,6 +146,54 @@ class EventDispatcher:
                     )
         except Exception as e:
             log.error(f"메르 신규 글 체크 오류: {e}")
+
+    async def _process_mer_post_with_agent(self, post: dict):
+        """MER 신규 포스트를 에이전트 루프로 분석. 실패 시 기존 방식 fallback."""
+        event = {
+            "event_type": EventType.MER_NEW_POST,
+            "title":      post["title"],
+            "content":    post["content_text"],
+            "source":     post["url"],
+            "event_date": datetime.now(),
+        }
+
+        # events 테이블 저장
+        raw_vec = self.embedder.encode(
+            [f"passage: {post['title']} {post.get('content_text', '')[:300]}"],
+            normalize_embeddings=True,
+        )[0].tolist()
+        vec = "[" + ",".join(f"{v:.8f}" for v in raw_vec) + "]"
+        event_id = await self.conn.fetchval("""
+            INSERT INTO events (event_type, source, title, content, event_date, embedding)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+        """, event["event_type"].value, event["source"], event["title"],
+            event["content"], event["event_date"], vec)
+
+        # 에이전트 루프 실행 (실패 시 fallback)
+        try:
+            analysis = await self.mer_agent.run(post)
+            log.info("  에이전트 분석 완료")
+        except Exception as e:
+            log.warning(f"  에이전트 실패, fallback 실행: {e}")
+            config  = ANALYSIS_CONFIGS[EventType.MER_NEW_POST]
+            context = await self.assembler.assemble(event, config)
+            analysis = await self.generator.generate(context, config)
+
+        sent = await self.telegram.send_analysis(
+            channel="tier1",
+            event=event,
+            analysis=analysis,
+            rules_count=0,
+        )
+        await self.conn.execute("""
+            INSERT INTO auto_analyses
+                (event_id, analysis_text, rules_used, macro_context, telegram_sent, telegram_sent_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        """, event_id, analysis, [], json.dumps({}), sent,
+            datetime.now() if sent else None)
+
+        log.info(f"  MER 포스트 처리 완료 (텔레그램: {'발송' if sent else '실패'})")
 
     async def _check_dart_filings(self):
         try:

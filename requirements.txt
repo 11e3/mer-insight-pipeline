@@ -36,3 +36,14 @@ matplotlib==3.9.0
 python-dotenv==1.0.1
 pydantic==2.7.4
 tqdm==4.66.4
+
+# Hybrid Search
+rank-bm25==0.2.2
+kiwipiepy==0.17.1
+
+# 통계 검증 (eval)
+scipy==1.13.0
+
+# 클러스터링 (eval용)
+scikit-learn==1.4.2
+numpy==1.26.4
