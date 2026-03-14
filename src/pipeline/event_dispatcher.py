@@ -53,8 +53,9 @@ class EventDispatcher:
         self.mer_agent: MerAgent | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
-    async def start(self):
-        log.info("EventDispatcher 시작 중...")
+    async def _init(self):
+        """공유 리소스 초기화 (start/run_job 공통)."""
+        from pathlib import Path
         self.conn = await asyncpg.connect(DATABASE_URL)
         self.embedder = VertexEmbedder()
         self.assembler = ContextAssembler(self.conn, self.embedder)
@@ -63,14 +64,55 @@ class EventDispatcher:
         self.news_collector = NewsCollector(self.conn)
         self.reporter = ReportGenerator(self.conn, self.telegram)
 
-        # BM25 인덱스 로드 (없으면 빌드)
-        from pathlib import Path
         bm25_cache = Path("data/bm25_cache.pkl")
         self.bm25_index = BM25Index()
         if not self.bm25_index.load(bm25_cache):
             await self.bm25_index.build(self.conn)
             self.bm25_index.save(bm25_cache)
         self.mer_agent = MerAgent(self.conn, self.embedder, self.bm25_index)
+
+    async def run_job(self, job: str) -> None:
+        """
+        Cloud Run Job 진입점 — 단일 작업 실행 후 종료.
+
+        job 값:
+          mer_check    — 메르 신규 글 확인
+          dart_check   — DART 공시 확인
+          macro_check  — 매크로 업데이트 + 알림 + 뉴스
+          daily        — 일간 리포트
+          weekly       — 주간 리포트
+          monthly      — 월간 리포트
+          quarterly    — 분기 리포트
+          annual       — 연간 리포트
+        """
+        await self._init()
+        try:
+            if job == "mer_check":
+                await self._check_mer_new_posts()
+            elif job == "dart_check":
+                await self._check_dart_filings()
+            elif job == "macro_check":
+                await self._update_macro_data()
+                await self._check_macro_alerts()
+                await self._check_news()
+            elif job == "daily":
+                await self._send_daily_report()
+            elif job == "weekly":
+                await self._send_weekly_report()
+            elif job == "monthly":
+                await self._send_monthly_report()
+            elif job == "quarterly":
+                await self._send_quarterly_report()
+            elif job == "annual":
+                await self._send_annual_report()
+            else:
+                raise ValueError(f"알 수 없는 job: {job}")
+        finally:
+            await self.conn.close()
+
+    async def start(self):
+        log.info("EventDispatcher 시작 중...")
+        await self._init()
 
         # 스케줄 등록
         self.scheduler.add_job(
