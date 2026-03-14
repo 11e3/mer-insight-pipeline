@@ -1,41 +1,67 @@
 """
 PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증.
 
-검증 로직:
-  - 컨텍스트를 예측 생성일 기준으로 구성 (예측일 이후 90일 macro_daily)
-  - CORRECT/INCORRECT → 확정, 더 이상 검증 안 함
-  - PENDING → 재시도. 단, 생성일로부터 180일 초과 시 skipped_at 마킹 후 제외
+컨텍스트:
+  - 가장 오래된 예측일 ~ 오늘까지 월별 macro 요약
+  - 주요 한국 주식 월별 종가 (네이버 금융)
+  - 해당 기간 auto_analyses
+
+판단:
+  - CORRECT/INCORRECT → 확정
+  - PENDING → 결론날 때까지 매일 재시도
 """
 
 import asyncio
 import json
 import logging
+import re
 from datetime import date
+from xml.etree import ElementTree as ET
 
 import anthropic
 import asyncpg
+import requests
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 
 log = logging.getLogger(__name__)
 
-BATCH_SIZE = 20  # 한 번에 검증할 예측 수
+BATCH_SIZE = 20
+
+# 예측에 자주 등장하는 한국 주식 종목코드
+KR_STOCKS = {
+    "삼성전자":   "005930",
+    "SK하이닉스": "000660",
+    "현대차":     "005380",
+    "기아":       "000270",
+    "LG에너지솔루션": "373220",
+    "삼성SDI":    "006400",
+    "POSCO홀딩스": "005490",
+    "카카오":     "035720",
+    "네이버":     "035420",
+    "셀트리온":   "068270",
+}
+
+_HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 _SYSTEM = """\
 너는 경제·금융 예측 검증 전문가다.
-주어진 [컨텍스트](예측일 이후의 시장 데이터)를 보고,
-[예측 목록]의 각 항목에 대해 다음 중 하나로 판단한다:
+[컨텍스트]와 네 자신의 지식을 모두 활용해 [예측 목록]의 각 항목을 판단한다.
 
-1. CORRECT   — 예측의 조건이 충족됐고 결과가 예측과 일치
-2. INCORRECT — 예측의 조건이 충족됐으나 결과가 예측과 반대
-3. PENDING   — 조건이 아직 충족되지 않았거나 판단하기에 정보가 부족
+판단 기준:
+1. CORRECT   — 예측 조건이 충족됐고 결과가 예측과 일치
+2. INCORRECT — 예측 조건이 충족됐으나 결과가 예측과 반대
+3. PENDING   — 조건이 아직 충족되지 않았거나 충분한 정보가 없어 판단 불가
 
-조건부 예측("A가 발생하면 B")은 A가 컨텍스트 기간 내에 실제로 발생했는지 먼저 확인.
-판단 근거는 컨텍스트에 있는 수치나 사실에만 기반한다. 추정 금지.
+규칙:
+- 조건부 예측("A가 발생하면 B")은 A가 실제로 발생했는지 먼저 확인
+- 컨텍스트 데이터 우선. 없으면 네 지식으로 보완 가능 (단, 확신이 없으면 PENDING)
+- 예측일 이후 기간만 기준으로 판단
+- reason은 근거를 구체적으로 한 줄로 (수치 포함 권장)
 
-출력: 반드시 JSON 배열만. 설명 텍스트 없이.
+출력: JSON 배열만. 설명 텍스트 없이.
 [
-  {"id": 예측ID, "verdict": "CORRECT|INCORRECT|PENDING", "reason": "판단 근거 한 줄 (한국어)"},
+  {"id": 예측ID, "verdict": "CORRECT|INCORRECT|PENDING", "reason": "판단 근거 (한국어)"},
   ...
 ]
 """
@@ -54,9 +80,8 @@ class PredictionVerifier:
             log.info("검증할 예측 없음")
             return 0
 
-        # 컨텍스트 한 번만 빌드 (가장 오래된 예측일 ~ 오늘)
         oldest = min(p["prediction_date"] for p in preds)
-        ctx = await self._build_context(oldest)
+        ctx    = await self._build_context(oldest)
 
         resolved = 0
         for i in range(0, len(preds), BATCH_SIZE):
@@ -66,13 +91,12 @@ class PredictionVerifier:
             if len(preds) > BATCH_SIZE:
                 await asyncio.sleep(0.3)
 
-        log.info(f"예측 검증 완료: {resolved}/{len(checkable)}건 확정")
+        log.info(f"예측 검증 완료: {resolved}/{len(preds)}건 확정")
         return resolved
 
     # ── 데이터 수집 ────────────────────────────────────────────────────────────
 
     async def _fetch_pending(self) -> list[dict]:
-        """미검증 예측 조회."""
         rows = await self.conn.fetch("""
             SELECT id, prediction_text, predicted_direction,
                    target_asset, prediction_date
@@ -83,33 +107,31 @@ class PredictionVerifier:
         return [dict(r) for r in rows]
 
     async def _build_context(self, since: date) -> str:
-        """since ~ 오늘까지 월별 요약 + auto_analyses."""
         until = date.today()
         parts: list[str] = []
 
-        # 월별 평균/최고/최저로 압축 (일별로 넣으면 토큰 초과)
+        # 1. 월별 macro 요약
         macro_rows = await self.conn.fetch("""
             SELECT
                 to_char(date, 'YYYY-MM') AS ym,
-                ROUND(AVG(kospi)::numeric, 0)    AS kospi_avg,
-                ROUND(MAX(kospi)::numeric, 0)    AS kospi_max,
-                ROUND(MIN(kospi)::numeric, 0)    AS kospi_min,
-                ROUND(AVG(usd_krw)::numeric, 0)  AS krw_avg,
-                ROUND(MAX(usd_krw)::numeric, 0)  AS krw_max,
-                ROUND(AVG(wti)::numeric, 1)      AS wti_avg,
-                ROUND(MAX(wti)::numeric, 1)      AS wti_max,
-                ROUND(AVG(us_10y)::numeric, 2)   AS us10y_avg,
+                ROUND(AVG(kospi)::numeric, 0)          AS kospi_avg,
+                ROUND(MAX(kospi)::numeric, 0)          AS kospi_max,
+                ROUND(MIN(kospi)::numeric, 0)          AS kospi_min,
+                ROUND(AVG(usd_krw)::numeric, 0)        AS krw_avg,
+                ROUND(MAX(usd_krw)::numeric, 0)        AS krw_max,
+                ROUND(AVG(wti)::numeric, 1)            AS wti_avg,
+                ROUND(MAX(wti)::numeric, 1)            AS wti_max,
+                ROUND(AVG(us_10y)::numeric, 2)         AS us10y_avg,
                 ROUND(AVG(fed_funds_rate)::numeric, 2) AS fed_avg,
-                ROUND(AVG(vix)::numeric, 1)      AS vix_avg,
-                ROUND(AVG(btc_usd)::numeric, 0)  AS btc_avg
+                ROUND(AVG(vix)::numeric, 1)            AS vix_avg,
+                ROUND(AVG(btc_usd)::numeric, 0)        AS btc_avg
             FROM macro_daily
             WHERE date BETWEEN $1 AND $2
-            GROUP BY ym
-            ORDER BY ym
+            GROUP BY ym ORDER BY ym
         """, since, until)
 
         if macro_rows:
-            lines = [f"[월별 매크로 요약: {since} ~ {until}]"]
+            lines = [f"[월별 매크로: {since} ~ {until}]"]
             for r in macro_rows:
                 lines.append(
                     f"{r['ym']}: KOSPI={r['kospi_avg']}(고{r['kospi_max']}/저{r['kospi_min']}) "
@@ -119,7 +141,14 @@ class PredictionVerifier:
                 )
             parts.append("\n".join(lines))
 
-        # 해당 기간 메르 분석 (최대 10개)
+        # 2. 주요 한국 주식 월별 종가
+        stock_ctx = await asyncio.get_event_loop().run_in_executor(
+            None, self._fetch_stock_context, since, until
+        )
+        if stock_ctx:
+            parts.append(stock_ctx)
+
+        # 3. 해당 기간 메르 분석
         analysis_rows = await self.conn.fetch("""
             SELECT e.title, aa.analysis_text, e.event_date
             FROM events e
@@ -140,6 +169,56 @@ class PredictionVerifier:
             parts.append("\n\n".join(lines))
 
         return "\n\n".join(parts) if parts else "(컨텍스트 없음)"
+
+    def _fetch_stock_context(self, since: date, until: date) -> str:
+        """네이버 금융에서 주요 종목 월별 평균 종가 수집."""
+        days = (until - since).days
+        count = min(days + 30, 1800)  # 최대 약 5년치
+
+        lines = ["[주요 한국 주식 월별 종가]"]
+        fetched = 0
+
+        for name, code in KR_STOCKS.items():
+            try:
+                url = (
+                    f"https://fchart.stock.naver.com/sise.nhn"
+                    f"?symbol={code}&timeframe=day&count={count}&requestType=0"
+                )
+                resp = requests.get(url, headers=_HEADERS, timeout=10)
+                root = ET.fromstring(resp.content.decode("euc-kr", errors="replace"))
+
+                # 월별 종가 집계
+                by_month: dict[str, list[int]] = {}
+                for item in root.findall(".//item"):
+                    data = item.get("data", "")
+                    parts = data.split("|")
+                    if len(parts) < 5:
+                        continue
+                    dt, close = parts[0], parts[4]
+                    if not dt or not close:
+                        continue
+                    try:
+                        d = date(int(dt[:4]), int(dt[4:6]), int(dt[6:8]))
+                    except ValueError:
+                        continue
+                    if d < since or d > until:
+                        continue
+                    ym = dt[:6]  # "YYYYMM"
+                    by_month.setdefault(ym, []).append(int(close))
+
+                if not by_month:
+                    continue
+
+                monthly = " ".join(
+                    f"{ym[:4]}-{ym[4:]}={int(sum(v)/len(v)):,}"
+                    for ym, v in sorted(by_month.items())
+                )
+                lines.append(f"{name}: {monthly}")
+                fetched += 1
+            except Exception as e:
+                log.debug(f"주가 수집 실패 ({name}): {e}")
+
+        return "\n".join(lines) if fetched else ""
 
     # ── Claude 검증 ────────────────────────────────────────────────────────────
 
@@ -185,4 +264,3 @@ class PredictionVerifier:
             """, verdict == "CORRECT", r.get("reason", ""), pred_id)
             resolved += 1
         return resolved
-
