@@ -32,7 +32,8 @@ flowchart TD
         AG -->|tool_use| T2[check_contradiction]
         AG -->|tool_use| T3[classify_novelty<br>DBSCAN 클러스터]
         AG -->|tool_use| T4[get_topic_history]
-        T1 & T2 & T3 & T4 --> C
+        AG -->|tool_use| T5[generate_comparative_analysis]
+        T1 & T2 & T3 & T4 & T5 --> C
         AG -->|분석 초안| GD[환각 방지 가드]
         GD -->|실패 → 최대 2회 재생성| AG
         GD -->|통과| OUT[최종 분석]
@@ -342,7 +343,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
 | 임베딩 차원 | 768 |
 | BM25 인덱스 크기 | 정규 문서 16,126개 |
-| 스케줄된 작업 | 8개 |
+| 스케줄된 작업 | 11개 |
 | 리포트 계층 단계 | 5단계 |
 | 포스트당 비용 (에이전트) | ~$0.15 |
 | 추적 거시 지표 | KOSPI, 달러/원, WTI, VIX, BTC, US10Y, Fed 금리, CPI, 실업률 |

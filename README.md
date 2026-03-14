@@ -32,7 +32,8 @@ flowchart TD
         AG -->|tool_use| T2[check_contradiction]
         AG -->|tool_use| T3[classify_novelty<br>DBSCAN clusters]
         AG -->|tool_use| T4[get_topic_history]
-        T1 & T2 & T3 & T4 --> C
+        AG -->|tool_use| T5[generate_comparative_analysis]
+        T1 & T2 & T3 & T4 & T5 --> C
         AG -->|draft analysis| GD[Hallucination Guard]
         GD -->|FAIL → retry ×2| AG
         GD -->|PASS| OUT[final analysis]
@@ -345,7 +346,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 768 |
 | BM25 index size | 16,126 canonical documents |
-| Scheduled jobs | 8 |
+| Scheduled jobs | 11 |
 | Report hierarchy levels | 5 |
 | Cost per post (agent) | ~$0.15 |
 | Macro indicators tracked | KOSPI, USD/KRW, WTI, VIX, BTC, US10Y, Fed rate, CPI, unemployment |
