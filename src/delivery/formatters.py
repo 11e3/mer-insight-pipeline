@@ -28,7 +28,7 @@ def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> s
     url   = event.get("source", "")
 
     parts = [
-        f"📝 *메르 새 글*\n_{title}_\n",
+        f"📝 *메르 새 글*\n[{title}]({url})\n",
         analysis,
     ]
 
@@ -72,7 +72,6 @@ def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> s
                 f"7일: KOSPI {d7['kospi']} | WTI {d7['wti']} | USD/KRW {d7['usd_krw']}"
             )
 
-    parts.append(f"\n🔗 [원문 읽기]({url})")
     return "\n".join(parts)
 
 
