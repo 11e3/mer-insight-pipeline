@@ -25,8 +25,9 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          service_account: mer-runner@mer-pipeline-prod.iam.gserviceaccount.com
           token_format: access_token
+          project_id: mer-pipeline-prod
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
