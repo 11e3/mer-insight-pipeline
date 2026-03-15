@@ -27,6 +27,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
     stream=sys.stdout,
 )
+log = logging.getLogger(__name__)
 
 VALID_JOBS = {
     "mer_check", "dart_check", "macro_check",
@@ -38,7 +39,17 @@ VALID_JOBS = {
 async def main(job: str) -> None:
     from src.pipeline.event_dispatcher import EventDispatcher
     dispatcher = EventDispatcher()
-    await dispatcher.run_job(job)
+    try:
+        await dispatcher.run_job(job)
+    except Exception as e:
+        log.error(f"잡 실패: {job} — {e}")
+        try:
+            await dispatcher.telegram.send_raw(
+                "tier1", f"🚨 *잡 실패*: `{job}`\n`{type(e).__name__}: {e}`"
+            )
+        except Exception:
+            pass  # 텔레그램 자체 실패는 무시
+        raise
 
 
 if __name__ == "__main__":

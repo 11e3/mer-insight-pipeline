@@ -8,6 +8,9 @@ Usage:
     python scripts/update_readme.py
 """
 
+import asyncio
+import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -93,7 +96,7 @@ def _kwarg(block: str, name: str) -> str | None:
     """add_job 블록에서 name=value 추출. 따옴표 유/무 모두 처리."""
     # 따옴표 있는 경우: "3,6,9,12" or 'mon-fri' → 그대로 추출
     # 따옴표 없는 경우: 숫자/단어만 — 쉼표/공백/닫는괄호에서 끊음
-    pattern = rf'(?<!\w){re.escape(name)}=(?:"([^"]+)"|\'([^\']+)\'|([0-9*][0-9*\/\-]*|last|\w+)(?=[,\s\)]))'
+    pattern = rf'(?<!\w){re.escape(name)}=(?:"([^"]+)"|\'([^\']+)\'|([0-9*][0-9*\/\-]*|last|\w+)(?=[,\s\)]|$))'
     m = re.search(pattern, block)
     if not m:
         return None
@@ -202,6 +205,131 @@ def jobs_table_kr(jobs: list[tuple]) -> str:
     return "\n".join(lines)
 
 
+# ── 예측 정확도 ──────────────────────────────────────────────────────────────
+
+async def _fetch_prediction_stats() -> dict | None:
+    """mer_predictions 테이블에서 정확도 통계 조회. DB 없으면 None 반환."""
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        return None
+    try:
+        import asyncpg  # noqa: PLC0415
+        conn = await asyncpg.connect(db_url)
+        try:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*)                                        AS total,
+                    COUNT(*) FILTER (WHERE is_correct IS NOT NULL) AS verified,
+                    COUNT(*) FILTER (WHERE is_correct = TRUE)       AS correct,
+                    COUNT(*) FILTER (WHERE is_correct = FALSE)      AS incorrect,
+                    COUNT(*) FILTER (WHERE is_correct IS NULL)      AS pending
+                FROM mer_predictions
+                """
+            )
+        finally:
+            await conn.close()
+        if row is None or row["total"] == 0:
+            return None
+        verified = row["verified"] or 0
+        correct  = row["correct"]  or 0
+        accuracy = (correct / verified * 100) if verified > 0 else 0.0
+        return {
+            "total":    row["total"],
+            "verified": verified,
+            "correct":  correct,
+            "incorrect": row["incorrect"] or 0,
+            "pending":  row["pending"]  or 0,
+            "accuracy": accuracy,
+        }
+    except Exception as exc:
+        print(f"  SKIP prediction_accuracy: {exc}", file=sys.stderr)
+        return None
+
+
+def prediction_accuracy_en(stats: dict) -> str:
+    return (
+        "| Metric | Value |\n"
+        "|--------|-------|\n"
+        f"| Total predictions tracked | {stats['total']:,} |\n"
+        f"| Verified (CORRECT + INCORRECT) | {stats['verified']:,} |\n"
+        f"| **Accuracy (verified only)** | **{stats['accuracy']:.1f}%** |\n"
+        f"| CORRECT | {stats['correct']:,} |\n"
+        f"| INCORRECT | {stats['incorrect']:,} |\n"
+        f"| PENDING (condition not yet met) | {stats['pending']:,} |"
+    )
+
+
+def prediction_accuracy_kr(stats: dict) -> str:
+    return (
+        "| 지표 | 값 |\n"
+        "|------|----|\n"
+        f"| 추적 중인 예측 전체 | {stats['total']:,}건 |\n"
+        f"| 검증 완료 (CORRECT + INCORRECT) | {stats['verified']:,}건 |\n"
+        f"| **정확도 (검증 완료 기준)** | **{stats['accuracy']:.1f}%** |\n"
+        f"| CORRECT | {stats['correct']:,}건 |\n"
+        f"| INCORRECT | {stats['incorrect']:,}건 |\n"
+        f"| PENDING (조건 미충족·미결) | {stats['pending']:,}건 |"
+    )
+
+
+# ── Alpha Ablation 테이블 ─────────────────────────────────────────────────────
+
+def _load_ablation() -> dict | None:
+    """results/search_experiment.json에서 ablation 키 로드. 없으면 None."""
+    path = ROOT / "results" / "search_experiment.json"
+    if not path.exists():
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("ablation")
+    except Exception:
+        return None
+
+
+def ablation_table_en(abl: dict) -> str:
+    k = abl.get("k", "K")
+    best_alpha = abl["best"]["precision"]["alpha"]
+    lines = [
+        f"| α (BM25 weight) | Precision@{k} | Recall@{k} | MRR |",
+        "|----------------|-------------|----------|-----|",
+    ]
+    for row in abl["results"]:
+        a = row["alpha"]
+        bold = a == best_alpha
+        p   = f"**{row['precision']:.2f}**" if bold else f"{row['precision']:.2f}"
+        r   = f"**{row['recall']:.2f}**"    if bold else f"{row['recall']:.2f}"
+        mrr = f"**{row['mrr']:.2f}**"       if bold else f"{row['mrr']:.2f}"
+        label = f"**α={a}** ★" if bold else f"α={a}"
+        lines.append(f"| {label} | {p} | {r} | {mrr} |")
+    bp = abl["best"]["precision"]
+    lines.append(f"\nBest α={bp['alpha']} across all metrics (Precision@{k}={bp['value']:.2f}).")
+    lines.append(f"\n```bash\npython -m src.search.experiment --mode ablation --k {k}\n```")
+    return "\n".join(lines)
+
+
+def ablation_table_kr(abl: dict) -> str:
+    k = abl.get("k", "K")
+    best_alpha = abl["best"]["precision"]["alpha"]
+    lines = [
+        f"| α (BM25 가중치) | Precision@{k} | Recall@{k} | MRR |",
+        "|----------------|-------------|----------|-----|",
+    ]
+    for row in abl["results"]:
+        a = row["alpha"]
+        bold = a == best_alpha
+        p   = f"**{row['precision']:.2f}**" if bold else f"{row['precision']:.2f}"
+        r   = f"**{row['recall']:.2f}**"    if bold else f"{row['recall']:.2f}"
+        mrr = f"**{row['mrr']:.2f}**"       if bold else f"{row['mrr']:.2f}"
+        label = f"**α={a}** ★" if bold else f"α={a}"
+        lines.append(f"| {label} | {p} | {r} | {mrr} |")
+    bp = abl["best"]["precision"]
+    lines.append(f"\n최적 α={bp['alpha']} — 모든 지표에서 동일 (Precision@{k}={bp['value']:.2f}).")
+    lines.append(f"\n```bash\npython -m src.search.experiment --mode ablation --k {k}\n```")
+    return "\n".join(lines)
+
+
 # ── 메인 ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -215,6 +343,20 @@ def main() -> None:
         ("README_KR.md", "tech_stack", tech_stack_kr(settings)),
         ("README_KR.md", "jobs",       jobs_table_kr(jobs)),
     ]
+
+    pred_stats = asyncio.run(_fetch_prediction_stats())
+    if pred_stats:
+        updates += [
+            ("README.md",    "prediction_accuracy", prediction_accuracy_en(pred_stats)),
+            ("README_KR.md", "prediction_accuracy", prediction_accuracy_kr(pred_stats)),
+        ]
+
+    ablation = _load_ablation()
+    if ablation:
+        updates += [
+            ("README.md",    "alpha_ablation", ablation_table_en(ablation)),
+            ("README_KR.md", "alpha_ablation", ablation_table_kr(ablation)),
+        ]
 
     changed: list[str] = []
     for filename, section, new_body in updates:
