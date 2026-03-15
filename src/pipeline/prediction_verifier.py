@@ -295,10 +295,24 @@ class PredictionVerifier:
                 system=_SYSTEM,
                 messages=[{"role": "user", "content": user_msg}],
             )
-            raw   = next((b.text for b in resp.content if hasattr(b, "text")), "").strip()
+            raw = next((b.text for b in resp.content if hasattr(b, "text")), "").strip()
+
+            if resp.stop_reason == "max_tokens":
+                log.warning(
+                    f"응답 truncated (max_tokens). "
+                    f"input={resp.usage.input_tokens} output={resp.usage.output_tokens}"
+                )
+
             start = raw.find("[")
             end   = raw.rfind("]") + 1
-            return json.loads(raw[start:end]) if start >= 0 else []
+            if start >= 0 and end > start:
+                return json.loads(raw[start:end])
+
+            log.warning(f"JSON 파싱 불가. stop={resp.stop_reason} raw[:200]={raw[:200]!r}")
+            return []
+        except json.JSONDecodeError as e:
+            log.error(f"JSON 디코딩 오류: {e}. raw[:200]={raw[:200]!r}")
+            return []
         except Exception as e:
             log.error(f"배치 검증 오류: {e}")
             return []
