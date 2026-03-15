@@ -47,3 +47,8 @@ scipy==1.13.0
 # 클러스터링 (eval용)
 scikit-learn==1.4.2
 numpy==1.26.4
+
+# 테스트
+pytest==8.2.2
+pytest-asyncio==0.23.7
+pytest-cov==5.0.0
