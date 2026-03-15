@@ -27,3 +27,7 @@ scraped_posts/done.txt
 data/raw/
 data/batches/
 eval_data/gold_review.txt
+
+# Coverage
+.coverage
+coverage.xml
