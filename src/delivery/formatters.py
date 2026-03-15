@@ -5,14 +5,15 @@
 import re
 
 from src.pipeline.event_types import EventType
+from src.pipeline.types import EnrichResult, Event, Post
 
 
 def format_message(
     event_type: EventType,
-    event: dict,
+    event: Event,
     analysis: str,
     rules_count: int = 0,
-    enriched: dict | None = None,
+    enriched: EnrichResult | None = None,
 ) -> str:
     body = _to_md1(analysis)
     if event_type == EventType.MER_NEW_POST:
@@ -23,7 +24,7 @@ def format_message(
         return _fmt_full_analysis(event, body)
 
 
-def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> str:
+def _fmt_mer_post(event: Event, analysis: str, enriched: EnrichResult | None = None) -> str:
     title = _esc(event.get("title", ""))
     url   = event.get("source", "")
 
@@ -56,7 +57,7 @@ def _fmt_mer_post(event: dict, analysis: str, enriched: dict | None = None) -> s
     return "\n".join(parts)
 
 
-def _fmt_full_analysis(event: dict, analysis: str) -> str:
+def _fmt_full_analysis(event: Event, analysis: str) -> str:
     title = _esc(event.get("title", ""))
     return (
         f"🤖 *메르 프레임워크 AI 분석*\n"
@@ -65,12 +66,12 @@ def _fmt_full_analysis(event: dict, analysis: str) -> str:
     )
 
 
-def _fmt_macro_alert(event: dict, analysis: str) -> str:
+def _fmt_macro_alert(event: Event, analysis: str) -> str:
     title = _esc(event.get("title", ""))
     return f"🚨 *매크로 알림*\n_{title}_\n\n{analysis}"
 
 
-def format_short_post(post: dict, topic: str, summary: str) -> str:
+def format_short_post(post: Post, topic: str, summary: str) -> str:
     """비경제 포스팅용 짧은 포맷."""
     title = _esc(post.get("title", ""))
     url   = post.get("source") or post.get("url", "")

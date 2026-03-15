@@ -16,6 +16,7 @@ from config.settings import (
 )
 from src.delivery.formatters import format_message
 from src.pipeline.event_types import EventType
+from src.pipeline.types import EnrichResult, Event
 
 log = logging.getLogger(__name__)
 
@@ -38,10 +39,10 @@ class TelegramBot:
     async def send_analysis(
         self,
         channel: str,
-        event: dict,
+        event: Event,
         analysis: str,
         rules_count: int = 0,
-        enriched: dict | None = None,
+        enriched: EnrichResult | None = None,
     ) -> bool:
         if not self.bot:
             log.info(f"[텔레그램 비활성화] {event.get('title', '')[:40]}")

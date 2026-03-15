@@ -34,6 +34,7 @@ from src.search.bm25_index import BM25Index
 from src.observability.tracer import Tracer
 from src.pipeline.post_enricher import PostEnricher
 from src.pipeline.prediction_verifier import PredictionVerifier
+from src.pipeline.types import Event, Post
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ log = logging.getLogger(__name__)
 class EventDispatcher:
 
     def __init__(self):
+        self.pool: asyncpg.Pool | None = None
         self.conn: asyncpg.Connection | None = None
         self.embedder: VertexEmbedder | None = None
         self.assembler: ContextAssembler | None = None
@@ -60,7 +62,8 @@ class EventDispatcher:
     async def _init(self):
         """공유 리소스 초기화 (start/run_job 공통)."""
         from pathlib import Path
-        self.conn = await asyncpg.connect(DATABASE_URL)
+        self.pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
+        self.conn = await self.pool.acquire()
         self.embedder = VertexEmbedder()
         self.assembler = ContextAssembler(self.conn, self.embedder)
         self.mer_monitor = MerMonitor(self.conn)
@@ -93,7 +96,7 @@ class EventDispatcher:
         """
         await self._init()
         try:
-            if job == "mer_check":
+            if job == "mer_check":  # noqa: SIM102
                 await self._check_mer_new_posts()
             elif job == "dart_check":
                 await self._check_dart_filings()
@@ -117,7 +120,8 @@ class EventDispatcher:
             else:
                 raise ValueError(f"알 수 없는 job: {job}")
         finally:
-            await self.conn.close()
+            await self.pool.release(self.conn)
+            await self.pool.close()
 
     async def start(self):
         log.info("EventDispatcher 시작 중...")
@@ -177,7 +181,8 @@ class EventDispatcher:
         try:
             await asyncio.Event().wait()  # 무한 대기
         finally:
-            await self.conn.close()
+            await self.pool.release(self.conn)
+            await self.pool.close()
 
     # ─── 이벤트 체크 ─────────────────────────────────────────────────────────
 
@@ -198,12 +203,12 @@ class EventDispatcher:
         except Exception as e:
             log.error(f"메르 신규 글 체크 오류: {e}")
 
-    async def _process_mer_post_with_agent(self, post: dict):
+    async def _process_mer_post_with_agent(self, post: Post):
         """MER 신규 포스트를 에이전트 루프로 분석. 실패 시 기존 방식 fallback."""
-        event = {
+        event: Event = {
             "event_type": EventType.MER_NEW_POST,
             "title":      post["title"],
-            "content":    post["content_text"],
+            "content":    post.get("content_text", ""),
             "source":     post["url"],
             "event_date": datetime.now(),
         }
@@ -256,13 +261,14 @@ class EventDispatcher:
         try:
             filings = await self.dart.fetch_recent()
             for f in filings:
-                await self._process_event({
+                event: Event = {
                     "event_type": EventType.DART_FILING,
                     "title":      f["title"],
                     "content":    f["content"],
                     "source":     f["url"],
                     "event_date": f["date"],
-                })
+                }
+                await self._process_event(event)
         except Exception as e:
             log.error(f"DART 공시 체크 오류: {e}")
 
@@ -270,13 +276,14 @@ class EventDispatcher:
         try:
             articles = await self.news_collector.fetch_recent()
             for article in articles:
-                await self._process_event({
+                event: Event = {
                     "event_type": EventType.NEWS_ARTICLE,
                     "title":      article["title"],
                     "content":    article["content"],
                     "source":     article["url"],
                     "event_date": article["date"],
-                })
+                }
+                await self._process_event(event)
         except Exception as e:
             log.error(f"뉴스 체크 오류: {e}")
 
@@ -318,13 +325,14 @@ class EventDispatcher:
                     )
 
             if alerts:
-                await self._process_event({
+                event: Event = {
                     "event_type": EventType.MACRO_ALERT,
                     "title":      f"매크로 급변 감지 ({date.today()})",
                     "content":    "\n".join(alerts),
                     "source":     "macro_monitor",
                     "event_date": datetime.now(),
-                })
+                }
+                await self._process_event(event)
         except Exception as e:
             log.error(f"매크로 알림 체크 오류: {e}")
 
@@ -369,7 +377,7 @@ class EventDispatcher:
 
     # ─── 이벤트 처리 ─────────────────────────────────────────────────────────
 
-    async def _process_event(self, event: dict):
+    async def _process_event(self, event: Event):
         event_type = event["event_type"]
         config     = ANALYSIS_CONFIGS[event_type]
         log.info(f"이벤트 처리: {event_type.value} — {event.get('title', '')[:50]}")
