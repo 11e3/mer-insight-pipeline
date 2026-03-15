@@ -23,7 +23,7 @@ flowchart TD
         EMB --> C
     end
 
-    subgraph "Daily Pipeline (22:00)"
+    subgraph "Daily Pipeline (01:00)"
         ED[event_dispatcher.py] -->|1| MER[mer_monitor<br>신규 글 수집]
         ED -->|2| DC[dart_collector<br>DART 공시]
         ED -->|2| LM[load_macro<br>FRED · BOK ECOS]
@@ -156,12 +156,12 @@ python -m src.search.bm25_index
 
 # 5. Run pipeline once (or start the daily scheduler)
 python -m scripts.run_job                 # run once
-python -m src.pipeline.event_dispatcher   # daily 22:00 scheduler
+python -m src.pipeline.event_dispatcher   # daily 01:00 scheduler
 ```
 
 ### Daily Pipeline
 
-Runs once daily at 22:00 (KST) via Cloud Scheduler or APScheduler:
+Runs once daily at 01:00 (KST) via Cloud Scheduler or APScheduler:
 
 1. Mer blog — check for new posts, extract predictions
 2. DART / FRED / BOK ECOS / News RSS — collect latest data

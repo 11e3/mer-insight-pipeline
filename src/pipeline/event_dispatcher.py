@@ -75,7 +75,7 @@ class EventDispatcher:
 
         self.scheduler.add_job(
             self._run_pipeline, "cron",
-            hour=22, minute=0, id="daily_pipeline"
+            hour=1, minute=0, id="daily_pipeline"
         )
 
         self.scheduler.start()

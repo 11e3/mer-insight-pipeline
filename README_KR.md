@@ -23,7 +23,7 @@ flowchart TD
         EMB --> C
     end
 
-    subgraph "일일 파이프라인 (22:00)"
+    subgraph "일일 파이프라인 (01:00)"
         ED[event_dispatcher.py] -->|1| MER[mer_monitor<br>신규 글 수집]
         ED -->|2| DC[dart_collector<br>DART 공시]
         ED -->|2| LM[load_macro<br>FRED · 한국은행 ECOS]
@@ -156,12 +156,12 @@ python -m src.search.bm25_index
 
 # 5. 파이프라인 1회 실행 또는 일일 스케줄러 시작
 python -m scripts.run_job                 # 1회 실행
-python -m src.pipeline.event_dispatcher   # 매일 22:00 스케줄러
+python -m src.pipeline.event_dispatcher   # 매일 01:00 스케줄러
 ```
 
 ### 일일 파이프라인
 
-매일 22:00 (KST) Cloud Scheduler 또는 APScheduler로 실행:
+매일 01:00 (KST) Cloud Scheduler 또는 APScheduler로 실행:
 
 1. 메르 블로그 — 신규 글 확인, 예측 추출
 2. DART / FRED / 한국은행 ECOS / 뉴스 RSS — 최신 데이터 수집
