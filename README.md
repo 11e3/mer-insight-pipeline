@@ -5,7 +5,7 @@
 [Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, α=0.6 production default) on PostgreSQL with no vector-DB vendor lock-in.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
-[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline-yvkztwypti7zbnfae8wfjs.streamlit.app)
+[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](http://34.50.19.176:8501)
 
 [한국어 README](README_KR.md)
 

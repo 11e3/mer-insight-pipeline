@@ -5,7 +5,7 @@
 [메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 Claude Batch API로 예측을 추출하고, 6개 외부 소스(FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News)에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,368건의 예측을 추적 중입니다. 검색은 하이브리드 BM25 + pgvector(25,090개 인사이트, α=0.6 프로덕션 기본값)로 구동되며, 벤더 종속 없이 PostgreSQL 위에서 동작합니다.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
-[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline-yvkztwypti7zbnfae8wfjs.streamlit.app)
+[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](http://34.50.19.176:8501)
 
 [English README](README.md)
 
