@@ -72,6 +72,9 @@ CREATE TABLE IF NOT EXISTS mer_predictions (
     created_at          TIMESTAMP DEFAULT NOW()
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_predictions_text
+    ON mer_predictions (md5(prediction_text));
+
 -- ─── 실시간 이벤트 ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS events (
     id          SERIAL PRIMARY KEY,
@@ -95,50 +98,3 @@ CREATE INDEX IF NOT EXISTS idx_events_embedding
     ON events USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 
--- ─── 자동 분석 결과 ────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS auto_analyses (
-    id                SERIAL PRIMARY KEY,
-    event_id          INTEGER REFERENCES events(id) ON DELETE CASCADE,
-    analysis_text     TEXT,
-    rules_used        INTEGER[],   -- 사용된 mer_insights.id 목록
-    macro_context     JSONB,
-    telegram_sent     BOOLEAN DEFAULT FALSE,
-    telegram_sent_at  TIMESTAMP,
-    created_at        TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_analyses_event_id ON auto_analyses (event_id);
-
--- ─── Observability: LLM 호출 추적 ───────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS traces (
-    id          VARCHAR(36) PRIMARY KEY,  -- UUID
-    name        TEXT NOT NULL,
-    start_time  TIMESTAMP NOT NULL,
-    end_time    TIMESTAMP,
-    total_input_tokens  INTEGER DEFAULT 0,
-    total_output_tokens INTEGER DEFAULT 0,
-    total_cost_usd      FLOAT DEFAULT 0,
-    status      VARCHAR(20) DEFAULT 'running'  -- running | ok | error
-                CHECK (status IN ('running','ok','error')),
-    metadata    JSONB
-);
-
-CREATE INDEX IF NOT EXISTS idx_traces_start ON traces (start_time);
-
-CREATE TABLE IF NOT EXISTS spans (
-    id              VARCHAR(36) PRIMARY KEY,  -- UUID
-    trace_id        VARCHAR(36) REFERENCES traces(id) ON DELETE CASCADE,
-    name            TEXT NOT NULL,
-    model           TEXT,
-    input_tokens    INTEGER DEFAULT 0,
-    output_tokens   INTEGER DEFAULT 0,
-    latency_ms      INTEGER,
-    cost_usd        FLOAT DEFAULT 0,
-    tool_calls      TEXT[],
-    error           TEXT,
-    created_at      TIMESTAMP DEFAULT NOW(),
-    metadata        JSONB
-);
-
-CREATE INDEX IF NOT EXISTS idx_spans_trace_id ON spans (trace_id);
-CREATE INDEX IF NOT EXISTS idx_spans_created  ON spans (created_at);

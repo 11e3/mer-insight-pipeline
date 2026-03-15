@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline**은 메르(ranto28)의 2,193개 블로그 포스트에서 금융 예측을 자동 추출·추적·검증하는 파이프라인입니다.
 
-[메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 Claude Batch API로 예측을 추출하고, 6개 외부 소스(FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News)에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,368건의 예측을 추적 중입니다. 검색은 하이브리드 BM25 + pgvector(25,090개 인사이트, α=0.6 프로덕션 기본값)로 구동되며, 벤더 종속 없이 PostgreSQL 위에서 동작합니다.
+[메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 Claude Batch API로 예측을 추출하고, 6개 외부 소스(FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News)에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,010건의 예측을 추적 중입니다. 검색은 하이브리드 BM25 + pgvector(25,090개 인사이트, α=0.6 프로덕션 기본값)로 구동되며, 벤더 종속 없이 PostgreSQL 위에서 동작합니다.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 [![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](http://34.50.19.176:8501)
@@ -182,7 +182,7 @@ python -m src.eval.eval_runner --mode full --k 5
 |------|-----|
 | 처리된 포스트 | 2,193개 |
 | 추출된 인사이트 | 25,090개 |
-| 추적 중인 예측 | 5,368개 |
+| 추적 중인 예측 | 5,010개 |
 | 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
 | 임베딩 차원 | 1024 |
 | BM25 인덱스 크기 | 정규 문서 16,126개 |

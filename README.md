@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline** automates financial prediction tracking and verification from Mer (ranto28)'s 2,193 blog posts using Korean macro data (FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, Google News).
 
-[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, α=0.6 production default) on PostgreSQL with no vector-DB vendor lock-in.
+[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,010 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, α=0.6 production default) on PostgreSQL with no vector-DB vendor lock-in.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 [![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](http://34.50.19.176:8501)
@@ -182,7 +182,7 @@ python -m src.eval.eval_runner --mode full --k 5
 |--------|-------|
 | Processed posts | 2,193 |
 | Extracted insights | 25,090 |
-| Tracked predictions | 5,368 |
+| Tracked predictions | 5,010 |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 1024 |
 | BM25 index size | 16,126 canonical documents |
