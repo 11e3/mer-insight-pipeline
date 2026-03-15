@@ -25,7 +25,7 @@ python scripts/expand_eval_dataset.py --target 200
 python -m src.search.bm25_index  # 캐시 → data/bm25_cache.pkl
 
 # 단일 잡 실행 (GCP Cloud Run Job 진입점)
-python -m scripts.run_job --job mer_check
+python -m scripts.run_job
 python -m scripts.run_job --job verify_predictions
 ```
 
@@ -51,8 +51,8 @@ python scripts/expand_eval_dataset.py  # ✓
 단위 테스트는 `DATABASE_URL` 불필요. 통합 테스트는 `TEST_DATABASE_URL` 별도 설정 필요 (미설정 시 자동 스킵).
 
 ### GCP Cloud Run Job vs 로컬 APScheduler
-- **로컬**: `event_dispatcher.py`가 APScheduler로 6개 스케줄 직접 실행
-- **GCP**: `run_job.py --job <name>`으로 2개 잡 호출 (`verify_predictions`가 DART/매크로/뉴스 수집 + 검증 통합)
+- **로컬**: `event_dispatcher.py`가 APScheduler로 매일 20:00 단일 잡 실행
+- **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 + DART/매크로/뉴스 수집 + 검증)
 
 ### Prediction Verifier 비용 최적화
 - Prompt caching 적용 (`cache_control` on system + context) → 2번째 배치부터 input 90% 할인
@@ -106,8 +106,7 @@ scripts/
 
 | 잡 이름 | 동작 | 스케줄 |
 |---------|------|--------|
-| `mer_check` | 메르 신규 글 확인 + 인사이트 추출 | 매 5분 |
-| `verify_predictions` | DART/매크로/뉴스 수집 + 미검증 예측 배치 판정 (Haiku) | 매일 20:00 |
+| `daily_pipeline` | 메르 글 수집 + DART/매크로/뉴스 수집 + 예측 검증 | 매일 20:00 |
 
 ## 환경변수
 

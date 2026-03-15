@@ -125,7 +125,7 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
-| Scheduler | APScheduler (local) / GCP Cloud Scheduler + Cloud Run Jobs |
+| Scheduler | APScheduler (local) / GCP Cloud Scheduler + Cloud Run Job |
 | Data Sources | FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, Google News |
 | Dashboard | Streamlit |
 
@@ -169,17 +169,18 @@ python scripts/run_batch.py all
 # 4. Build BM25 index cache
 python -m src.search.bm25_index
 
-# 5. Run a job once (or start the always-on dispatcher)
-python -m scripts.run_job --job mer_check
-python -m src.pipeline.event_dispatcher   # always-on mode
+# 5. Run pipeline once (or start the daily scheduler)
+python -m scripts.run_job                 # run once
+python -m src.pipeline.event_dispatcher   # daily 20:00 scheduler
 ```
 
-### Cloud Run Jobs
+### Daily Pipeline
 
-| Job | Schedule |
-|-----|----------|
-| `mer_check` | every 5 min |
-| `verify_predictions` | 20:00 daily (DART + macro + news collection, then verification) |
+Runs once daily at 20:00 (KST) via Cloud Scheduler or APScheduler:
+
+1. Mer blog — check for new posts, extract predictions
+2. DART / FRED / BOK ECOS / News RSS — collect latest data
+3. Prediction verification — Claude Haiku judges all pending predictions
 
 ### Dashboard
 
@@ -250,7 +251,7 @@ mer-insight-pipeline/
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL schema
 │   ├── run_batch.py              # Batch extraction orchestrator
-│   ├── run_job.py                # Cloud Run Job entry point
+│   ├── run_job.py                # Pipeline entry point (single daily run)
 │   └── migrate_predictions.py    # One-time: mer_insights → mer_predictions backfill
 ├── docker-compose.yml
 ├── Dockerfile

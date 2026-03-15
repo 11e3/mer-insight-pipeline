@@ -1,16 +1,12 @@
 """
-Cloud Run Job 진입점.
+Cloud Run Job / 로컬 실행 진입점.
 
-각 잡은 이 스크립트를 --job 인자만 다르게 해서 실행.
+전체 파이프라인을 1회 실행: 메르 글 수집 → 외부 데이터 수집 → 예측 검증.
 
-Usage (로컬):
-    python -m scripts.run_job --job mer_check
-    python -m scripts.run_job --job verify_predictions
-
-Cloud Run Job 배포 시 --args 에 해당 값 전달.
+Usage:
+    python -m scripts.run_job
 """
 
-import argparse
 import asyncio
 import logging
 import sys
@@ -20,27 +16,13 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
     stream=sys.stdout,
 )
-log = logging.getLogger(__name__)
-
-VALID_JOBS = {
-    "mer_check",
-    "verify_predictions",
-}
 
 
-async def main(job: str) -> None:
+async def main() -> None:
     from src.pipeline.event_dispatcher import EventDispatcher
     dispatcher = EventDispatcher()
-    await dispatcher.run_job(job)
+    await dispatcher.run()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MER Pipeline Job Runner")
-    parser.add_argument(
-        "--job",
-        required=True,
-        choices=sorted(VALID_JOBS),
-        help="실행할 잡 이름",
-    )
-    args = parser.parse_args()
-    asyncio.run(main(args.job))
+    asyncio.run(main())

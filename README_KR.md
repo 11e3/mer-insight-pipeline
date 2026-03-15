@@ -125,7 +125,7 @@ flowchart TD
 | 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
-| 스케줄러 | APScheduler (로컬) / GCP Cloud Scheduler + Cloud Run Jobs |
+| 스케줄러 | APScheduler (로컬) / GCP Cloud Scheduler + Cloud Run Job |
 | 데이터 소스 | FRED, BOK ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News |
 | 대시보드 | Streamlit |
 
@@ -169,17 +169,18 @@ python scripts/run_batch.py all
 # 4. BM25 인덱스 캐시 빌드
 python -m src.search.bm25_index
 
-# 5. 단일 잡 실행 또는 상시 디스패처 시작
-python -m scripts.run_job --job mer_check
-python -m src.pipeline.event_dispatcher   # 상시 모드
+# 5. 파이프라인 1회 실행 또는 일일 스케줄러 시작
+python -m scripts.run_job                 # 1회 실행
+python -m src.pipeline.event_dispatcher   # 매일 20:00 스케줄러
 ```
 
-### Cloud Run 잡
+### 일일 파이프라인
 
-| 잡 | 스케줄 |
-|----|--------|
-| `mer_check` | 매 5분 |
-| `verify_predictions` | 매일 20:00 (DART + 매크로 + 뉴스 수집 후 검증) |
+매일 20:00 (KST) Cloud Scheduler 또는 APScheduler로 실행:
+
+1. 메르 블로그 — 신규 글 확인, 예측 추출
+2. DART / FRED / 한국은행 ECOS / 뉴스 RSS — 최신 데이터 수집
+3. 예측 검증 — Claude Haiku가 모든 미검증 예측 판정
 
 ### 대시보드
 
@@ -250,7 +251,7 @@ mer-insight-pipeline/
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL 스키마
 │   ├── run_batch.py              # 배치 추출 오케스트레이터
-│   ├── run_job.py                # Cloud Run Job 진입점
+│   ├── run_job.py                # 파이프라인 진입점 (일일 1회 실행)
 │   └── migrate_predictions.py    # 일회성: mer_insights → mer_predictions 소급 적재
 ├── docker-compose.yml
 ├── Dockerfile
