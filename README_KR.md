@@ -1,8 +1,8 @@
 # mer-insight-pipeline
 
-**mer-insight-pipeline**은 [메르(ranto28) 한국 경제 블로그](https://blog.naver.com/ranto28)를 모니터링하고, Claude Batch API로 포스트 2,193개에서 인사이트를 추출하며, 새 글이 올라오면 수분 내에 인용 근거가 명시된 분석을 텔레그램 구독자에게 전송합니다.
+**mer-insight-pipeline**은 한국 매크로 금융 데이터(FRED, 한국은행 ECOS, DART, 네이버 금융)를 활용하여 금융 예측의 추적과 검증을 자동화하는 LLM 기반 분석 파이프라인입니다.
 
-모든 컴포넌트가 실운영 수준으로 연결됩니다: 25,090개 인사이트를 인덱싱한 하이브리드 검색, 스스로 도구 호출을 결정하는 LLM 에이전트 루프, 미인용 주장을 차단하는 환각 방지 가드, Claude Haiku를 심판으로 사용하는 예측 자동 검증 파이프라인(5,368개 추적 중), 호출별 비용·지연 추적, LLM 심판을 포함한 평가 파이프라인 — 모두 벤더 종속 없이 PostgreSQL + pgvector 위에서 동작합니다.
+[메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 해당 예측을 추출하고, 6개 외부 소스에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,368건의 예측을 추적 중입니다. 인프라에는 하이브리드 검색(25,090개 인사이트 인덱싱), LLM 에이전트 루프, 환각 방지 가드, 계층형 리포트 생성, 호출별 비용·지연 추적이 포함되며, 모두 벤더 종속 없이 PostgreSQL + pgvector 위에서 동작합니다.
 
 **포스트당 약 $0.15** (평균 4 iteration) · **월 30개 기준 약 $4.50**
 
@@ -85,55 +85,65 @@ flowchart TD
 
 ---
 
-## 하이브리드 검색 — 실험 결과
+## 예측 자동 검증 파이프라인
 
-BM25(키워드) + 벡터(임베딩)를 RRF로 결합하면 단일 방식 대비 랭킹 품질이 향상됩니다.
+메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Haiku가 자동 심판을 수행합니다.
 
-쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024-dim)을 사용합니다 — DB 인덱싱에 사용한 것과 동일한 모델. 실제 쿼리 텍스트 기반의 검색 품질을 반영합니다.
+**배치당 Claude에 제공되는 컨텍스트:**
 
-```bash
-python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
-```
+| 소스 | 내용 |
+|------|------|
+| 월별 매크로 요약 | KOSPI 고/저/평균, 달러/원, WTI, US10Y, Fed 금리, VIX, BTC — FRED + 한국은행 ECOS |
+| 네이버 금융 주가 | 주요 10개 종목 — 과거분 월별 고/저/말일종가(H/L/C) + 최근 90일 일간 종가 |
+| DART 공시 + 뉴스 | 가장 오래된 미검증 예측일 이후 수집된 기업 이벤트 |
+| 자동 분석 | 동일 기간 메르 포스트 분석 내용 |
 
-**Alpha ablation** — N=200 쿼리, K=5:
+**판정 기준**
 
-<!-- AUTO:alpha_ablation -->
-| α (BM25 가중치) | Precision@5 | Recall@5 | MRR |
-|----------------|-------------|----------|-----|
-| α=0.0 | 0.20 | 0.99 | 0.99 |
-| α=0.2 | 0.20 | 0.99 | 0.99 |
-| α=0.3 | 0.20 | 0.99 | 0.99 |
-| α=0.4 | 0.20 | 0.99 | 0.99 |
-| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
-| α=0.8 | 0.20 | 0.99 | 0.96 |
-| α=1.0 | 0.20 | 0.98 | 0.94 |
+| 판정 | 조건 |
+|------|------|
+| `CORRECT` | 컨텍스트 또는 Claude 지식으로 예측 내용 확인됨 |
+| `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
+| `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
 
-최적 α=0.6 — 모든 지표에서 동일 (Precision@5=0.20).
+만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 일간 리포트 생성 전에 전체 미검증 예측을 검증합니다.
 
 ```bash
-python -m src.search.experiment --mode ablation --k 5
+# 과거 적체 1회 소급 처리
+gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
 ```
-<!-- END:alpha_ablation -->
 
-임베딩: `intfloat/multilingual-e5-large` (1024-dim, DB 인덱싱과 동일 모델), N=200 쿼리.
+**실시간 정확도** (CI 푸시마다 자동 업데이트):
 
-**핵심 관찰**:
-- 하이브리드(α=0.4–0.6)가 단독 방식 모두를 상회: 벡터 단독 대비 Recall +5.0%p, MRR +3.0%p
-- α=0.6이 전 지표 최고 — 프로덕션 기본값 0.4보다 BM25 비중을 약간 더 주는 것이 유리
-- BM25 단독(α=1.0) MRR이 순수 벡터(α=0.0)보다 높음(0.935 > 0.908): 한국 금융 텍스트에서는 티커·금리·날짜 같은 키워드 매칭이 의미 유사도보다 중요
+<!-- AUTO:prediction_accuracy -->
+<!-- END:prediction_accuracy -->
 
-**왜 차이가 나는가**
+---
 
-- **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
-- **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
-- **RRF**로 결합하면 두 방법이 서로의 약점을 보완
+## 매크로 데이터 파이프라인
+
+6개 외부 소스에서 금융·경제 데이터를 스케줄에 따라 수집하여 `macro_daily` 및 `events` 테이블에 저장합니다. 예측 검증과 리포트 생성에 활용됩니다.
+
+| 소스 | 데이터 | 스케줄 | 모듈 |
+|------|--------|--------|------|
+| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, Fed 기금금리, CPI YoY, 실업률 | 매시간 | `src/ingest/load_macro.py` |
+| 한국은행 ECOS | 달러/원 환율, KOSPI, KOSDAQ, 기준금리 | 매시간 | `src/ingest/load_macro.py` |
+| 네이버 금융 | 주요 한국 10개 종목 일간 종가 (삼성전자, SK하이닉스, 현대차, 기아, LG에너지솔루션, 포스코홀딩스, 삼성SDI, 카카오, 네이버, 셀트리온) | 검증 시 | `src/pipeline/prediction_verifier.py` |
+| DART | 기업 공시 (사업보고서, 주요사항보고서, M&A 등) RSS | 매 10분, 8–18시 | `src/pipeline/dart_collector.py` |
+| 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정, 통화정책 | 매 30분 | `src/pipeline/news_collector.py` |
+| Google News | 지정학 이벤트 — 제재, 관세, 무역전쟁 키워드 | 매 30분 | `src/pipeline/news_collector.py` |
+
+`config/settings.py`에 추가 데이터 소스용 API 키 지원: BLS (미국 노동통계), MOLIT (국토부 부동산), KOSIS (통계청 무역통계).
+
+모든 매크로 데이터는 두 가지 다운스트림에 활용됩니다:
+1. **예측 검증 컨텍스트** — 월별 집계 + 최근 30일 일간 수치를 Claude Haiku에 예측 판정 근거로 제공
+2. **리포트 생성 폴백** — 하위 리포트가 없을 때 매크로 원시 수치(KOSPI, 금리, VIX, 무역수지)로 코멘터리를 직접 생성
 
 ---
 
 ## 에이전트 루프 — 왜 고정 프롬프트가 아닌가
 
-기존 파이프라인은 새 포스트마다 고정된 프롬프트로 분석을 생성했습니다.
-에이전트 루프는 LLM이 **어떤 정보가 필요한지 스스로 판단**하고 도구를 순서대로 호출합니다.
+새 메르 블로그 포스트가 도착하면, 에이전트 루프는 LLM이 **어떤 정보가 필요한지 스스로 판단**하고 도구를 순서대로 호출합니다 — 고정된 프롬프트를 반복하는 것이 아닙니다.
 
 ```
 새 포스트 수신
@@ -187,38 +197,48 @@ python -m src.search.experiment --mode ablation --k 5
 
 ---
 
-## 예측 자동 검증 파이프라인
+## 검색 인프라
 
-메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Haiku가 자동 심판을 수행합니다.
+하이브리드 BM25 + 벡터 검색은 에이전트 루프와 컨텍스트 조합의 검색 백본으로 기능합니다.
 
-**배치당 Claude에 제공되는 컨텍스트:**
-
-| 소스 | 내용 |
-|------|------|
-| 월별 매크로 요약 | KOSPI 고/저/평균, 달러/원, WTI, US10Y, Fed 금리, VIX, BTC — FRED + 한국은행 ECOS |
-| 네이버 금융 주가 | 주요 10개 종목 — 과거분 월별 고/저/말일종가(H/L/C) + 최근 90일 일간 종가 |
-| DART 공시 + 뉴스 | 가장 오래된 미검증 예측일 이후 수집된 기업 이벤트 |
-| 자동 분석 | 동일 기간 메르 포스트 분석 내용 |
-
-**판정 기준**
-
-| 판정 | 조건 |
-|------|------|
-| `CORRECT` | 컨텍스트 또는 Claude 지식으로 예측 내용 확인됨 |
-| `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
-| `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
-
-만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 일간 리포트 생성 전에 전체 미검증 예측을 검증합니다.
+쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024-dim)을 사용합니다 — DB 인덱싱에 사용한 것과 동일한 모델. 실제 쿼리 텍스트 기반의 검색 품질을 반영합니다.
 
 ```bash
-# 과거 적체 1회 소급 처리
-gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
+python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
 ```
 
-**실시간 정확도** (CI 푸시마다 자동 업데이트):
+**Alpha ablation** — N=200 쿼리, K=5:
 
-<!-- AUTO:prediction_accuracy -->
-<!-- END:prediction_accuracy -->
+<!-- AUTO:alpha_ablation -->
+| α (BM25 가중치) | Precision@5 | Recall@5 | MRR |
+|----------------|-------------|----------|-----|
+| α=0.0 | 0.20 | 0.99 | 0.99 |
+| α=0.2 | 0.20 | 0.99 | 0.99 |
+| α=0.3 | 0.20 | 0.99 | 0.99 |
+| α=0.4 | 0.20 | 0.99 | 0.99 |
+| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
+| α=0.8 | 0.20 | 0.99 | 0.96 |
+| α=1.0 | 0.20 | 0.98 | 0.94 |
+
+최적 α=0.6 — 모든 지표에서 동일 (Precision@5=0.20).
+
+```bash
+python -m src.search.experiment --mode ablation --k 5
+```
+<!-- END:alpha_ablation -->
+
+임베딩: `intfloat/multilingual-e5-large` (1024-dim, DB 인덱싱과 동일 모델), N=200 쿼리.
+
+**핵심 관찰**:
+- 하이브리드(α=0.4–0.6)가 단독 방식 모두를 상회: 벡터 단독 대비 Recall +5.0%p, MRR +3.0%p
+- α=0.6이 전 지표 최고 — 프로덕션 기본값 0.4보다 BM25 비중을 약간 더 주는 것이 유리
+- BM25 단독(α=1.0) MRR이 순수 벡터(α=0.0)보다 높음(0.935 > 0.908): 한국 금융 텍스트에서는 티커·금리·날짜 같은 키워드 매칭이 의미 유사도보다 중요
+
+**왜 차이가 나는가**
+
+- **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
+- **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
+- **RRF**로 결합하면 두 방법이 서로의 약점을 보완
 
 ---
 
@@ -463,6 +483,12 @@ streamlit run src/dashboard/observability.py   # http://localhost:8501
 # 운영: Cloud Run Service (docs/gcp_setup.md 참조)
 ```
 
+### 예측 대시보드
+
+```bash
+streamlit run src/dashboard/prediction_dashboard.py   # http://localhost:8501
+```
+
 ### 평가 실행
 
 ```bash
@@ -503,7 +529,7 @@ mer-insight-pipeline/
 │   │   ├── tools.py              # 5개 도구 (검색 / 모순 / 신규성 / 이력 / 비교)
 │   │   ├── prompts.py            # citation 태깅 지시 포함 시스템 프롬프트
 │   │   └── state.py              # 메시지 이력 & 반복 상태
-│   ├── search/                   # 하이브리드 검색
+│   ├── search/                   # 검색 인프라
 │   │   ├── bm25_index.py         # BM25 + kiwipiepy 토크나이저 + pickle 캐시
 │   │   ├── vector_index.py       # pgvector HNSW 래퍼
 │   │   ├── hybrid.py             # RRF 융합 (α=0.4)
@@ -528,14 +554,14 @@ mer-insight-pipeline/
 │   │   └── realtime_extractor.py # 실시간 인사이트 추출 (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
-│   │   ├── load_macro.py         # FRED / 한국은행 ECOS (yfinance 제거 — GCP 차단)
+│   │   ├── load_macro.py         # FRED / 한국은행 ECOS 매크로 데이터 수집
 │   │   ├── load_bls.py
 │   │   ├── load_realestate.py
 │   │   └── load_trade.py
 │   ├── pipeline/
 │   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler) + 에이전트 연동
-│   │   ├── mer_monitor.py        # 블로그 RSS 감시
-│   │   ├── dart_collector.py     # DART 공시 (한국 증권거래소)
+│   │   ├── mer_monitor.py        # 블로그 RSS 감시 (1차 데이터 소스)
+│   │   ├── dart_collector.py     # DART 기업 공시
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
 │   │   ├── context_assembler.py  # RAG 컨텍스트 빌더
 │   │   ├── analysis_generator.py # Claude 분석 생성 (폴백)
@@ -545,8 +571,8 @@ mer-insight-pipeline/
 │   │   ├── telegram_bot.py       # 2티어 텔레그램 전송
 │   │   └── formatters.py
 │   └── dashboard/
-│       ├── app.py                # 메인 대시보드
-│       └── observability.py      # LLM 비용 / 지연 / 오류 대시보드
+│       ├── observability.py      # LLM 비용 / 지연 / 오류 대시보드
+│       └── prediction_dashboard.py # 예측 적중률 대시보드
 ├── docs/
 │   ├── telegram_demo.png         # 텔레그램 전송 예시
 │   └── dashboard.png             # Observability 대시보드
