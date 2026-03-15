@@ -11,7 +11,6 @@ import anthropic
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from config.prompts import ENTITY_EXTRACT_PROMPT
 from src.extract.vertex_embedder import Embedder, vec_str
-from src.pipeline.event_types import AnalysisConfig
 
 client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -22,7 +21,12 @@ class ContextAssembler:
         self.conn = conn
         self.embedder = embedder
 
-    async def assemble(self, event: dict, config: AnalysisConfig) -> dict:
+    async def assemble(
+        self,
+        event: dict,
+        max_rules: int = 10,
+        include_macro: bool = True,
+    ) -> dict:
         context = {
             "event": event,
             "rules": [],
@@ -32,14 +36,14 @@ class ContextAssembler:
 
         entities = await self._extract_entities(event)
 
-        if config.max_rules > 0:
+        if max_rules > 0:
             context["rules"] = await self._retrieve_rules(
                 event_text=event.get("content", ""),
                 entities=entities,
-                max_results=config.max_rules,
+                max_results=max_rules,
             )
 
-        if config.include_macro:
+        if include_macro:
             context["macro_context"] = await self._get_macro_context()
 
         context["similar_analyses"] = await self._find_similar_past(

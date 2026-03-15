@@ -1,12 +1,11 @@
 """
-Event Dispatcher: 이벤트 소스 폴링 → 분석 트리거 → 결과 저장/발송
+Event Dispatcher: 예측 추출 → 데이터 수집 → 자동 검증 파이프라인
 
 Usage:
     python -m src.pipeline.event_dispatcher
 """
 
 import asyncio
-import json
 import logging
 from datetime import datetime, date
 
@@ -16,22 +15,14 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from config.settings import (
     DATABASE_URL, MACRO_ALERT_THRESHOLDS,
 )
-from src.extract.vertex_embedder import get_embedder, vec_str
-from src.pipeline.event_types import EventType, ANALYSIS_CONFIGS
-from src.pipeline.context_assembler import ContextAssembler
-from src.pipeline.analysis_generator import AnalysisGenerator
+from src.extract.vertex_embedder import get_embedder
 from src.pipeline.mer_monitor import MerMonitor
 from src.pipeline.dart_collector import DartCollector
 from src.pipeline.news_collector import NewsCollector
 from src.delivery.telegram_bot import TelegramBot
-from src.extract.realtime_extractor import extract_and_save, is_economic
-from src.pipeline.report_generator import ReportGenerator
-from src.agent.agent import MerAgent
+from src.extract.realtime_extractor import extract_and_save
 from src.search.bm25_index import BM25Index
-from src.observability.tracer import Tracer
-from src.pipeline.post_enricher import PostEnricher
 from src.pipeline.prediction_verifier import PredictionVerifier
-from src.pipeline.types import Event, Post
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -43,16 +34,11 @@ class EventDispatcher:
         self.pool: asyncpg.Pool | None = None
         self.conn: asyncpg.Connection | None = None
         self.embedder = None
-        self.assembler: ContextAssembler | None = None
-        self.generator = AnalysisGenerator()
-        self.telegram  = TelegramBot()
+        self.telegram = TelegramBot()
         self.mer_monitor: MerMonitor | None = None
         self.dart: DartCollector | None = None
         self.news_collector: NewsCollector | None = None
-        self.reporter: ReportGenerator | None = None
         self.bm25_index: BM25Index | None = None
-        self.mer_agent: MerAgent | None = None
-        self.enricher: PostEnricher | None = None
         self.verifier: PredictionVerifier | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
@@ -62,19 +48,15 @@ class EventDispatcher:
         self.pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
         self.conn = await self.pool.acquire()
         self.embedder = get_embedder()
-        self.assembler = ContextAssembler(self.conn, self.embedder)
         self.mer_monitor = MerMonitor(self.conn)
         self.dart = DartCollector(self.conn)
         self.news_collector = NewsCollector(self.conn)
-        self.reporter = ReportGenerator(self.conn, self.telegram)
 
         bm25_cache = Path("data/bm25_cache.pkl")
         self.bm25_index = BM25Index()
         if not self.bm25_index.load(bm25_cache):
             await self.bm25_index.build(self.conn)
             self.bm25_index.save(bm25_cache)
-        self.mer_agent = MerAgent(self.conn, self.embedder, self.bm25_index)
-        self.enricher = PostEnricher(self.conn, self.embedder)
         self.verifier = PredictionVerifier(self.conn)
 
     async def _alert(self, msg: str) -> None:
@@ -89,18 +71,14 @@ class EventDispatcher:
         Cloud Run Job 진입점 — 단일 작업 실행 후 종료.
 
         job 값:
-          mer_check    — 메르 신규 글 확인
-          dart_check   — DART 공시 확인
-          macro_check  — 매크로 업데이트 + 알림 + 뉴스
-          daily        — 일간 리포트
-          weekly       — 주간 리포트
-          monthly      — 월간 리포트
-          quarterly    — 분기 리포트
-          annual       — 연간 리포트
+          mer_check          — 메르 신규 글 확인 + 예측 추출
+          dart_check         — DART 공시 확인
+          macro_check        — 매크로 업데이트 + 알림 + 뉴스
+          verify_predictions — 예측 자동 검증
         """
         await self._init()
         try:
-            if job == "mer_check":  # noqa: SIM102
+            if job == "mer_check":
                 await self._check_mer_new_posts()
             elif job == "dart_check":
                 await self._check_dart_filings()
@@ -110,17 +88,6 @@ class EventDispatcher:
                 await self._check_news()
             elif job == "verify_predictions":
                 await self._verify_predictions()
-            elif job == "daily":
-                await self._verify_predictions()
-                await self._send_daily_report()
-            elif job == "weekly":
-                await self._send_weekly_report()
-            elif job == "monthly":
-                await self._send_monthly_report()
-            elif job == "quarterly":
-                await self._send_quarterly_report()
-            elif job == "annual":
-                await self._send_annual_report()
             else:
                 raise ValueError(f"알 수 없는 job: {job}")
         finally:
@@ -148,35 +115,10 @@ class EventDispatcher:
         self.scheduler.add_job(
             self._check_news, "interval", minutes=30, id="news"
         )
-        # 예측 검증: 매일 20:00 (일간 리포트 전)
+        # 예측 검증: 매일 20:00
         self.scheduler.add_job(
             self._verify_predictions, "cron",
             hour=20, minute=0, id="verify_predictions"
-        )
-        # 일간 리포트: 매일 21:00
-        self.scheduler.add_job(
-            self._send_daily_report, "cron",
-            hour=21, minute=0, id="report_daily"
-        )
-        # 주간 리포트: 매주 일요일 21:00
-        self.scheduler.add_job(
-            self._send_weekly_report, "cron",
-            day_of_week="sun", hour=21, minute=0, id="report_weekly"
-        )
-        # 월간 리포트: 매월 마지막 날 21:00
-        self.scheduler.add_job(
-            self._send_monthly_report, "cron",
-            day="last", hour=21, minute=0, id="report_monthly"
-        )
-        # 분기 리포트: 3/6/9/12월 마지막 날 21:00
-        self.scheduler.add_job(
-            self._send_quarterly_report, "cron",
-            month="3,6,9,12", day="last", hour=21, minute=0, id="report_quarterly"
-        )
-        # 연간 리포트: 12월 31일 21:00
-        self.scheduler.add_job(
-            self._send_annual_report, "cron",
-            month=12, day=31, hour=21, minute=0, id="report_annual"
         )
 
         self.scheduler.start()
@@ -188,92 +130,42 @@ class EventDispatcher:
             await self.pool.release(self.conn)
             await self.pool.close()
 
-    # ─── 이벤트 체크 ─────────────────────────────────────────────────────────
+    # --- 이벤트 체크 ---
 
     async def _check_mer_new_posts(self):
         try:
             new_posts = await self.mer_monitor.check_new()
-            for post in new_posts:
-                # 인사이트 추출 + primary_topic 파악 (Haiku)
-                extracted = await extract_and_save(self.conn, self.embedder, post)
-                topic   = extracted["primary_topic"]
-                summary = extracted["post_summary"]
+            if not new_posts:
+                return
 
-                if is_economic(topic, post.get("title", ""), post.get("content_text", "")):
-                    # 경제 관련 → 에이전트 루프 분석 + 텔레그램 발송
-                    await self._process_mer_post_with_agent(post)
-                else:
-                    log.info(f"  비경제 포스팅 ({topic}) — 알림 스킵")
+            for post in new_posts:
+                extracted = await extract_and_save(self.conn, self.embedder, post)
+                count = extracted["count"]
+                log.info(f"  인사이트 {count}개 추출 ({post.get('title', '')[:40]})")
+
+            # 새 예측 건수 집계 후 텔레그램 알림
+            pred_count = sum(
+                1 for p in new_posts
+                for _ in range(1)  # placeholder
+            )
+            # 실제 예측 건수는 mer_predictions에서 최근 삽입 카운트로 확인
+            pred_count = await self.conn.fetchval("""
+                SELECT COUNT(*) FROM mer_predictions
+                WHERE created_at >= NOW() - INTERVAL '10 minutes'
+            """) or 0
+
+            if pred_count > 0:
+                await self.telegram.send_prediction_extracted(pred_count)
+
         except Exception as e:
             log.error(f"메르 신규 글 체크 오류: {e}")
             await self._alert(f"mer_check 실패: {e}")
-
-    async def _process_mer_post_with_agent(self, post: Post):
-        """MER 신규 포스트를 에이전트 루프로 분석. 실패 시 기존 방식 fallback."""
-        event: Event = {
-            "event_type": EventType.MER_NEW_POST,
-            "title":      post["title"],
-            "content":    post.get("content_text", ""),
-            "source":     post["url"],
-            "event_date": datetime.now(),
-        }
-
-        # events 테이블 저장
-        embed_text = f"{post['title']} {post.get('content_text', '')[:300]}"
-        vecs = await self.embedder.embed_passages([embed_text])
-        event_vec = vec_str(vecs[0])
-        event_id = await self.conn.fetchval("""
-            INSERT INTO events (event_type, source, title, content, event_date, embedding)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id
-        """, event["event_type"].value, event["source"], event["title"],
-            event["content"], event["event_date"], event_vec)
-
-        # 에이전트 루프 실행 (Tracer로 감싸서 비용/지연 기록, 실패 시 fallback)
-        try:
-            async with Tracer(
-                self.conn,
-                trace_name="agent_run",
-                metadata={"post_id": post.get("id"), "title": post.get("title", "")[:80]},
-            ) as tracer:
-                analysis = await self.mer_agent.run(post, tracer=tracer)
-            log.info("  에이전트 분석 완료")
-        except Exception as e:
-            log.warning(f"  에이전트 실패, fallback 실행: {e}")
-            config  = ANALYSIS_CONFIGS[EventType.MER_NEW_POST]
-            context = await self.assembler.assemble(event, config)
-            analysis = await self.generator.generate(context, config)
-
-        enriched = await self.enricher.enrich(post, analysis)
-
-        sent = await self.telegram.send_analysis(
-            channel="tier1",
-            event=event,
-            analysis=analysis,
-            rules_count=0,
-            enriched=enriched,
-        )
-        await self.conn.execute("""
-            INSERT INTO auto_analyses
-                (event_id, analysis_text, rules_used, macro_context, telegram_sent, telegram_sent_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-        """, event_id, analysis, [], json.dumps({}), sent,
-            datetime.now() if sent else None)
-
-        log.info(f"  MER 포스트 처리 완료 (텔레그램: {'발송' if sent else '실패'})")
 
     async def _check_dart_filings(self):
         try:
             filings = await self.dart.fetch_recent()
             for f in filings:
-                event: Event = {
-                    "event_type": EventType.DART_FILING,
-                    "title":      f["title"],
-                    "content":    f["content"],
-                    "source":     f["url"],
-                    "event_date": f["date"],
-                }
-                await self._process_event(event)
+                log.info(f"  DART 공시: {f['title'][:50]}")
         except Exception as e:
             log.error(f"DART 공시 체크 오류: {e}")
             await self._alert(f"dart_check 실패: {e}")
@@ -282,14 +174,7 @@ class EventDispatcher:
         try:
             articles = await self.news_collector.fetch_recent()
             for article in articles:
-                event: Event = {
-                    "event_type": EventType.NEWS_ARTICLE,
-                    "title":      article["title"],
-                    "content":    article["content"],
-                    "source":     article["url"],
-                    "event_date": article["date"],
-                }
-                await self._process_event(event)
+                log.info(f"  뉴스: {article['title'][:50]}")
         except Exception as e:
             log.error(f"뉴스 체크 오류: {e}")
             await self._alert(f"news_check 실패: {e}")
@@ -305,7 +190,7 @@ class EventDispatcher:
             await self._alert(f"macro_update 실패: {e}")
 
     async def _check_macro_alerts(self):
-        """전일 대비 급변 감지 → MACRO_ALERT 이벤트 생성."""
+        """전일 대비 급변 감지."""
         try:
             rows = await self.conn.fetch("""
                 SELECT * FROM macro_daily
@@ -316,7 +201,7 @@ class EventDispatcher:
                 return
 
             today_row = dict(rows[0])
-            prev_row  = dict(rows[1])
+            prev_row = dict(rows[1])
 
             alerts = []
             for col, threshold in MACRO_ALERT_THRESHOLDS.items():
@@ -328,120 +213,50 @@ class EventDispatcher:
                 if change >= threshold:
                     direction = "상승" if curr > prev else "하락"
                     alerts.append(
-                        f"{col}: {prev:.2f} → {curr:.2f} "
+                        f"{col}: {prev:.2f} -> {curr:.2f} "
                         f"({direction} {change*100:.1f}%)"
                     )
 
             if alerts:
-                event: Event = {
-                    "event_type": EventType.MACRO_ALERT,
-                    "title":      f"매크로 급변 감지 ({date.today()})",
-                    "content":    "\n".join(alerts),
-                    "source":     "macro_monitor",
-                    "event_date": datetime.now(),
-                }
-                await self._process_event(event)
+                log.info(f"매크로 급변 감지: {len(alerts)}건")
         except Exception as e:
             log.error(f"매크로 알림 체크 오류: {e}")
             await self._alert(f"macro_alert 실패: {e}")
 
-    # ─── 주기 리포트 ─────────────────────────────────────────────────────────
+    # --- 예측 검증 ---
 
     async def _verify_predictions(self):
         try:
+            # 검증 전 PENDING 상태 예측 ID 수집
+            pending_before = await self.conn.fetch("""
+                SELECT id, prediction_text FROM mer_predictions
+                WHERE is_correct IS NULL
+            """)
+            pending_ids = {r["id"] for r in pending_before}
+
             resolved = await self.verifier.run()
             log.info(f"예측 검증 완료: {resolved}건 확정")
+
+            if resolved > 0:
+                # 새로 확정된 예측들의 verdict 조회 후 텔레그램 알림
+                newly_resolved = await self.conn.fetch("""
+                    SELECT id, prediction_text, is_correct
+                    FROM mer_predictions
+                    WHERE id = ANY($1::int[]) AND is_correct IS NOT NULL
+                """, list(pending_ids))
+
+                for pred in newly_resolved:
+                    verdict = "CORRECT" if pred["is_correct"] else "INCORRECT"
+                    summary = (pred["prediction_text"] or "")[:30]
+                    await self.telegram.send_verdict_changed(
+                        pred_id=pred["id"],
+                        verdict=verdict,
+                        summary=summary,
+                    )
+
         except Exception as e:
             log.error(f"예측 검증 오류: {e}")
             await self._alert(f"verify_predictions 실패: {e}")
-
-    async def _send_daily_report(self):
-        try:
-            await self.reporter.generate_daily()
-        except Exception as e:
-            log.error(f"일간 리포트 오류: {e}")
-            await self._alert(f"daily_report 실패: {e}")
-
-    async def _send_weekly_report(self):
-        try:
-            await self.reporter.generate_weekly()
-        except Exception as e:
-            log.error(f"주간 리포트 오류: {e}")
-            await self._alert(f"weekly_report 실패: {e}")
-
-    async def _send_monthly_report(self):
-        try:
-            await self.reporter.generate_monthly()
-        except Exception as e:
-            log.error(f"월간 리포트 오류: {e}")
-            await self._alert(f"monthly_report 실패: {e}")
-
-    async def _send_quarterly_report(self):
-        try:
-            await self.reporter.generate_quarterly()
-        except Exception as e:
-            log.error(f"분기 리포트 오류: {e}")
-            await self._alert(f"quarterly_report 실패: {e}")
-
-    async def _send_annual_report(self):
-        try:
-            await self.reporter.generate_annual()
-        except Exception as e:
-            log.error(f"연간 리포트 오류: {e}")
-            await self._alert(f"annual_report 실패: {e}")
-
-    # ─── 이벤트 처리 ─────────────────────────────────────────────────────────
-
-    async def _process_event(self, event: Event):
-        event_type = event["event_type"]
-        config     = ANALYSIS_CONFIGS[event_type]
-        log.info(f"이벤트 처리: {event_type.value} — {event.get('title', '')[:50]}")
-
-        # events 테이블 저장 + embedding
-        embed_text = f"{event.get('title', '')} {event.get('content', '')[:300]}"
-        vecs = await self.embedder.embed_passages([embed_text])
-        vec = vec_str(vecs[0])
-
-        event_id = await self.conn.fetchval("""
-            INSERT INTO events (event_type, source, title, content, event_date, embedding)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id
-        """,
-            event_type.value,
-            event.get("source", ""),
-            event.get("title", ""),
-            event.get("content", ""),
-            event.get("event_date", datetime.now()),
-            vec,
-        )
-
-        # 컨텍스트 조립 + 분석 생성
-        context  = await self.assembler.assemble(event, config)
-        analysis = await self.generator.generate(context, config)
-
-        # 텔레그램 발송
-        sent = await self.telegram.send_analysis(
-            channel=config.telegram_channel,
-            event=event,
-            analysis=analysis,
-            rules_count=len(context["rules"]),
-        )
-
-        # 결과 저장
-        await self.conn.execute("""
-            INSERT INTO auto_analyses
-                (event_id, analysis_text, rules_used, macro_context, telegram_sent, telegram_sent_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-        """,
-            event_id,
-            analysis,
-            [r["id"] for r in context["rules"]],
-            json.dumps(context["macro_context"], default=str),
-            sent,
-            datetime.now() if sent else None,
-        )
-
-        log.info(f"  → 분석 완료 (텔레그램: {'발송' if sent else '실패'})")
 
 
 if __name__ == "__main__":
