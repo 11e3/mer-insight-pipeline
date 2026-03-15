@@ -48,12 +48,12 @@ async def export(limit: int, out_path: Path) -> None:
 
     # ── 인사이트 (최신순, rule/evaluation/macro_view만) ─────────────────────
     insight_rows = await conn.fetch("""
-        SELECT mi.id, mi.insight_type, mi.content, mp.date
+        SELECT DISTINCT ON (mi.content) mi.id, mi.insight_type, mi.content, mp.date
         FROM mer_insights mi
         JOIN mer_posts mp ON mi.post_id = mp.id
         WHERE mi.insight_type IN ('rule', 'evaluation', 'macro_view')
-          AND (mi.is_canonical IS NULL OR mi.is_canonical = TRUE)
-        ORDER BY mp.date DESC
+          AND mi.is_canonical = TRUE
+        ORDER BY mi.content, mp.date DESC
         LIMIT $1
     """, limit)
 
