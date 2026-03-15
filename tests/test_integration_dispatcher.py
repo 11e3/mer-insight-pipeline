@@ -140,8 +140,9 @@ async def test_post_enricher_related_posts_empty_db(pg_conn):
         sys.modules["vertexai"] = MagicMock()
         sys.modules["vertexai.language_models"] = MagicMock()
 
-    # config.settings가 DATABASE_URL을 필수로 요구
+    # config.settings가 필수로 요구하는 env vars
     os.environ.setdefault("DATABASE_URL", os.environ.get("TEST_DATABASE_URL", "test"))
+    os.environ.setdefault("ANTHROPIC_API_KEY", "test")
 
     with patch("src.pipeline.post_enricher.anthropic.AsyncAnthropic"):
         from src.pipeline.post_enricher import PostEnricher
