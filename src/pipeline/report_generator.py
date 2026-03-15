@@ -3,7 +3,7 @@
 
 각 리포트는 하위 리포트를 원재료로 받아 상위 관점 해석을 새로 생성.
 
-  - 일간  (21:00)             — 그날 메르 글 팩트 요약          (Claude 1회)
+  - 일간  (21:00)             — 메르 글 요약 또는 매크로 시황    (Claude 1회)
   - 주간  (일요일 21:00)     — 이번 주 흐름 해석               (Claude 1회)
   - 월간  (월 마지막날 21:00) — 이달 패턴·연결고리             (Claude 1회)
   - 분기  (분기 마지막날 21:00) — 분기 관심사 이동             (Claude 1회)
@@ -269,7 +269,7 @@ class ReportGenerator:
     # ─── Public ──────────────────────────────────────────────────────────────
 
     async def generate_daily(self):
-        """일간 리포트 — 그날 메르 글 팩트 요약. 글 없으면 미발송."""
+        """일간 리포트 — 메르 글 있으면 팩트 요약, 없으면 매크로 시황."""
         today = date.today()
         log.info(f"일간 리포트: {today}")
 
@@ -282,21 +282,22 @@ class ReportGenerator:
             ORDER BY e.event_date
         """, today)
 
-        if not posts:
-            log.info("오늘 메르 글 없음 — 일간 리포트 미발송")
-            return
+        if posts:
+            posts_ctx = "\n\n".join(
+                f"[{r['title']}]\n{(r['analysis_text'] or '')[:300]}"
+                for r in posts
+            )
+            summary = await self._commentary(
+                posts_ctx,
+                "오늘 메르가 쓴 글들을 글별로 정리.\n"
+                "형식: • 글 제목 — 핵심 팩트 + 시장에 왜 중요한지 한 줄 해석\n"
+                "존댓말 금지. 단순 팩트 나열 금지. 전체 400자 이내.",
+                400,
+            )
+        else:
+            log.info("오늘 메르 글 없음 — 매크로 시황 기반 일간 리포트 생성")
+            summary = await self._daily_macro_summary(today)
 
-        posts_ctx = "\n\n".join(
-            f"[{r['title']}]\n{(r['analysis_text'] or '')[:300]}"
-            for r in posts
-        )
-        summary = await self._commentary(
-            posts_ctx,
-            "오늘 메르가 쓴 글들을 글별로 정리.\n"
-            "형식: • 글 제목 — 핵심 팩트 + 시장에 왜 중요한지 한 줄 해석\n"
-            "존댓말 금지. 단순 팩트 나열 금지. 전체 400자 이내.",
-            400,
-        )
         title = "*📝 일간 메르 인사이트*"
         text  = f"{title}\n_{today.strftime('%Y.%m.%d')}_\n\n{summary}"
         await self.telegram.send_raw("tier1", text)
@@ -640,6 +641,42 @@ class ReportGenerator:
         )
         text = next((b.text for b in resp.content if isinstance(b, anthropic.types.TextBlock)), "")
         return text.strip()
+
+    # ─── 매크로 시황 일간 리포트 ─────────────────────────────────────────────
+
+    async def _daily_macro_summary(self, today: date) -> str:
+        """메르 글 없는 날: 매크로 데이터 + 최근 메르 인사이트로 시황 리포트 생성."""
+        yesterday = today - timedelta(days=1)
+        ms = await self._macro_snapshot(yesterday)
+        me = await self._macro_snapshot(today)
+
+        parts = []
+
+        # 매크로 지표 변동
+        if ms and me:
+            macro_block = _render_macro_block(ms, me)
+            if macro_block:
+                parts.append(f"[매크로 지표]\n{macro_block}")
+
+        # 최근 7일 메르 분석 컨텍스트 (있으면)
+        recent_ctx = await self._analyses_ctx(
+            today - timedelta(days=7), today, limit=5,
+        )
+        if recent_ctx:
+            parts.append(f"[최근 메르 분석]\n{recent_ctx}")
+
+        if not parts:
+            return "(오늘 메르 포스팅 없음. 매크로 데이터 수집 중)"
+
+        data_str = "\n\n".join(parts)
+        return await self._commentary(
+            data_str,
+            "오늘 메르 새 글은 없다. 매크로 지표 변동과 최근 메르 분석을 바탕으로 시황 요약.\n"
+            "형식: • 주제 — 핵심 변동 + 시장 의미 한 줄 해석\n"
+            "첫 줄에 '(오늘 메르 포스팅 없음)' 표기.\n"
+            "존댓말 금지. 단순 수치 나열 금지. 300자 이내.",
+            300,
+        )
 
     # ─── 발송 / 저장 ──────────────────────────────────────────────────────────
 
