@@ -313,7 +313,7 @@ mer-insight-pipeline/
 │   ├── extract/
 │   │   ├── batch_api.py          # Claude Batch API 오케스트레이션
 │   │   ├── local_embedder.py     # multilingual-e5-large 1024차원 (기본)
-│   │   ├── vertex_embedder.py    # Vertex AI 임베더 (선택, GCP_PROJECT_ID 필요)
+│   │   ├── embedder.py           # Embedder 프로토콜 + 팩토리 (LocalEmbedder 기본)
 │   │   ├── parse_results.py      # 배치 결과 파싱 → DB 저장
 │   │   └── realtime_extractor.py # 실시간 인사이트 추출 (Haiku)
 │   ├── ingest/

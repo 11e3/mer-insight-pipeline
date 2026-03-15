@@ -316,7 +316,7 @@ mer-insight-pipeline/
 │   ├── extract/
 │   │   ├── batch_api.py          # Claude Batch API orchestration
 │   │   ├── local_embedder.py     # multilingual-e5-large 1024-dim (default)
-│   │   ├── vertex_embedder.py    # Vertex AI embedder (optional, GCP_PROJECT_ID required)
+│   │   ├── embedder.py           # Embedder protocol + factory (LocalEmbedder default)
 │   │   ├── parse_results.py      # Batch result parsing → DB
 │   │   └── realtime_extractor.py # Real-time insight extraction (Haiku)
 │   ├── ingest/

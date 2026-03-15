@@ -11,7 +11,7 @@ import asyncpg
 from tqdm import tqdm
 
 from config.settings import DATABASE_URL, EMBEDDING_BATCH_SIZE
-from src.extract.vertex_embedder import get_embedder, vec_str
+from src.extract.embedder import get_embedder, vec_str
 
 
 async def fill_embeddings():

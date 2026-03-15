@@ -17,7 +17,7 @@ import asyncpg
 from tqdm import tqdm
 
 from config.settings import DATABASE_URL, EMBEDDING_BATCH_SIZE
-from src.extract.vertex_embedder import VertexEmbedder, vec_str
+from src.extract.embedder import VertexEmbedder, vec_str
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger(__name__)

@@ -62,20 +62,6 @@ INSIGHT_USER_TEMPLATE = """\
 Variables: {title}, {date}, {url}, {content_text}
 """
 
-# ─── 실시간 분석: 이벤트 유형별 system prompt ─────────────────────────────────
-
-ANALYSIS_SUMMARY_PROMPT = """\
-[System prompt for Tier 1 (free) channel: new post summary]
-"""
-
-ANALYSIS_FULL_PROMPT = """\
-[System prompt for Tier 2 (premium) channel: full analysis with frameworks]
-"""
-
-ANALYSIS_ALERT_PROMPT = """\
-[System prompt for macro alert messages]
-"""
-
 # ─── 엔티티 추출 ──────────────────────────────────────────────────────────────
 
 ENTITY_EXTRACT_PROMPT = """\

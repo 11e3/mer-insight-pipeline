@@ -1,8 +1,7 @@
 """
-Embedder factory + Vertex AI wrapper.
+Embedder protocol + factory.
 
-get_embedder() → GCP 설정 있으면 VertexEmbedder(768-dim), 없으면 LocalEmbedder(1024-dim).
-현재 DB는 1024-dim이므로 LocalEmbedder가 기본.
+get_embedder() → LocalEmbedder(1024-dim) 기본. GCP_PROJECT_ID 설정 시 VertexEmbedder(768-dim, DB 비호환).
 """
 
 from __future__ import annotations

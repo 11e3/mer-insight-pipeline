@@ -36,7 +36,7 @@ async def pg_conn():
             title      TEXT,
             content    TEXT,
             event_date TIMESTAMP,
-            embedding  vector(768),
+            embedding  vector(1024),
             created_at TIMESTAMP DEFAULT NOW()
         )
     """)

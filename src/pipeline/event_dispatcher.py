@@ -15,7 +15,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from config.settings import (
     DATABASE_URL, MACRO_ALERT_THRESHOLDS,
 )
-from src.extract.vertex_embedder import get_embedder
+from src.extract.embedder import get_embedder
 from src.pipeline.mer_monitor import MerMonitor
 from src.pipeline.dart_collector import DartCollector
 from src.pipeline.news_collector import NewsCollector

@@ -23,7 +23,7 @@ from scipy import stats
 
 from config.settings import DATABASE_URL
 from src.eval.metrics import precision_at_k, recall_at_k, mean_reciprocal_rank as reciprocal_rank
-from src.extract.vertex_embedder import vec_str
+from src.extract.embedder import vec_str
 from src.search.bm25_index import BM25Index
 
 log = logging.getLogger(__name__)

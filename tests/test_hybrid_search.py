@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-# src/search/__init__.py → hybrid.py → vertex_embedder.py → vertexai 체인
+# src/search/__init__.py → hybrid.py → embedder.py → vertexai 체인
 # CI에 vertexai 미설치이므로 import 전에 mock 주입
 if "vertexai" not in sys.modules:
     sys.modules["vertexai"] = MagicMock()

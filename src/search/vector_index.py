@@ -6,7 +6,7 @@ Returns: [(insight_id, similarity_score), ...] top_k 개
 
 import asyncpg
 
-from src.extract.vertex_embedder import Embedder, vec_str
+from src.extract.embedder import Embedder, vec_str
 
 
 class VectorIndex:
