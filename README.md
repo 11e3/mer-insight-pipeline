@@ -1,10 +1,8 @@
 # mer-insight-pipeline
 
-**mer-insight-pipeline** automates financial prediction tracking and verification using Korean macro data (FRED, BOK ECOS, DART, Naver Finance) with LLM-powered analysis.
+**mer-insight-pipeline** automates financial prediction tracking and verification from Mer (ranto28)'s 2,193 blog posts using Korean macro data (FRED, BOK ECOS, DART, Naver Finance).
 
-[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions, collects real market data from 6 external sources, and uses Claude Haiku as an automated judge to verify each prediction daily — 5,368 predictions tracked so far. The infrastructure includes a hybrid retriever (25,090 indexed insights), an LLM agent loop, a hallucination guard, hierarchical report generation, and per-call cost/latency tracing — all on PostgreSQL + pgvector with no vector-DB vendor lock-in.
-
-**~$0.15 per post** (4 agent iterations avg) · **$4.50/month** at 30 posts/month
+[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, α=0.6 optimal) on PostgreSQL with no vector-DB vendor lock-in.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 [![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline-yvkztwypti7zbnfae8wfjs.streamlit.app)
@@ -24,22 +22,9 @@ flowchart TD
         C -->|2,193 posts| D[Claude Batch API<br>batch_api.py]
         D -->|JSONL results| E[parse_results.py]
         E -->|rules / predictions<br>evaluations / macro_views| C
-        C --> F[embeddings.py<br>text-multilingual-embedding-002]
-        F -->|768-dim vectors| C
+        C --> F[local_embedder.py<br>multilingual-e5-large 1024-dim]
+        F -->|1024-dim vectors| C
         C --> G[cluster_insights.py<br>DBSCAN dedup]
-    end
-
-    subgraph Agent Loop
-        B -->|new post| AG[MerAgent<br>pure while loop]
-        AG -->|tool_use| T1[search_past_insights<br>Hybrid Search]
-        AG -->|tool_use| T2[check_contradiction]
-        AG -->|tool_use| T3[classify_novelty<br>DBSCAN clusters]
-        AG -->|tool_use| T4[get_topic_history]
-        AG -->|tool_use| T5[generate_comparative_analysis]
-        T1 & T2 & T3 & T4 & T5 --> C
-        AG -->|draft analysis| GD[Hallucination Guard]
-        GD -->|FAIL → retry ×2| AG
-        GD -->|PASS| OUT[final analysis]
     end
 
     subgraph Hybrid Search
@@ -48,7 +33,6 @@ flowchart TD
         HS1 & HS2 -->|RRF fusion α=0.4| HS3[HybridSearcher]
     end
 
-    T1 --> HS3
     HS3 --> C
 
     subgraph Real-time Pipeline
@@ -60,22 +44,13 @@ flowchart TD
         DC & NC & LM --> CA[context_assembler]
         CA --> HS3
         CA --> AG2[analysis_generator<br>Claude Sonnet]
-        AG2 --> RG[report_generator<br>5-level hierarchy]
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    OUT --> TG1[Telegram Tier 1<br>Free Channel]
-    RG --> TG1
-    AG2 --> TG2[Telegram Tier 2<br>Premium Channel]
-
-    subgraph Observability
-        TR[Tracer<br>context manager] -->|spans| PG2[(traces / spans<br>PostgreSQL)]
-        PG2 --> DB2[Streamlit Dashboard<br>cost · latency · errors]
-    end
+    AG2 --> TG[Telegram<br>Tier 1 · Tier 2]
 
     subgraph Eval Pipeline
         EV[eval_runner.py] --> HS3
-        EV --> AG
         EV --> LJ[LLM Judge<br>Claude Sonnet]
         EV --> RPT[Markdown Report]
     end
@@ -135,73 +110,13 @@ The pipeline collects financial and economic data from 6 external sources on sch
 
 Additional API keys supported in `config/settings.py` for future data sources: BLS (US labor statistics), MOLIT (Korea real estate), KOSIS (Korea trade statistics).
 
-All macro data feeds into two downstream consumers:
-1. **Prediction verification context** — monthly aggregates + recent 30-day daily values provided to Claude Haiku as evidence for judging predictions
-2. **Report generation fallback** — when sub-reports are missing, raw macro numbers (KOSPI, rates, VIX, trade balance) are used to generate commentary directly
-
----
-
-## Agent Loop — Why Not a Fixed Prompt?
-
-When a new Mer blog post arrives, the agent loop lets the LLM **decide what information it needs** and call tools in sequence — rather than running a fixed prompt on every post.
-
-```
-New post received
-  → LLM: "Need past insights on interest rates" → search_past_insights("rate cut")
-  → LLM: "Does this contradict prior claims?"  → check_contradiction(...)
-  → LLM: "Is this a new topic?"                → classify_novelty(...)
-  → LLM: "Enough context. Generate analysis."
-```
-
-**Implementation**
-- Pure `while` loop with Claude `tool_use` API — no frameworks
-- `max_iterations=5`; Hallucination Guard failure triggers up to 2 automatic re-generations
-- Falls back to `analysis_generator.py` on agent error
-
-**Analysis output — example**
-
-Each analysis is grounded in past insights retrieved from the 25,090-insight DB and cited inline. Example from a post about Hormuz Strait supply chain risk (2026-03-08):
-
-```
-*핵심 요약* (Core summary)
-
-🎯 The real threat from a Hormuz closure isn't oil/LNG — it's urea supply chain
-   collapse. [ref: ins_2316]
-   Korea has zero domestic production and only 15 days of public stockpile.
-   [ref: ins_15390]
-
-*과거 발언과의 비교* (vs. past statements)
-
-- Mer warned since Dec 2023 that the 2021 urea shortage was never structurally
-  resolved. [ref: ins_7022]
-- Then: China-only risk. Now: simultaneous multi-country supply cut — crisis
-  layer has expanded. [ref: ins_2316]
-- Dependency fell to 67% post-2021, quietly rose back to 91.8% by 2023.
-  [ref: ins_15390, ins_23520]
-- New angle not in past insights: Egypt sources Israeli gas → converts to urea.
-  [ref: none]
-
-*시장 시사점* (Market implications)
-
-- Lotte Fine Chemical: price pass-through upside, offset by import cost risk.
-  [ref: ins_15391]
-- Logistics/trucking: urea shortage → truck shutdowns → freight spike across
-  construction, cement, retail. [ref: ins_2308]
-- Agri inflation: urea is fertiliser feedstock, not just AdBlue. [ref: ins_2316]
-
-💬 "In 2021 it was China alone. In 2026 multiple producers drop simultaneously."
-   [ref: ins_2316]
-```
-
-Citations are verified by the Hallucination Guard before delivery.
-
-![Telegram delivery example](docs/telegram_demo.png)
+All macro data feeds into **prediction verification context** — monthly aggregates + recent 30-day daily values provided to Claude Haiku as evidence for judging predictions.
 
 ---
 
 ## Search Infrastructure
 
-Hybrid BM25 + vector search serves as the retrieval backbone for the agent loop and context assembly.
+Hybrid BM25 + vector search serves as the retrieval backbone for context assembly and the eval pipeline.
 
 Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB. Results reflect actual retrieval quality against real query texts.
 
@@ -241,97 +156,6 @@ Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model as DB indexin
 - **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
 - **BM25** pinpoints specific numbers and proper nouns, but fails on synonyms and varied phrasing
 - **RRF** combines both: each method covers the blind spots of the other
-
----
-
-## Hierarchical Report Pipeline
-
-Rather than generating a single flat summary, reports are produced in a **5-level hierarchy** where each level's output becomes the raw material for the next.
-
-```
-Annual   (Dec 31 21:00)    ← synthesises 4 quarterly reports  (2 Claude calls)
-  └─ Quarterly (last day of Mar/Jun/Sep/Dec 21:00) ← synthesises 3 monthly reports
-       └─ Monthly (last day 21:00) ← synthesises 4 weekly reports
-            └─ Weekly (Sun 21:00) ← synthesises 7 daily reports
-                 └─ Daily (21:00) ← summarises that day's agent analyses
-```
-
-Each level is instructed to find **patterns invisible at the level below** — not to copy-paste or re-list:
-
-```
-Weekly  → "What thread connected this week's posts?"
-Monthly → "What structural shift happened across weeks?"
-Annual  → "What were the two defining themes of the year?"
-```
-
-When sub-reports are missing, the generator falls back to raw macro data (KOSPI, rates, VIX, trade balance) and produces commentary directly.
-
-| Mode | Input | Constraint |
-|------|-------|------------|
-| `_commentary` | Raw macro numbers | No invented figures |
-| `_synthesis` | Sub-reports (text) | No copy-paste — find cross-level connections only |
-
----
-
-## Hallucination Guard
-
-Automatically detects **uncited claims** in the agent's output and triggers re-generation.
-
-**Required output format** (instructed in system prompt):
-```
-US Treasury yields are expected to decline in H2. [ref: ins_22737, ins_16440]
-This aligns with Fed rate-cut signalling.          [ref: ins_16433]
-Inflation re-acceleration risk remains, however.   [ref: none]
-```
-
-**Verdicts**
-
-| Verdict | Condition |
-|---------|-----------|
-| `GROUNDED` | `[ref: ins_ID]` present and ID exists in `mer_insights` |
-| `UNGROUNDED` | Cited ID does not exist in DB |
-| `UNSUPPORTED` | No citation tag at all |
-| `NONE_DECLARED` | Explicitly tagged `[ref: none]` — accepted |
-
-UNGROUNDED + UNSUPPORTED ratio > 20% → re-generation triggered (max 2 retries)
-
----
-
-## Observability
-
-Agent loop iterations are wrapped in a `Tracer` context manager that records cost and latency to PostgreSQL and surfaces them in a Streamlit dashboard. (Report generation and prediction verification calls are not currently traced.)
-
-```python
-async with Tracer(conn, trace_name="agent_run") as tracer:
-    resp = await tracer.call(
-        client.messages.create,
-        span_name="agent_step_1",
-        model=MODEL_SONNET,
-        messages=...,
-    )
-```
-
-**Tracked per span**: `model`, `input_tokens`, `output_tokens`, `latency_ms`, `cost_usd`, `tool_calls`, `error`
-
-**Token pricing** (claude-sonnet-4-6): $3/1M input · $15/1M output
-
-Example trace from a real agent run (4 iterations):
-
-| Span | Input tokens | Output tokens | Cost | Latency |
-|------|-------------|--------------|------|---------|
-| agent_step_1 | 5,330 | 293 | $0.0204 | 6.1s |
-| agent_step_2 | 7,763 | 406 | $0.0294 | 9.1s |
-| agent_step_3 | 9,584 | 687 | $0.0391 | 12.5s |
-| agent_step_4 | 11,571 | 1,958 | $0.0641 | 40.3s |
-| **Total** | **34,248** | **3,344** | **$0.153** | **~2 min** |
-
-Context grows each iteration as tool results accumulate — visible in the token progression.
-
-```bash
-streamlit run src/dashboard/observability.py   # http://localhost:8501
-```
-
-![Observability dashboard](docs/dashboard.png)
 
 ---
 
@@ -394,11 +218,9 @@ Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each q
 | Extracted insights | 25,090 |
 | Tracked predictions | 5,368 |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
-| Embedding dimensions | 768 |
+| Embedding dimensions | 1024 |
 | BM25 index size | 16,126 canonical documents |
-| Scheduled jobs | 11 |
-| Report hierarchy levels | 5 |
-| Cost per post (agent) | ~$0.15 |
+| Scheduled jobs | 6 |
 | Macro indicators tracked | KOSPI, USD/KRW, WTI, VIX, BTC, US10Y, Fed rate, CPI, unemployment |
 
 ---
@@ -483,15 +305,6 @@ Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 | `report_annual` | 12/31 21:00 |
 <!-- END:jobs -->
 
-### Observability Dashboard
-
-```bash
-# Local
-streamlit run src/dashboard/observability.py   # http://localhost:8501
-
-# Production: Cloud Run Service (see docs/gcp_setup.md)
-```
-
 ### Prediction Dashboard
 
 ```bash
@@ -533,23 +346,11 @@ mer-insight-pipeline/
 │   ├── settings.py               # All configuration, loaded from .env
 │   └── prompts.example.py        # Prompt structure template
 ├── src/
-│   ├── agent/                    # LLM Agent Loop
-│   │   ├── agent.py              # Pure while loop, max_iterations=5
-│   │   ├── tools.py              # 5 tools: search / contradiction / novelty / history / compare
-│   │   ├── prompts.py            # System prompt with citation tagging instructions
-│   │   └── state.py              # Message history & iteration state
 │   ├── search/                   # Search Infrastructure
 │   │   ├── bm25_index.py         # BM25 with kiwipiepy tokenizer + pickle cache
-│   │   ├── vector_index.py       # pgvector HNSW wrapper
+│   │   ├── vector_index.py       # pgvector HNSW wrapper (1024-dim)
 │   │   ├── hybrid.py             # RRF fusion (α=0.4)
 │   │   └── experiment.py         # A/B comparison: vector vs BM25 vs hybrid
-│   ├── guard/                    # Hallucination Guard
-│   │   ├── guard.py              # GROUNDED / UNGROUNDED / UNSUPPORTED verdict
-│   │   ├── citation_tracker.py   # [ref: ins_ID] tag parser
-│   │   └── self_correct.py       # Auto re-generation on FAIL (max 2 retries)
-│   ├── observability/            # LLM Call Tracing
-│   │   ├── tracer.py             # Tracer context manager + @trace_llm_call decorator
-│   │   └── storage.py            # traces / spans PostgreSQL CRUD
 │   ├── eval/                     # Eval Pipeline
 │   │   ├── eval_runner.py        # Main runner (--mode retrieval_only | full)
 │   │   ├── metrics.py            # Precision@K, Recall@K, MRR
@@ -558,37 +359,37 @@ mer-insight-pipeline/
 │   │   └── report.py             # Markdown + JSON report generator
 │   ├── extract/
 │   │   ├── batch_api.py          # Claude Batch API orchestration
-│   │   ├── embeddings.py         # Vector embedding generation
+│   │   ├── local_embedder.py     # multilingual-e5-large 1024-dim (default)
+│   │   ├── vertex_embedder.py    # Vertex AI embedder (optional, GCP_PROJECT_ID required)
 │   │   ├── parse_results.py      # Batch result parsing → DB
 │   │   └── realtime_extractor.py # Real-time insight extraction (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
-│   │   ├── load_macro.py         # FRED / BOK ECOS macro data collection
-│   │   ├── load_bls.py
-│   │   ├── load_realestate.py
-│   │   └── load_trade.py
+│   │   └── load_macro.py         # FRED / BOK ECOS macro data collection
 │   ├── pipeline/
-│   │   ├── event_dispatcher.py   # Main runtime (APScheduler) + agent integration
+│   │   ├── event_dispatcher.py   # Main runtime (APScheduler, 6 scheduled jobs)
 │   │   ├── mer_monitor.py        # Blog RSS watcher (primary data source)
 │   │   ├── dart_collector.py     # DART filings (Korean corporate disclosure)
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
 │   │   ├── context_assembler.py  # RAG context builder
-│   │   ├── analysis_generator.py # Claude analysis (fallback)
-│   │   ├── prediction_verifier.py # Daily Claude Haiku batch verification
-│   │   └── report_generator.py   # 5-level hierarchical synthesis
+│   │   ├── analysis_generator.py # Claude Sonnet post analysis
+│   │   └── prediction_verifier.py # Daily Claude Haiku batch verification
 │   ├── delivery/
 │   │   ├── telegram_bot.py       # Two-tier Telegram delivery
 │   │   └── formatters.py
 │   └── dashboard/
-│       ├── observability.py      # LLM cost / latency / error dashboard
+│       ├── observability.py      # Cost / latency dashboard (local reference)
 │       └── prediction_dashboard.py # Prediction accuracy dashboard
+├── demo/
+│   ├── app.py                    # Streamlit demo (no API keys needed)
+│   └── sample_data.json          # Pre-exported insights dataset
 ├── eval_data/
-│   └── gold.json                 # Gold dataset: 5 queries × 5 relevant insight IDs
+│   └── gold_extended.json        # Gold dataset: 200 queries with relevant insight IDs
 ├── results/                      # Eval reports & experiment outputs
 ├── scripts/
-│   ├── init_db.sql               # PostgreSQL schema (includes traces / spans)
-│   ├── migrate_predictions.py    # One-time: mer_insights → mer_predictions backfill
-│   └── run_batch.py
+│   ├── init_db.sql               # PostgreSQL schema
+│   ├── run_batch.py              # Batch extraction orchestrator
+│   └── migrate_predictions.py    # One-time: mer_insights → mer_predictions backfill
 ├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt

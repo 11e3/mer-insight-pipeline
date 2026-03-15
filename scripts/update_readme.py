@@ -52,7 +52,7 @@ def tech_stack_en(settings: str) -> str:
     return (
         "| Layer | Technology |\n"
         "|-------|------------|\n"
-        f"| LLM (analysis · agent) | `{sonnet}` |\n"
+        f"| LLM (analysis · verification) | `{sonnet}` |\n"
         f"| LLM (extraction · verification) | `{haiku}` |\n"
         "| Batch API | Anthropic Batch API |\n"
         f"| Embeddings | Vertex AI `{embed}` ({dim} dims) |\n"
@@ -75,7 +75,7 @@ def tech_stack_kr(settings: str) -> str:
     return (
         "| 레이어 | 기술 |\n"
         "|--------|------|\n"
-        f"| LLM (분석 · 에이전트) | `{sonnet}` |\n"
+        f"| LLM (분석 · 검증) | `{sonnet}` |\n"
         f"| LLM (추출 · 검증) | `{haiku}` |\n"
         "| 배치 API | Anthropic Batch API |\n"
         f"| 임베딩 | Vertex AI `{embed}` ({dim}차원) |\n"
