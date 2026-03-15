@@ -352,7 +352,7 @@ Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each q
 | LLM (analysis · agent) | `claude-sonnet-4-6` |
 | LLM (extraction · verification) | `claude-haiku-4-5-20251001` |
 | Batch API | Anthropic Batch API |
-| Embeddings | Vertex AI `text-multilingual-embedding-002` (768 dims) |
+| Embeddings | Vertex AI `text-multilingual-embedding-002` (1024 dims) |
 | Vector DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.4) |

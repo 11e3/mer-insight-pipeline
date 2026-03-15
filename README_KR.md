@@ -349,7 +349,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | LLM (분석 · 에이전트) | `claude-sonnet-4-6` |
 | LLM (추출 · 검증) | `claude-haiku-4-5-20251001` |
 | 배치 API | Anthropic Batch API |
-| 임베딩 | Vertex AI `text-multilingual-embedding-002` (768차원) |
+| 임베딩 | Vertex AI `text-multilingual-embedding-002` (1024차원) |
 | 벡터 DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.4) |
