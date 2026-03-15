@@ -291,11 +291,11 @@ class PredictionVerifier:
         try:
             resp = await self._claude.messages.create(
                 model=MODEL_HAIKU,
-                max_tokens=1024,
+                max_tokens=4096,
                 system=_SYSTEM,
                 messages=[{"role": "user", "content": user_msg}],
             )
-            raw   = resp.content[0].text.strip()
+            raw   = next((b.text for b in resp.content if hasattr(b, "text")), "").strip()
             start = raw.find("[")
             end   = raw.rfind("]") + 1
             return json.loads(raw[start:end]) if start >= 0 else []
