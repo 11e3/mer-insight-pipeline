@@ -12,7 +12,7 @@ Usage:
 
 import asyncio
 import argparse
-from datetime import date, timedelta
+from datetime import date
 
 import asyncpg
 import pandas as pd

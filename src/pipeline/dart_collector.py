@@ -3,7 +3,6 @@ DART 공시 수집 (OpenAPI).
 API 키 없이도 RSS로 최근 공시 수집 가능.
 """
 
-import re
 import asyncpg
 import requests
 from xml.etree import ElementTree as ET

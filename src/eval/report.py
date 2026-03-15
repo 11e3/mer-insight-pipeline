@@ -64,28 +64,28 @@ def _render_markdown(agg: dict, results: list[CaseResult], ts: str) -> str:
 
     lines = [
         f"# Eval Report — {ts}",
-        f"",
+        "",
         f"테스트 케이스: **{n}개** | K={k}",
-        f"",
-        f"## Retrieval 지표",
-        f"",
-        f"| 지표 | 값 |",
-        f"|------|----|",
+        "",
+        "## Retrieval 지표",
+        "",
+        "| 지표 | 값 |",
+        "|------|----|",
         f"| Precision@{k} | {ret.get('precision_at_k', 0):.4f} |",
         f"| Recall@{k}    | {ret.get('recall_at_k', 0):.4f}    |",
         f"| MRR           | {ret.get('mrr', 0):.4f}             |",
-        f"",
-        f"## Generation 지표",
-        f"",
-        f"| 지표 | 값 |",
-        f"|------|----|",
+        "",
+        "## Generation 지표",
+        "",
+        "| 지표 | 값 |",
+        "|------|----|",
         f"| Context Relevance | {gen.get('context_relevance', 0):.4f} |",
         f"| Faithfulness      | {gen.get('faithfulness', 0):.4f}      |",
         f"| Answer Relevance  | {gen.get('answer_relevance', 0):.4f}  |",
         f"| Hallucination Rate| {gen.get('hallucination_rate', 0):.4f}|",
-        f"",
-        f"## Worst Cases (Precision@K 하위 3개)",
-        f"",
+        "",
+        "## Worst Cases (Precision@K 하위 3개)",
+        "",
     ]
 
     # worst cases
@@ -96,7 +96,7 @@ def _render_markdown(agg: dict, results: list[CaseResult], ts: str) -> str:
             f"- Query: {r.query}",
             f"- Precision@K: {r.retrieval.precision_at_k:.4f}",
             f"- Faithfulness: {r.generation.faithfulness:.4f}",
-            f"",
+            "",
         ]
 
     return "\n".join(lines)

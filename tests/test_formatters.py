@@ -8,7 +8,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.delivery.formatters import _esc, _to_md1, _fmt_mer_post, _fmt_macro_alert, format_short_post
-from src.pipeline.event_types import EventType
 
 
 # ── _esc ──────────────────────────────────────────────────────────────────────

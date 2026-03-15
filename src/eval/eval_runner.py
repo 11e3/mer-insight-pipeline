@@ -18,7 +18,7 @@ from sentence_transformers import SentenceTransformer
 
 from config.settings import DATABASE_URL, EMBEDDING_MODEL
 from src.eval.eval_dataset import load_dataset, save_template, TestCase
-from src.eval.metrics import CaseResult, GenerationMetrics, compute_retrieval, aggregate
+from src.eval.metrics import CaseResult, compute_retrieval, aggregate
 from src.eval.llm_judge import (
     judge_context_relevance, judge_faithfulness, judge_answer_relevance,
     normalize_score,

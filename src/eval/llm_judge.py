@@ -107,7 +107,7 @@ async def _call_judge(prompt: str) -> dict:
         if start != -1 and end > start:
             return json.loads(text[start:end])
     except Exception as e:
-        log.warning(f"Judge 호출 오류: {e}")
+        log.warning(f"Judge 호출 오류: {e}", exc_info=True)
     return {"score": 0, "reasoning": "평가 실패", "hallucinated_claims": []}
 
 

@@ -21,7 +21,6 @@ import functools
 import logging
 import time
 import uuid
-from contextlib import asynccontextmanager
 from datetime import datetime
 
 import asyncpg

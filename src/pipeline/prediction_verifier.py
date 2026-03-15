@@ -14,7 +14,6 @@ PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증
 import asyncio
 import json
 import logging
-import re
 from datetime import date
 from xml.etree import ElementTree as ET
 

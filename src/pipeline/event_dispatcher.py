@@ -11,12 +11,10 @@ import logging
 from datetime import datetime, date
 
 import asyncpg
-import requests
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config.settings import (
     DATABASE_URL, MACRO_ALERT_THRESHOLDS,
-    BLOG_RSS,
 )
 from src.extract.vertex_embedder import VertexEmbedder, vec_str
 from src.pipeline.event_types import EventType, ANALYSIS_CONFIGS
@@ -27,7 +25,6 @@ from src.pipeline.dart_collector import DartCollector
 from src.pipeline.news_collector import NewsCollector
 from src.delivery.telegram_bot import TelegramBot
 from src.extract.realtime_extractor import extract_and_save, is_economic
-from src.delivery.formatters import format_short_post
 from src.pipeline.report_generator import ReportGenerator
 from src.agent.agent import MerAgent
 from src.search.bm25_index import BM25Index

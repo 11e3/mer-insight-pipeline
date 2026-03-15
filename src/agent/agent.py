@@ -21,7 +21,6 @@ from src.search.bm25_index import BM25Index
 from src.agent.prompts import AGENT_SYSTEM_PROMPT
 from src.agent.state import AgentState
 from src.agent.tools import TOOL_SPECS, ToolExecutor
-from src.guard.self_correct import verify_and_correct
 
 if TYPE_CHECKING:
     from src.observability.tracer import Tracer

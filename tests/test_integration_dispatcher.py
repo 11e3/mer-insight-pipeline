@@ -10,7 +10,6 @@
     DATABASE_URL=postgresql://mer:pass@localhost:5432/mer_test pytest tests/test_integration_dispatcher.py -v
 """
 
-import asyncio
 import json
 import os
 import pytest

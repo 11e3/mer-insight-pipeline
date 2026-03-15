@@ -100,7 +100,7 @@ if __name__ == "__main__":
         results_path = sys.argv[2]
         batch_id = asyncio.run(create_retokenize_batch(results_path))
         if batch_id:
-            print(f"\n재배치 완료되면:")
+            print("\n재배치 완료되면:")
             print(f"  python scripts/run_batch.py parse {batch_id}")
 
     elif cmd == "all":

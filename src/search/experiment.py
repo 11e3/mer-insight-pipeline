@@ -15,7 +15,6 @@ import asyncio
 import argparse
 import json
 import logging
-import os
 from pathlib import Path
 
 import asyncpg
@@ -25,7 +24,6 @@ from scipy import stats
 from config.settings import DATABASE_URL
 from src.extract.vertex_embedder import vec_str
 from src.search.bm25_index import BM25Index
-from src.search.hybrid import HybridSearcher
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

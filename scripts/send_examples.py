@@ -17,7 +17,7 @@ import asyncio
 import argparse
 import logging
 import sys
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -26,7 +26,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import asyncpg
-import os
 from sentence_transformers import SentenceTransformer
 
 from config.settings import DATABASE_URL, EMBEDDING_MODEL
