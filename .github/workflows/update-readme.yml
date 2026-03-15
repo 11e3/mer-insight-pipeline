@@ -42,7 +42,7 @@ jobs:
         run: pytest tests/ -v --ignore=tests/test_integration_dispatcher.py --cov=src --cov-report=xml --tb=short
 
       - name: Run integration tests
-        run: pytest tests/test_integration_dispatcher.py -v --cov=src --cov-report=xml --cov-append
+        run: pytest tests/test_integration_dispatcher.py -v --tb=long -s --cov=src --cov-report=xml --cov-append
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
