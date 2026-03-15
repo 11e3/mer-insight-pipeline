@@ -22,6 +22,7 @@ import numpy as np
 from scipy import stats
 
 from config.settings import DATABASE_URL
+from src.eval.metrics import precision_at_k, recall_at_k, mean_reciprocal_rank as reciprocal_rank
 from src.extract.vertex_embedder import vec_str
 from src.search.bm25_index import BM25Index
 
@@ -29,27 +30,6 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 _DEFAULT_DATASET = Path(__file__).parent.parent.parent / "eval_data" / "gold.json"
-
-
-# ─── 지표 계산 ────────────────────────────────────────────────────────────────
-
-def precision_at_k(retrieved: list[int], relevant: set[int], k: int) -> float:
-    top_k = retrieved[:k]
-    hits = sum(1 for r in top_k if r in relevant)
-    return hits / k if k > 0 else 0.0
-
-
-def recall_at_k(retrieved: list[int], relevant: set[int], k: int) -> float:
-    top_k = retrieved[:k]
-    hits = sum(1 for r in top_k if r in relevant)
-    return hits / len(relevant) if relevant else 0.0
-
-
-def reciprocal_rank(retrieved: list[int], relevant: set[int]) -> float:
-    for rank, doc_id in enumerate(retrieved, start=1):
-        if doc_id in relevant:
-            return 1.0 / rank
-    return 0.0
 
 
 # ─── 쿼리 벡터 (DB 저장 임베딩 활용) ──────────────────────────────────────────

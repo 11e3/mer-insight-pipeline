@@ -11,33 +11,12 @@ import asyncpg
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from src.extract.vertex_embedder import Embedder, vec_str
+from src.extract.parse_results import INSIGHT_TYPE_MAP, extract_content
 from config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
 
 log = logging.getLogger(__name__)
 
 client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
-
-INSIGHT_TYPE_MAP = {
-    "rules":       "rule",
-    "predictions": "prediction",
-    "evaluations": "evaluation",
-    "macro_views": "macro_view",
-}
-
-
-def _extract_content(item: dict, insight_type: str) -> str:
-    if insight_type == "rule":
-        return item.get("rule_statement", json.dumps(item, ensure_ascii=False)[:200])
-    if insight_type == "prediction":
-        return item.get("prediction", json.dumps(item, ensure_ascii=False)[:200])
-    if insight_type == "evaluation":
-        name = item.get("entity_name", "")
-        assessment = item.get("mer_assessment", "")
-        reasoning = item.get("reasoning", "")
-        return f"{name} ({assessment}): {reasoning}"[:300]
-    if insight_type == "macro_view":
-        return item.get("mer_interpretation", json.dumps(item, ensure_ascii=False)[:200])
-    return json.dumps(item, ensure_ascii=False)[:200]
 
 
 
@@ -103,7 +82,7 @@ async def extract_and_save(
             continue
 
         for item in items:
-            content = _extract_content(item, insight_type)
+            content = extract_content(item, insight_type)
 
             vecs = await embedder.embed_passages([content])
             vec = vec_str(vecs[0])

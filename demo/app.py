@@ -82,13 +82,12 @@ if page == "About":
         """
 | 레이어 | 기술 |
 |--------|------|
-| LLM (분석 · 에이전트) | Claude Sonnet 4.6 |
-| LLM (추출 · 검증) | Claude Haiku 4.5 |
-| 임베딩 | Vertex AI `text-multilingual-embedding-002` (768차원) |
+| LLM (분석 · 검증) | Claude Sonnet 4.6 |
+| LLM (추출) | Claude Haiku 4.5 |
+| 임베딩 | `intfloat/multilingual-e5-large` (1024차원, 로컬) |
 | 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy 한국어 형태소 분석 |
-| 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.4) |
-| 환각 방지 | Citation guard — `[ref: ins_ID]` DB 존재 검증 |
+| 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
 | 배포 | GCP Cloud Run Jobs + Cloud SQL |
         """
     )

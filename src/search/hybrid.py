@@ -116,7 +116,7 @@ async def hybrid_search(
     conn: asyncpg.Connection,
     embedder: Embedder,
     bm25_index: BM25Index,
-    alpha: float = 0.4,
+    alpha: float = 0.6,
 ) -> list[dict]:
     """HybridSearcher 편의 래퍼."""
     searcher = HybridSearcher(conn, embedder, bm25_index, alpha=alpha)
