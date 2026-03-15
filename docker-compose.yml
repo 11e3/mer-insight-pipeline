@@ -28,8 +28,6 @@ services:
     environment:
       DATABASE_URL: postgresql://mer:${DB_PASSWORD}@db:5432/mer_pipeline
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_TIER1_CHAT_ID: ${TELEGRAM_TIER1_CHAT_ID}
       FRED_API_KEY: ${FRED_API_KEY}
       BOK_API_KEY: ${BOK_API_KEY}
     volumes:

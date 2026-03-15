@@ -16,9 +16,6 @@ sentence-transformers>=2.2.0        # 로컬 임베딩 (intfloat/multilingual-e5
 # 스케줄러
 APScheduler==3.10.4
 
-# 텔레그램
-python-telegram-bot==21.3
-
 # 웹 스크래핑 (메르 신규글 감지)
 beautifulsoup4==4.12.3
 lxml==5.2.2

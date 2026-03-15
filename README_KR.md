@@ -45,7 +45,6 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    ED --> TG[텔레그램]
 
     subgraph 평가 파이프라인
         EV[eval_runner.py] --> HS3
@@ -169,7 +168,6 @@ python -m src.eval.eval_runner --mode full --k 5
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
 | 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
-| 전송 | python-telegram-bot 21 |
 | 데이터 | FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News |
 | 대시보드 | Streamlit |
 | 인프라 | GCP Cloud Run Jobs + Cloud SQL |
@@ -198,11 +196,10 @@ python -m src.eval.eval_runner --mode full --k 5
 **로컬 개발**
 - Docker & Docker Compose
 - Anthropic API 키
-- 텔레그램 봇 토큰
 
 **운영 (GCP)**
 - GCP 계정 + `gcloud` CLI
-- Anthropic API 키, 텔레그램 봇 토큰
+- Anthropic API 키
 - 전체 설정은 [docs/gcp_setup.md](docs/gcp_setup.md) 참조
 
 ### 로컬 빠른 시작
@@ -282,8 +279,6 @@ python -m src.search.experiment --k 5
 |----------|----------|------|
 | `DATABASE_URL` | ✓ 필수 | PostgreSQL 연결 문자열 |
 | `ANTHROPIC_API_KEY` | ✓ 필수 | Claude API 키 |
-| `TELEGRAM_BOT_TOKEN` | 전송 시 | 텔레그램 봇 토큰 |
-| `TELEGRAM_TIER1_CHAT_ID` | 전송 시 | 텔레그램 채널 채팅 ID |
 | `GCP_PROJECT_ID` | 운영 | GCP 프로젝트 ID |
 | `GCP_LOCATION` | 운영 | Vertex AI 리전 (기본: us-central1) |
 | `FRED_API_KEY` | 선택 | FRED 경제 데이터 (무료) |
@@ -326,8 +321,6 @@ mer-insight-pipeline/
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
 │   │   ├── analysis_generator.py # Claude Sonnet 포스트 분석
 │   │   └── prediction_verifier.py # 매일 Claude Haiku 배치 검증
-│   ├── delivery/
-│   │   ├── telegram_bot.py       # 텔레그램 전송 (Tier 1 채널)
 │   │   └── formatters.py
 │   └── dashboard/
 │       ├── observability.py      # 비용·지연 대시보드 (로컬 참고용)

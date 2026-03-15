@@ -2,7 +2,7 @@
 
 ## 프로젝트 개요
 
-메르(ranto28) 네이버 블로그 모니터링 → Claude로 인사이트 추출 → 텔레그램 전송 파이프라인.
+메르(ranto28) 네이버 블로그 모니터링 → Claude로 인사이트 추출 → 예측 자동 검증 파이프라인.
 PostgreSQL + pgvector 기반 하이브리드 검색 (BM25 + 벡터), 예측 자동 검증.
 
 ## 주요 명령어
@@ -56,9 +56,6 @@ python scripts/expand_eval_dataset.py  # ✓
 - **로컬**: `event_dispatcher.py`가 APScheduler로 6개 스케줄 직접 실행
 - **GCP**: `run_job.py --job <name>`으로 4개 잡 개별 호출 (`macro_check`가 macro_update + macro_alert + news 통합)
 
-### Telegram — Tier 1 단일 채널
-`TELEGRAM_TIER1_CHAT_ID` 하나만 존재. Tier 2 구현 없음. 전체 알림(예측 추출 / verdict 변경 / 에러)이 동일 채널로 발송.
-
 ### Prediction Verifier 비용 최적화
 - Prompt caching 적용 (`cache_control` on system + context) → 2번째 배치부터 input 90% 할인
 - `BATCH_SIZE=40` (20→40): API 호출 수 절반
@@ -96,7 +93,6 @@ src/
 ├── eval/           # LLM 심판 평가 파이프라인
 │   └── metrics.py        # precision_at_k/recall_at_k/MRR (experiment.py에서도 사용)
 ├── ingest/         # FRED / 한국은행 ECOS 매크로 수집
-├── delivery/       # 텔레그램 전송 (Tier 1 단일 채널, telegram_bot.py만 존재)
 └── dashboard/      # Streamlit 예측 적중률 대시보드
 
 scripts/
@@ -123,8 +119,6 @@ scripts/
 |------|------|------|
 | `DATABASE_URL` | ✓ | PostgreSQL 연결 문자열 |
 | `ANTHROPIC_API_KEY` | ✓ | Claude API 키 |
-| `TELEGRAM_BOT_TOKEN` | 전송 시 | 텔레그램 봇 토큰 |
-| `TELEGRAM_TIER1_CHAT_ID` | 전송 시 | 텔레그램 채널 ID |
 | `GCP_PROJECT_ID` | 선택 | Vertex AI 임베딩 활성화 |
 | `GCP_LOCATION` | 선택 | Vertex AI 리전 (기본: us-central1) |
 | `FRED_API_KEY` | 선택 | FRED 거시경제 데이터 |

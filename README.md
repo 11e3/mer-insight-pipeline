@@ -45,7 +45,6 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    ED --> TG[Telegram]
 
     subgraph Eval Pipeline
         EV[eval_runner.py] --> HS3
@@ -169,7 +168,6 @@ python -m src.eval.eval_runner --mode full --k 5
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
 | Scheduler | GCP Cloud Scheduler + Cloud Run Jobs |
-| Delivery | python-telegram-bot 21 |
 | Data Sources | FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, Google News |
 | Dashboard | Streamlit |
 | Infra | GCP Cloud Run Jobs + Cloud SQL |
@@ -198,11 +196,10 @@ python -m src.eval.eval_runner --mode full --k 5
 **Local dev**
 - Docker & Docker Compose
 - Anthropic API key
-- Telegram bot token
 
 **Production (GCP)**
 - GCP account + `gcloud` CLI
-- Anthropic API key, Telegram bot token
+- Anthropic API key
 - See [docs/gcp_setup.md](docs/gcp_setup.md) for full GCP setup
 
 ### Local Quick Start
@@ -285,8 +282,6 @@ See [.env.example](.env.example) for all required variables.
 |----------|----------|-------------|
 | `DATABASE_URL` | ✓ | PostgreSQL connection string |
 | `ANTHROPIC_API_KEY` | ✓ | Claude API key |
-| `TELEGRAM_BOT_TOKEN` | delivery | Telegram bot token |
-| `TELEGRAM_TIER1_CHAT_ID` | delivery | Telegram channel chat ID |
 | `GCP_PROJECT_ID` | production | GCP project ID |
 | `GCP_LOCATION` | production | Vertex AI region (default: us-central1) |
 | `FRED_API_KEY` | optional | FRED economic data (free) |
@@ -329,8 +324,6 @@ mer-insight-pipeline/
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
 │   │   ├── analysis_generator.py # Claude Sonnet post analysis
 │   │   └── prediction_verifier.py # Daily Claude Haiku batch verification
-│   ├── delivery/
-│   │   ├── telegram_bot.py       # Telegram delivery (Tier 1 channel)
 │   │   └── formatters.py
 │   └── dashboard/
 │       ├── observability.py      # Cost / latency dashboard (local reference)

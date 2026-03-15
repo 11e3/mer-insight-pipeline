@@ -12,10 +12,6 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 MODEL_SONNET = "claude-sonnet-4-6"
 MODEL_HAIKU  = "claude-haiku-4-5-20251001"
 
-# ─── Telegram ─────────────────────────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN     = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_TIER1_CHAT_ID = os.environ.get("TELEGRAM_TIER1_CHAT_ID", "")
-
 # ─── 외부 API ─────────────────────────────────────────────────────────────────
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
 BOK_API_KEY  = os.environ.get("BOK_API_KEY", "")

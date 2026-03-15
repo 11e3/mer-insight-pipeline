@@ -19,7 +19,6 @@ from src.extract.embedder import get_embedder
 from src.pipeline.mer_monitor import MerMonitor
 from src.pipeline.dart_collector import DartCollector
 from src.pipeline.news_collector import NewsCollector
-from src.delivery.telegram_bot import TelegramBot
 from src.extract.realtime_extractor import extract_and_save
 from src.search.bm25_index import BM25Index
 from src.pipeline.prediction_verifier import PredictionVerifier
@@ -34,7 +33,6 @@ class EventDispatcher:
         self.pool: asyncpg.Pool | None = None
         self.conn: asyncpg.Connection | None = None
         self.embedder = None
-        self.telegram = TelegramBot()
         self.mer_monitor: MerMonitor | None = None
         self.dart: DartCollector | None = None
         self.news_collector: NewsCollector | None = None
@@ -58,13 +56,6 @@ class EventDispatcher:
             await self.bm25_index.build(self.conn)
             self.bm25_index.save(bm25_cache)
         self.verifier = PredictionVerifier(self.conn)
-
-    async def _alert(self, msg: str) -> None:
-        """크리티컬 에러 텔레그램 알림. 알림 실패는 무시."""
-        try:
-            await self.telegram.send_alert(msg)
-        except Exception:
-            log.warning("텔레그램 에러 알림 발송 실패")
 
     async def run_job(self, job: str) -> None:
         """
@@ -143,18 +134,8 @@ class EventDispatcher:
                 count = extracted["count"]
                 log.info(f"  인사이트 {count}개 추출 ({post.get('title', '')[:40]})")
 
-            # 새 예측 건수 집계 후 텔레그램 알림
-            pred_count = await self.conn.fetchval("""
-                SELECT COUNT(*) FROM mer_predictions
-                WHERE created_at >= NOW() - INTERVAL '10 minutes'
-            """) or 0
-
-            if pred_count > 0:
-                await self.telegram.send_prediction_extracted(pred_count)
-
         except Exception as e:
             log.error(f"메르 신규 글 체크 오류: {e}")
-            await self._alert(f"mer_check 실패: {e}")
 
     async def _check_dart_filings(self):
         try:
@@ -163,7 +144,6 @@ class EventDispatcher:
                 log.info(f"  DART 공시: {f['title'][:50]}")
         except Exception as e:
             log.error(f"DART 공시 체크 오류: {e}")
-            await self._alert(f"dart_check 실패: {e}")
 
     async def _check_news(self):
         try:
@@ -172,7 +152,6 @@ class EventDispatcher:
                 log.info(f"  뉴스: {article['title'][:50]}")
         except Exception as e:
             log.error(f"뉴스 체크 오류: {e}")
-            await self._alert(f"news_check 실패: {e}")
 
     async def _update_macro_data(self):
         """오늘 매크로 데이터 갱신 (FRED + BOK ECOS)."""
@@ -182,7 +161,6 @@ class EventDispatcher:
             await load_macro(start=today, end=today)
         except Exception as e:
             log.error(f"매크로 업데이트 오류: {e}")
-            await self._alert(f"macro_update 실패: {e}")
 
     async def _check_macro_alerts(self):
         """전일 대비 급변 감지."""
@@ -216,42 +194,15 @@ class EventDispatcher:
                 log.info(f"매크로 급변 감지: {len(alerts)}건")
         except Exception as e:
             log.error(f"매크로 알림 체크 오류: {e}")
-            await self._alert(f"macro_alert 실패: {e}")
 
     # --- 예측 검증 ---
 
     async def _verify_predictions(self):
         try:
-            # 검증 전 PENDING 상태 예측 ID 수집
-            pending_before = await self.conn.fetch("""
-                SELECT id, prediction_text FROM mer_predictions
-                WHERE is_correct IS NULL
-            """)
-            pending_ids = {r["id"] for r in pending_before}
-
             resolved = await self.verifier.run()
             log.info(f"예측 검증 완료: {resolved}건 확정")
-
-            if resolved > 0:
-                # 새로 확정된 예측들의 verdict 조회 후 텔레그램 알림
-                newly_resolved = await self.conn.fetch("""
-                    SELECT id, prediction_text, is_correct
-                    FROM mer_predictions
-                    WHERE id = ANY($1::int[]) AND is_correct IS NOT NULL
-                """, list(pending_ids))
-
-                for pred in newly_resolved:
-                    verdict = "CORRECT" if pred["is_correct"] else "INCORRECT"
-                    summary = (pred["prediction_text"] or "")[:30]
-                    await self.telegram.send_verdict_changed(
-                        pred_id=pred["id"],
-                        verdict=verdict,
-                        summary=summary,
-                    )
-
         except Exception as e:
             log.error(f"예측 검증 오류: {e}")
-            await self._alert(f"verify_predictions 실패: {e}")
 
 
 if __name__ == "__main__":
