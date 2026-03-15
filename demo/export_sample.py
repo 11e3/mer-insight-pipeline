@@ -52,7 +52,7 @@ async def export(limit: int, out_path: Path) -> None:
         FROM mer_insights mi
         JOIN mer_posts mp ON mi.post_id = mp.id
         WHERE mi.insight_type IN ('rule', 'evaluation', 'macro_view')
-          AND mi.is_canonical = TRUE
+          AND (mi.is_canonical IS NULL OR mi.is_canonical = TRUE)
         ORDER BY mi.content, mp.date DESC
         LIMIT $1
     """, limit)
