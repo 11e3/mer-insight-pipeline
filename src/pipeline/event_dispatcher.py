@@ -7,7 +7,7 @@ Usage:
 
 import asyncio
 import logging
-from datetime import datetime, date
+from datetime import date
 
 import asyncpg
 from apscheduler.schedulers.asyncio import AsyncIOScheduler

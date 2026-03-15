@@ -85,8 +85,8 @@ flowchart TD
 
 | 소스 | 데이터 | 주기 | 모듈 |
 |------|--------|------|------|
-| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, 기준금리, CPI YoY, 실업률 | 매 30분 | `src/ingest/load_macro.py` |
-| 한국은행 ECOS | USD/KRW, KOSPI, KOSDAQ, 한국 기준금리 | 매 30분 | `src/ingest/load_macro.py` |
+| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, 기준금리, CPI YoY, 실업률 | 매 1시간 | `src/ingest/load_macro.py` |
+| 한국은행 ECOS | USD/KRW, KOSPI, KOSDAQ, 한국 기준금리 | 매 1시간 | `src/ingest/load_macro.py` |
 | 네이버 금융 | 주요 한국 주식 10종목 일간 종가 | 검증 시 | `src/pipeline/prediction_verifier.py` |
 | DART | 기업 공시 (사업보고서, 주요사항보고서 등) RSS | 매 10분, 8–18시 평일 | `src/pipeline/dart_collector.py` |
 | 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정 | 매 30분 | `src/pipeline/news_collector.py` |
@@ -119,7 +119,7 @@ flowchart TD
 | 레이어 | 기술 |
 |--------|------|
 | LLM (분석 · 검증) | `claude-sonnet-4-6` |
-| LLM (추출) | `claude-haiku-4-5-20251001` |
+| LLM (추출, 기본) | `claude-sonnet-4-6` (Haiku 선택 가능: `--haiku`) |
 | 배치 API | Anthropic Batch API |
 | 임베딩 | `intfloat/multilingual-e5-large` (1024차원, 로컬) |
 | 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
@@ -180,7 +180,7 @@ python -m src.pipeline.event_dispatcher   # 상시 모드
 |----|--------|
 | `mer_check` | 매 5분 |
 | `dart_check` | 매 10분, 8–18시 (평일) |
-| `macro_check` | 매 30분 |
+| `macro_check` | 매 1시간 |
 | `verify_predictions` | 매일 20:00 |
 
 ### 대시보드
@@ -205,6 +205,7 @@ python -m src.search.experiment --mode ablation --k 5
 | `DATABASE_URL` | ✓ | PostgreSQL 연결 문자열 |
 | `ANTHROPIC_API_KEY` | ✓ | Claude API 키 |
 | `GCP_PROJECT_ID` | 선택 | GCP 프로젝트 ID (Vertex AI 임베딩용) |
+| `GCP_LOCATION` | 선택 | Vertex AI 리전 (기본: us-central1) |
 | `FRED_API_KEY` | 선택 | FRED 거시경제 데이터 (무료) |
 | `BOK_API_KEY` | 선택 | 한국은행 ECOS API (무료) |
 

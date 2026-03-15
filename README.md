@@ -85,8 +85,8 @@ Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=40` pred
 
 | Source | Data | Schedule | Module |
 |--------|------|----------|--------|
-| FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment | Every 30 min | `src/ingest/load_macro.py` |
-| BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate | Every 30 min | `src/ingest/load_macro.py` |
+| FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment | Every hour | `src/ingest/load_macro.py` |
+| BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate | Every hour | `src/ingest/load_macro.py` |
 | Naver Finance | Daily close prices for 10 major Korean stocks | On verification | `src/pipeline/prediction_verifier.py` |
 | DART | Corporate disclosure filings via RSS | Every 10 min, 8–18h (weekdays) | `src/pipeline/dart_collector.py` |
 | Fed / BOK RSS | Central bank press releases, rate decisions | Every 30 min | `src/pipeline/news_collector.py` |
@@ -119,7 +119,7 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 | Layer | Technology |
 |-------|------------|
 | LLM (analysis · verification) | `claude-sonnet-4-6` |
-| LLM (extraction) | `claude-haiku-4-5-20251001` |
+| LLM (extraction, default) | `claude-sonnet-4-6` (Haiku optional via `--haiku`) |
 | Batch API | Anthropic Batch API |
 | Embeddings | `intfloat/multilingual-e5-large` (1024-dim, local) |
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
@@ -180,7 +180,7 @@ python -m src.pipeline.event_dispatcher   # always-on mode
 |-----|----------|
 | `mer_check` | every 5 min |
 | `dart_check` | every 10 min, 8–18h (weekdays) |
-| `macro_check` | every 30 min |
+| `macro_check` | every hour |
 | `verify_predictions` | 20:00 daily |
 
 ### Dashboard
@@ -205,6 +205,7 @@ python -m src.search.experiment --mode ablation --k 5
 | `DATABASE_URL` | ✓ | PostgreSQL connection string |
 | `ANTHROPIC_API_KEY` | ✓ | Claude API key |
 | `GCP_PROJECT_ID` | optional | GCP project ID (for Vertex AI embeddings) |
+| `GCP_LOCATION` | optional | Vertex AI region (default: us-central1) |
 | `FRED_API_KEY` | optional | FRED economic data (free) |
 | `BOK_API_KEY` | optional | Bank of Korea ECOS API (free) |
 
