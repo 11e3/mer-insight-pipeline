@@ -287,15 +287,37 @@ class PredictionVerifier:
             f'(방향: {p["predicted_direction"]}, 예측일: {p["prediction_date"]})'
             for p in batch
         )
-        user_msg = f"[컨텍스트]\n{ctx}\n\n[예측 목록]\n{pred_list}"
         try:
             resp = await self._claude.messages.create(
                 model=MODEL_HAIKU,
                 max_tokens=4096,
-                system=_SYSTEM,
-                messages=[{"role": "user", "content": user_msg}],
+                system=[{
+                    "type": "text",
+                    "text": _SYSTEM,
+                    "cache_control": {"type": "ephemeral"},
+                }],
+                messages=[{"role": "user", "content": [
+                    {
+                        "type": "text",
+                        "text": f"[컨텍스트]\n{ctx}",
+                        "cache_control": {"type": "ephemeral"},
+                    },
+                    {
+                        "type": "text",
+                        "text": f"[예측 목록]\n{pred_list}",
+                    },
+                ]}],
             )
             raw = next((b.text for b in resp.content if hasattr(b, "text")), "").strip()
+
+            cache_read = getattr(resp.usage, "cache_read_input_tokens", 0) or 0
+            cache_create = getattr(resp.usage, "cache_creation_input_tokens", 0) or 0
+            if cache_read or cache_create:
+                log.debug(
+                    f"토큰: input={resp.usage.input_tokens} "
+                    f"cache_read={cache_read} cache_create={cache_create} "
+                    f"output={resp.usage.output_tokens}"
+                )
 
             if resp.stop_reason == "max_tokens":
                 log.warning(

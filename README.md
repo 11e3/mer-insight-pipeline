@@ -1,8 +1,8 @@
 # mer-insight-pipeline
 
-**mer-insight-pipeline** automates financial prediction tracking and verification from Mer (ranto28)'s 2,193 blog posts using Korean macro data (FRED, BOK ECOS, DART, Naver Finance).
+**mer-insight-pipeline** automates financial prediction tracking and verification from Mer (ranto28)'s 2,193 blog posts using Korean macro data (FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, Google News).
 
-[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, α=0.6 optimal) on PostgreSQL with no vector-DB vendor lock-in.
+[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, α=0.6 production default) on PostgreSQL with no vector-DB vendor lock-in.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 [![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline-yvkztwypti7zbnfae8wfjs.streamlit.app)
@@ -47,7 +47,7 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    AG2 --> TG[Telegram<br>Tier 1 · Tier 2]
+    AG2 --> TG[Telegram]
 
     subgraph Eval Pipeline
         EV[eval_runner.py] --> HS3
@@ -91,10 +91,10 @@ The pipeline collects financial and economic data from 6 external sources on sch
 
 | Source | Data | Schedule | Module |
 |--------|------|----------|--------|
-| FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment | Hourly | `src/ingest/load_macro.py` |
-| BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate | Hourly | `src/ingest/load_macro.py` |
+| FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment | Every 30 min | `src/ingest/load_macro.py` |
+| BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate | Every 30 min | `src/ingest/load_macro.py` |
 | Naver Finance | Daily close prices for 10 major Korean stocks (Samsung Electronics, SK Hynix, Hyundai Motor, Kia, LG Energy Solution, POSCO Holdings, Samsung SDI, Kakao, Naver, Celltrion) | On verification | `src/pipeline/prediction_verifier.py` |
-| DART | Corporate disclosure filings (사업보고서, 주요사항보고서, M&A, etc.) via RSS | Every 10 min, 8–18h | `src/pipeline/dart_collector.py` |
+| DART | Corporate disclosure filings (사업보고서, 주요사항보고서, M&A, etc.) via RSS | Every 10 min, 8–18h (weekdays) | `src/pipeline/dart_collector.py` |
 | Fed / BOK RSS | Central bank press releases, rate decisions, monetary policy | Every 30 min | `src/pipeline/news_collector.py` |
 | Google News | Geopolitical events — sanctions, tariffs, trade war keywords | Every 30 min | `src/pipeline/news_collector.py` |
 
@@ -108,7 +108,7 @@ All macro data feeds into **prediction verification context** — monthly aggreg
 
 Hybrid BM25 + vector search serves as the retrieval backbone for context assembly and the eval pipeline.
 
-Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB. Results reflect actual retrieval quality against real query texts.
+Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB.
 
 ```bash
 python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
@@ -118,32 +118,26 @@ python -m src.search.experiment --mode ablation --dataset eval_data/gold_extende
 
 | α (BM25 weight) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
-| α=0.0 | 0.20 | 0.99 | 0.99 |
-| α=0.2 | 0.20 | 0.99 | 0.99 |
-| α=0.3 | 0.20 | 0.99 | 0.99 |
-| α=0.4 | 0.20 | 0.99 | 0.99 |
-| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
-| α=0.8 | 0.20 | 0.99 | 0.96 |
-| α=1.0 | 0.20 | 0.98 | 0.94 |
+| **α=0.0** | 0.199 | 0.995 | **0.995** |
+| α=0.2 | 0.199 | 0.995 | 0.995 |
+| α=0.3 | 0.199 | 0.995 | 0.990 |
+| α=0.4 | 0.199 | 0.995 | 0.986 |
+| **α=0.6** ★ | **0.200** | **1.000** | 0.968 |
+| α=0.8 | 0.199 | 0.995 | 0.960 |
+| α=1.0 | 0.196 | 0.980 | 0.935 |
 
-Best α=0.6 across all metrics (Precision@5=0.20).
-
-```bash
-python -m src.search.experiment --mode ablation --k 5
-```
-
-Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model as DB indexing), N=200 queries from `gold_extended.json`.
+Production default: **α=0.6**.
 
 **Key observations**:
-- Hybrid (α=0.4–0.6) outperforms both pure methods: +4.8% Recall and +3.0% MRR vs. vector-only
-- α=0.6 peaks across all three metrics — used as the production default
-- Pure BM25 (α=1.0) outperforms pure vector on MRR (0.935 vs 0.908): Korean finance text rewards exact keyword matching (specific tickers, rates, dates) more than semantic paraphrasing alone
+- α=0.6 is the only setting that achieves perfect Recall (1.000) and the highest Precision (0.200) — chosen as production default to avoid missing any predictions
+- Best MRR is vector-only (α=0.0, MRR=0.995); hybrid trades a slight MRR drop (−2.7pp) for perfect Recall
+- BM25-only (α=1.0) trails vector-only on both Recall (0.980 vs 0.995) and MRR (0.935 vs 0.995) — Korean financial text benefits more from semantic search than keyword-exact matching
 
 **Why they differ**
 
-- **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
+- **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — and leads on MRR
 - **BM25** pinpoints specific numbers and proper nouns, but fails on synonyms and varied phrasing
-- **RRF** combines both: each method covers the blind spots of the other
+- **RRF** at α=0.6 covers the recall gap of pure vector while preserving strong precision
 
 ---
 
@@ -156,16 +150,6 @@ python -m src.eval.eval_runner --mode retrieval_only --k 5
 # Full — Retrieval + LLM Judge
 python -m src.eval.eval_runner --mode full --k 5
 ```
-
-**Retrieval results** (gold\_extended.json, 200 queries, K=5, hybrid α=0.6):
-
-| Metric | Score |
-|--------|-------|
-| Precision@5 | 0.199 |
-| Recall@5 | 0.995 |
-| MRR | 0.938 |
-
-Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each query has 1 relevant insight in the gold set, so P@5 ceiling = 0.20.
 
 **LLM Judge metrics** (Claude Sonnet as judge, 1–5 scale normalised to 0–1):
 
@@ -190,7 +174,7 @@ Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each q
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
 | Scheduler | GCP Cloud Scheduler + Cloud Run Jobs |
 | Delivery | python-telegram-bot 21 |
-| Data Sources | FRED, BOK ECOS, DART, Naver Finance |
+| Data Sources | FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, Google News |
 | Dashboard | Streamlit |
 | Infra | GCP Cloud Run Jobs + Cloud SQL |
 
@@ -206,7 +190,7 @@ Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each q
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 1024 |
 | BM25 index size | 16,126 canonical documents |
-| Scheduled jobs | 6 |
+| GCP Cloud Run jobs | 4 |
 | Macro indicators tracked | KOSPI, USD/KRW, WTI, VIX, BTC, US10Y, Fed rate, CPI, unemployment |
 
 ---
@@ -264,7 +248,7 @@ python -m src.pipeline.event_dispatcher   # always-on mode (local only)
 
 ```bash
 # Build & push image
-IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT/mer-pipeline/app:latest"
+IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT_ID/mer-pipeline/app:latest"
 docker build -t $IMAGE . && docker push $IMAGE
 
 # Deploy jobs + scheduler
@@ -275,12 +259,12 @@ Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 
 | Job | Schedule |
 |-----|----------|
-| `mer` | every 5 min |
-| `dart` | every 10 min, 8–18h (weekdays) |
-| `macro_update` | every 1h |
-| `macro_alert` | every 30 min |
-| `news` | every 30 min |
+| `mer_check` | every 5 min |
+| `dart_check` | every 10 min, 8–18h (weekdays) |
+| `macro_check` | every 30 min |
 | `verify_predictions` | 20:00 daily |
+
+`macro_check` consolidates macro data update, macro alert detection, and news collection into a single job execution.
 
 ### Prediction Dashboard
 
@@ -301,17 +285,19 @@ python -m src.search.experiment --k 5
 
 See [.env.example](.env.example) for all required variables.
 
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `ANTHROPIC_API_KEY` | Claude API key |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
-| `GCP_PROJECT_ID` | GCP project ID (production) |
-| `TELEGRAM_TIER1_CHAT_ID` | Telegram channel chat ID |
-| `FRED_API_KEY` | FRED economic data (free) |
-| `BOK_API_KEY` | Bank of Korea ECOS API (free) |
-| `BLS_API_KEY` | US Bureau of Labor Statistics (free) |
-| `MOLIT_API_KEY` | Korea real estate data / data.go.kr (free) |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✓ | PostgreSQL connection string |
+| `ANTHROPIC_API_KEY` | ✓ | Claude API key |
+| `TELEGRAM_BOT_TOKEN` | delivery | Telegram bot token |
+| `TELEGRAM_TIER1_CHAT_ID` | delivery | Telegram channel chat ID |
+| `GCP_PROJECT_ID` | production | GCP project ID |
+| `GCP_LOCATION` | production | Vertex AI region (default: us-central1) |
+| `FRED_API_KEY` | optional | FRED economic data (free) |
+| `BOK_API_KEY` | optional | Bank of Korea ECOS API (free) |
+| `BLS_API_KEY` | optional | US Bureau of Labor Statistics (free) |
+| `MOLIT_API_KEY` | optional | Korea real estate data / data.go.kr (free) |
+| `KOSIS_API_KEY` | optional | Korea trade statistics / KOSIS (free) |
 
 ---
 
@@ -344,7 +330,7 @@ mer-insight-pipeline/
 │   │   ├── load_posts.py
 │   │   └── load_macro.py         # FRED / BOK ECOS macro data collection
 │   ├── pipeline/
-│   │   ├── event_dispatcher.py   # Main runtime (APScheduler, 6 scheduled jobs)
+│   │   ├── event_dispatcher.py   # Main runtime (APScheduler, 6 local schedules)
 │   │   ├── mer_monitor.py        # Blog RSS watcher (primary data source)
 │   │   ├── dart_collector.py     # DART filings (Korean corporate disclosure)
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
@@ -352,7 +338,7 @@ mer-insight-pipeline/
 │   │   ├── analysis_generator.py # Claude Sonnet post analysis
 │   │   └── prediction_verifier.py # Daily Claude Haiku batch verification
 │   ├── delivery/
-│   │   ├── telegram_bot.py       # Two-tier Telegram delivery
+│   │   ├── telegram_bot.py       # Telegram delivery (Tier 1 channel)
 │   │   └── formatters.py
 │   └── dashboard/
 │       ├── observability.py      # Cost / latency dashboard (local reference)
@@ -366,6 +352,7 @@ mer-insight-pipeline/
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL schema
 │   ├── run_batch.py              # Batch extraction orchestrator
+│   ├── run_job.py                # Cloud Run Job entry point (mer_check / dart_check / macro_check / verify_predictions)
 │   └── migrate_predictions.py    # One-time: mer_insights → mer_predictions backfill
 ├── docker-compose.yml
 ├── Dockerfile

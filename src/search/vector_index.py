@@ -1,5 +1,5 @@
 """
-벡터 검색 래퍼: context_assembler의 pgvector 검색 로직을 동일 인터페이스로 노출.
+벡터 검색 래퍼: pgvector HNSW 검색을 동일 인터페이스로 노출.
 
 Returns: [(insight_id, similarity_score), ...] top_k 개
 """

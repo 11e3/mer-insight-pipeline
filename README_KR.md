@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline**은 메르(ranto28)의 2,193개 블로그 포스트에서 금융 예측을 자동 추출·추적·검증하는 파이프라인입니다.
 
-[메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 Claude Batch API로 예측을 추출하고, 6개 외부 소스(FRED, 한국은행 ECOS, DART, 네이버 금융)에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,368건의 예측을 추적 중입니다. 검색은 하이브리드 BM25 + pgvector(25,090개 인사이트, α=0.6 최적)로 구동되며, 벤더 종속 없이 PostgreSQL 위에서 동작합니다.
+[메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 Claude Batch API로 예측을 추출하고, 6개 외부 소스(FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News)에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,368건의 예측을 추적 중입니다. 검색은 하이브리드 BM25 + pgvector(25,090개 인사이트, α=0.6 프로덕션 기본값)로 구동되며, 벤더 종속 없이 PostgreSQL 위에서 동작합니다.
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 [![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline-yvkztwypti7zbnfae8wfjs.streamlit.app)
@@ -47,7 +47,7 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    AG2 --> TG[텔레그램<br>1티어 · 2티어]
+    AG2 --> TG[텔레그램]
 
     subgraph 평가 파이프라인
         EV[eval_runner.py] --> HS3
@@ -91,10 +91,10 @@ flowchart TD
 
 | 소스 | 데이터 | 스케줄 | 모듈 |
 |------|--------|--------|------|
-| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, Fed 기금금리, CPI YoY, 실업률 | 매시간 | `src/ingest/load_macro.py` |
-| 한국은행 ECOS | 달러/원 환율, KOSPI, KOSDAQ, 기준금리 | 매시간 | `src/ingest/load_macro.py` |
+| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, Fed 기금금리, CPI YoY, 실업률 | 매 30분 | `src/ingest/load_macro.py` |
+| 한국은행 ECOS | 달러/원 환율, KOSPI, KOSDAQ, 기준금리 | 매 30분 | `src/ingest/load_macro.py` |
 | 네이버 금융 | 주요 한국 10개 종목 일간 종가 (삼성전자, SK하이닉스, 현대차, 기아, LG에너지솔루션, 포스코홀딩스, 삼성SDI, 카카오, 네이버, 셀트리온) | 검증 시 | `src/pipeline/prediction_verifier.py` |
-| DART | 기업 공시 (사업보고서, 주요사항보고서, M&A 등) RSS | 매 10분, 8–18시 | `src/pipeline/dart_collector.py` |
+| DART | 기업 공시 (사업보고서, 주요사항보고서, M&A 등) RSS | 매 10분, 8–18시 (평일) | `src/pipeline/dart_collector.py` |
 | 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정, 통화정책 | 매 30분 | `src/pipeline/news_collector.py` |
 | Google News | 지정학 이벤트 — 제재, 관세, 무역전쟁 키워드 | 매 30분 | `src/pipeline/news_collector.py` |
 
@@ -108,7 +108,7 @@ flowchart TD
 
 하이브리드 BM25 + 벡터 검색은 컨텍스트 조합과 평가 파이프라인의 검색 백본으로 기능합니다.
 
-쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024-dim)을 사용합니다 — DB 인덱싱에 사용한 것과 동일한 모델. 실제 쿼리 텍스트 기반의 검색 품질을 반영합니다.
+쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024-dim)을 사용합니다 — DB 인덱싱에 사용한 것과 동일한 모델.
 
 ```bash
 python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
@@ -118,32 +118,26 @@ python -m src.search.experiment --mode ablation --dataset eval_data/gold_extende
 
 | α (BM25 가중치) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
-| α=0.0 | 0.20 | 0.99 | 0.99 |
-| α=0.2 | 0.20 | 0.99 | 0.99 |
-| α=0.3 | 0.20 | 0.99 | 0.99 |
-| α=0.4 | 0.20 | 0.99 | 0.99 |
-| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
-| α=0.8 | 0.20 | 0.99 | 0.96 |
-| α=1.0 | 0.20 | 0.98 | 0.94 |
+| **α=0.0** | 0.199 | 0.995 | **0.995** |
+| α=0.2 | 0.199 | 0.995 | 0.995 |
+| α=0.3 | 0.199 | 0.995 | 0.990 |
+| α=0.4 | 0.199 | 0.995 | 0.986 |
+| **α=0.6** ★ | **0.200** | **1.000** | 0.968 |
+| α=0.8 | 0.199 | 0.995 | 0.960 |
+| α=1.0 | 0.196 | 0.980 | 0.935 |
 
-최적 α=0.6 — 모든 지표에서 동일 (Precision@5=0.20).
-
-```bash
-python -m src.search.experiment --mode ablation --k 5
-```
-
-임베딩: `intfloat/multilingual-e5-large` (1024-dim, DB 인덱싱과 동일 모델), N=200 쿼리.
+프로덕션 기본값: **α=0.6**.
 
 **핵심 관찰**:
-- 하이브리드(α=0.4–0.6)가 단독 방식 모두를 상회: 벡터 단독 대비 Recall +5.0%p, MRR +3.0%p
-- α=0.6이 전 지표 최고 — 프로덕션 기본값으로 사용
-- BM25 단독(α=1.0) MRR이 순수 벡터(α=0.0)보다 높음(0.935 > 0.908): 한국 금융 텍스트에서는 티커·금리·날짜 같은 키워드 매칭이 의미 유사도보다 중요
+- α=0.6은 유일하게 완전한 Recall(1.000)과 최고 Precision(0.200)을 달성 — 예측 누락 방지를 위해 프로덕션 기본값으로 채택
+- 최고 MRR은 순수 벡터(α=0.0, MRR=0.995). 하이브리드는 MRR을 소폭 낮추는 대신(−2.7%p) 완전한 Recall을 확보
+- BM25 단독(α=1.0)은 Recall(0.980)과 MRR(0.935) 모두 순수 벡터(0.995)보다 낮음 — 한국 금융 텍스트에서도 의미 검색이 키워드 단독보다 효과적
 
 **왜 차이가 나는가**
 
-- **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
+- **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하며, MRR에서 우위
 - **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
-- **RRF**로 결합하면 두 방법이 서로의 약점을 보완
+- **RRF α=0.6**으로 결합하면 순수 벡터의 Recall 공백을 커버하면서 Precision도 유지
 
 ---
 
@@ -156,16 +150,6 @@ python -m src.eval.eval_runner --mode retrieval_only --k 5
 # 전체 평가 (검색 + LLM 심판)
 python -m src.eval.eval_runner --mode full --k 5
 ```
-
-**검색 평가 결과** (gold\_extended.json, 200개 쿼리, K=5, 하이브리드 α=0.6):
-
-| 지표 | 점수 |
-|------|------|
-| Precision@5 | 0.199 |
-| Recall@5 | 0.995 |
-| MRR | 0.938 |
-
-임베딩: `intfloat/multilingual-e5-large` (DB 인덱싱과 동일 모델). 골드 데이터셋에 쿼리당 관련 문서가 1개이므로 P@5 이론 최대값 = 0.20.
 
 **LLM 심판 지표** (Claude Sonnet, 1–5점 → 0–1 정규화):
 
@@ -190,7 +174,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
 | 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
 | 전송 | python-telegram-bot 21 |
-| 데이터 | FRED, 한국은행 ECOS, DART, 네이버 금융 |
+| 데이터 | FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News |
 | 대시보드 | Streamlit |
 | 인프라 | GCP Cloud Run Jobs + Cloud SQL |
 
@@ -206,7 +190,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
 | 임베딩 차원 | 1024 |
 | BM25 인덱스 크기 | 정규 문서 16,126개 |
-| 스케줄된 작업 | 6개 |
+| GCP Cloud Run 잡 | 4개 |
 | 추적 거시 지표 | KOSPI, 달러/원, WTI, VIX, BTC, US10Y, Fed 금리, CPI, 실업률 |
 
 ---
@@ -217,10 +201,12 @@ python -m src.eval.eval_runner --mode full --k 5
 
 **로컬 개발**
 - Docker & Docker Compose
-- Anthropic API 키, 텔레그램 봇 토큰
+- Anthropic API 키
+- 텔레그램 봇 토큰
 
 **운영 (GCP)**
 - GCP 계정 + `gcloud` CLI
+- Anthropic API 키, 텔레그램 봇 토큰
 - 전체 설정은 [docs/gcp_setup.md](docs/gcp_setup.md) 참조
 
 ### 로컬 빠른 시작
@@ -261,7 +247,7 @@ python -m src.pipeline.event_dispatcher   # 상시 실행 (로컬 전용)
 ### 운영 배포 (GCP Cloud Run)
 
 ```bash
-IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT/mer-pipeline/app:latest"
+IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT_ID/mer-pipeline/app:latest"
 docker build -t $IMAGE . && docker push $IMAGE
 # 전체 배포 절차: docs/gcp_setup.md 참조
 ```
@@ -270,12 +256,12 @@ Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 
 | 잡 | 스케줄 |
 |----|--------|
-| `mer` | 매 5분 |
-| `dart` | 매 10분, 8–18시 (평일) |
-| `macro_update` | 매 1시간 |
-| `macro_alert` | 매 30분 |
-| `news` | 매 30분 |
+| `mer_check` | 매 5분 |
+| `dart_check` | 매 10분, 8–18시 (평일) |
+| `macro_check` | 매 30분 |
 | `verify_predictions` | 매일 20:00 |
+
+`macro_check`는 매크로 데이터 갱신, 급변 알림, 뉴스 수집을 단일 잡 실행으로 통합합니다.
 
 ### 예측 대시보드
 
@@ -296,17 +282,19 @@ python -m src.search.experiment --k 5
 
 전체 변수 목록은 [.env.example](.env.example) 참조.
 
-| 환경변수 | 설명 |
-|----------|------|
-| `DATABASE_URL` | PostgreSQL 연결 문자열 |
-| `ANTHROPIC_API_KEY` | Claude API 키 |
-| `TELEGRAM_BOT_TOKEN` | 텔레그램 봇 토큰 |
-| `GCP_PROJECT_ID` | GCP 프로젝트 ID (운영) |
-| `TELEGRAM_TIER1_CHAT_ID` | 텔레그램 채널 채팅 ID |
-| `FRED_API_KEY` | FRED 경제 데이터 (무료) |
-| `BOK_API_KEY` | 한국은행 ECOS API (무료) |
-| `BLS_API_KEY` | 미국 노동통계국 (무료) |
-| `MOLIT_API_KEY` | 국토부 부동산 데이터 / data.go.kr (무료) |
+| 환경변수 | 필수 여부 | 설명 |
+|----------|----------|------|
+| `DATABASE_URL` | ✓ 필수 | PostgreSQL 연결 문자열 |
+| `ANTHROPIC_API_KEY` | ✓ 필수 | Claude API 키 |
+| `TELEGRAM_BOT_TOKEN` | 전송 시 | 텔레그램 봇 토큰 |
+| `TELEGRAM_TIER1_CHAT_ID` | 전송 시 | 텔레그램 채널 채팅 ID |
+| `GCP_PROJECT_ID` | 운영 | GCP 프로젝트 ID |
+| `GCP_LOCATION` | 운영 | Vertex AI 리전 (기본: us-central1) |
+| `FRED_API_KEY` | 선택 | FRED 경제 데이터 (무료) |
+| `BOK_API_KEY` | 선택 | 한국은행 ECOS API (무료) |
+| `BLS_API_KEY` | 선택 | 미국 노동통계국 (무료) |
+| `MOLIT_API_KEY` | 선택 | 국토부 부동산 데이터 / data.go.kr (무료) |
+| `KOSIS_API_KEY` | 선택 | 통계청 KOSIS 무역통계 (무료) |
 
 ---
 
@@ -339,7 +327,7 @@ mer-insight-pipeline/
 │   │   ├── load_posts.py
 │   │   └── load_macro.py         # FRED / 한국은행 ECOS 매크로 데이터 수집
 │   ├── pipeline/
-│   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler, 6개 잡)
+│   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler, 로컬 6개 스케줄)
 │   │   ├── mer_monitor.py        # 블로그 RSS 감시 (1차 데이터 소스)
 │   │   ├── dart_collector.py     # DART 기업 공시
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
@@ -347,7 +335,7 @@ mer-insight-pipeline/
 │   │   ├── analysis_generator.py # Claude Sonnet 포스트 분석
 │   │   └── prediction_verifier.py # 매일 Claude Haiku 배치 검증
 │   ├── delivery/
-│   │   ├── telegram_bot.py       # 2티어 텔레그램 전송
+│   │   ├── telegram_bot.py       # 텔레그램 전송 (Tier 1 채널)
 │   │   └── formatters.py
 │   └── dashboard/
 │       ├── observability.py      # 비용·지연 대시보드 (로컬 참고용)
@@ -361,6 +349,7 @@ mer-insight-pipeline/
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL 스키마
 │   ├── run_batch.py              # 배치 추출 오케스트레이터
+│   ├── run_job.py                # Cloud Run Job 진입점 (mer_check / dart_check / macro_check / verify_predictions)
 │   └── migrate_predictions.py    # 1회성: mer_insights → mer_predictions 소급 적재
 ├── docker-compose.yml
 ├── Dockerfile
