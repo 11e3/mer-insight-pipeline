@@ -3,8 +3,16 @@ Hybrid Search 테스트.
 
 _rrf_fuse() 순수 함수 + HybridSearcher.search() (mock BM25/Vector/DB).
 """
-import pytest
+import sys
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+# src/search/__init__.py → hybrid.py → vertex_embedder.py → vertexai 체인
+# CI에 vertexai 미설치이므로 import 전에 mock 주입
+if "vertexai" not in sys.modules:
+    sys.modules["vertexai"] = MagicMock()
+    sys.modules["vertexai.language_models"] = MagicMock()
 
 from src.search.hybrid import _rrf_fuse, HybridSearcher
 
