@@ -335,9 +335,7 @@ mer-insight-pipeline/
 │   └── dashboard/
 │       ├── observability.py      # Cost / latency dashboard (local reference)
 │       └── prediction_dashboard.py # Prediction accuracy dashboard
-├── demo/
-│   ├── app.py                    # Streamlit demo (no API keys needed)
-│   └── sample_data.json          # Pre-exported insights dataset
+├── app.py                        # Streamlit Cloud entry point → prediction_dashboard
 ├── eval_data/
 │   └── gold_extended.json        # Gold dataset: 200 queries with relevant insight IDs
 ├── results/                      # Eval reports & experiment outputs

@@ -332,9 +332,7 @@ mer-insight-pipeline/
 │   └── dashboard/
 │       ├── observability.py      # 비용·지연 대시보드 (로컬 참고용)
 │       └── prediction_dashboard.py # 예측 적중률 대시보드
-├── demo/
-│   ├── app.py                    # Streamlit 데모 (API 키 불필요)
-│   └── sample_data.json          # 사전 내보낸 인사이트 데이터셋
+├── app.py                        # Streamlit Cloud 진입점 → prediction_dashboard
 ├── eval_data/
 │   └── gold_extended.json        # 골드 데이터셋: 200개 쿼리 + 관련 인사이트 ID
 ├── results/                      # 평가 리포트 & 실험 결과
