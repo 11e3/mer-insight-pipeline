@@ -5,7 +5,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import NotRequired, TypedDict
+import sys
+if sys.version_info >= (3, 11):
+    from typing import NotRequired, TypedDict
+else:
+    from typing import TypedDict
+    from typing_extensions import NotRequired
 
 from src.pipeline.event_types import EventType
 
