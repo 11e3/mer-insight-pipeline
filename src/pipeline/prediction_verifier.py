@@ -189,15 +189,11 @@ class PredictionVerifier:
     def _fetch_stock_context(self, since: date, until: date) -> str:
         """네이버 금융에서 주요 종목 주가 수집.
 
-        - 최근 30일: 일간 종가
-        - 이전: 월별 고/저/말일 종가 (H/L/C)
+        - 월별 고/저/말일 종가 (H/L/C)
+        - 최신 종가 1개
         """
         days = (until - since).days
-        count = min(days + 30, 1800)  # 최대 약 5년치
-        cutoff = date(until.year, until.month, until.day)
-        # 최근 90일 기준일
-        from datetime import timedelta
-        recent_since = until - timedelta(days=30)
+        count = min(days + 30, 1800)
 
         lines = ["[주요 한국 주식 주가]"]
         fetched = 0
@@ -211,8 +207,8 @@ class PredictionVerifier:
                 resp = requests.get(url, headers=_HEADERS, timeout=10)
                 root = ET.fromstring(resp.content.decode("euc-kr", errors="replace"))
 
-                by_month: dict[str, list[int]] = {}  # ym -> [closes]
-                daily_recent: list[str] = []          # 최근 30일 일간
+                by_month: dict[str, list[int]] = {}
+                latest_close: str | None = None
 
                 for item in root.findall(".//item"):
                     raw = item.get("data", "")
@@ -230,15 +226,12 @@ class PredictionVerifier:
                     if d < since or d > until:
                         continue
 
-                    if d >= recent_since:
-                        daily_recent.append(f"{d}={c:,}")
-                    else:
-                        ym = dt[:6]
-                        by_month.setdefault(ym, []).append(c)
+                    ym = dt[:6]
+                    by_month.setdefault(ym, []).append(c)
+                    latest_close = f"{d}={c:,}"
 
                 parts_line: list[str] = []
 
-                # 월별 H/L/C (90일 이전)
                 if by_month:
                     monthly = " ".join(
                         f"{ym[:4]}-{ym[4:]}(H={max(v):,}/L={min(v):,}/C={v[-1]:,})"
@@ -246,9 +239,8 @@ class PredictionVerifier:
                     )
                     parts_line.append(monthly)
 
-                # 최근 30일 일간 종가
-                if daily_recent:
-                    parts_line.append("최근30일:" + " ".join(daily_recent))
+                if latest_close:
+                    parts_line.append(f"최신={latest_close}")
 
                 if parts_line:
                     lines.append(f"{name}: " + " | ".join(parts_line))

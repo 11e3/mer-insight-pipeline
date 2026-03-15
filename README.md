@@ -52,13 +52,7 @@ flowchart TD
 
 Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge.
 
-**Context fed to Claude per batch:**
-
-| Source | What's included |
-|--------|----------------|
-| Monthly macro summary | KOSPI hi/lo/avg, USD/KRW, WTI, US10Y, Fed rate, VIX, BTC — from FRED + BOK ECOS |
-| Naver Finance stocks | Monthly H/L/close + daily close for recent 30 days (10 major equities) |
-| DART filings + news | Corporate events collected since the oldest pending prediction date |
+All data sources listed below are collected daily and fed to Claude as verification context.
 
 **Verdicts**
 
@@ -78,7 +72,7 @@ Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=40` pred
 |--------|------|
 | FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment |
 | BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate |
-| Naver Finance | Daily close prices for 10 major Korean stocks |
+| Naver Finance | Monthly H/L/C + latest close for 10 major Korean stocks |
 | DART | Corporate disclosure filings via RSS |
 | Fed / BOK RSS | Central bank press releases, rate decisions |
 | Google News | Geopolitical events — sanctions, tariffs, trade war keywords |
