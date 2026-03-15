@@ -124,11 +124,14 @@ def load_recent_verified(limit: int = 20):
         conn = await _get_conn()
         rows = await conn.fetch("""
             SELECT
-                prediction_date, prediction_text, predicted_direction,
-                target_asset, is_correct, actual_outcome, verification_date
-            FROM mer_predictions
-            WHERE is_correct IS NOT NULL
-            ORDER BY verification_date DESC
+                mp.prediction_date, mp.prediction_text, mp.predicted_direction,
+                mp.target_asset, mp.is_correct, mp.actual_outcome, mp.verification_date,
+                p.url AS post_url
+            FROM mer_predictions mp
+            LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
+            LEFT JOIN mer_posts p ON p.id = mi.post_id
+            WHERE mp.is_correct IS NOT NULL
+            ORDER BY mp.verification_date DESC
             LIMIT $1
         """, limit)
         await conn.close()
@@ -252,7 +255,7 @@ if monthly:
 
     fig_trend.update_layout(
         title="월별 예측 수 & 적중률",
-        xaxis_title="월",
+        xaxis=dict(title="월", type="category"),
         yaxis=dict(title="예측 수", side="left"),
         yaxis2=dict(title="적중률 (%)", side="right", overlaying="y", range=[0, 100]),
         legend=dict(x=0.01, y=0.99),
@@ -272,31 +275,27 @@ recent_limit = st.slider("표시 건수", 10, 50, 20)
 recent = load_recent_verified(recent_limit)
 
 if recent:
-    df_r = pd.DataFrame(recent)
-    df_r["verdict"] = df_r["is_correct"].map({True: "CORRECT", False: "INCORRECT"})
-    df_r["prediction_date"] = pd.to_datetime(df_r["prediction_date"]).dt.strftime("%Y-%m-%d")
-    df_r["verification_date"] = pd.to_datetime(df_r["verification_date"]).dt.strftime("%Y-%m-%d")
-    df_r["prediction_summary"] = df_r["prediction_text"].apply(
-        lambda t: t[:80] + "…" if t and len(t) > 80 else t
-    )
-    df_r["outcome_summary"] = df_r["actual_outcome"].apply(
-        lambda t: t[:100] + "…" if t and len(t) > 100 else (t or "—")
-    )
+    for r in recent:
+        verdict = "CORRECT" if r["is_correct"] else "INCORRECT"
+        icon = "✅" if r["is_correct"] else "❌"
+        pred_date = r["prediction_date"].strftime("%Y-%m-%d") if r["prediction_date"] else ""
+        asset = r["target_asset"] or ""
+        short = (r["prediction_text"] or "")[:50]
+        label = f"{icon} [{pred_date}] {asset} — {short}"
 
-    display_cols = [
-        "prediction_date", "target_asset", "prediction_summary",
-        "predicted_direction", "verdict", "outcome_summary", "verification_date",
-    ]
-    col_labels = {
-        "prediction_date": "예측일",
-        "target_asset": "대상 자산",
-        "prediction_summary": "예측 내용",
-        "predicted_direction": "방향",
-        "verdict": "판정",
-        "outcome_summary": "실제 결과 / 근거",
-        "verification_date": "검증일",
-    }
-    df_display = df_r[display_cols].rename(columns=col_labels)
-    st.dataframe(df_display, use_container_width=True, hide_index=True)
+        with st.expander(label):
+            st.markdown(f"**예측 내용**")
+            pred_text = r["prediction_text"] or ""
+            if r.get("post_url"):
+                st.markdown(f"{pred_text}\n\n🔗 [원글 보기]({r['post_url']})")
+            else:
+                st.write(pred_text)
+
+            st.markdown(f"**판정: {verdict}** | 방향: `{r['predicted_direction']}` | "
+                        f"검증일: {r['verification_date']}")
+
+            outcome = r.get("actual_outcome") or ""
+            if outcome:
+                st.markdown(f"**근거:** {outcome}")
 else:
     st.info("검증된 예측이 없습니다.")
