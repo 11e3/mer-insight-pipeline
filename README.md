@@ -7,7 +7,7 @@ Every component is production-wired: a hybrid retriever backed by 25,090 indexed
 **~$0.15 per post** (4 agent iterations avg) · **$4.50/month** at 30 posts/month
 
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
-[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline.streamlit.app)
+[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline-yvkztwypti7zbnfae8wfjs.streamlit.app)
 
 [한국어 README](README_KR.md)
 
