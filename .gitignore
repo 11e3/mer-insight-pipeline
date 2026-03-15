@@ -1,33 +1,43 @@
+# Python
 __pycache__/
 *.pyc
-.env
 *.egg-info/
 dist/
 build/
 .venv/
 venv/
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+
+# Data (large files, generated)
 data/
+scraped_posts/
+
+# DB dumps
 *.sql
 *.sql.gz
 !scripts/init_db.sql
-!scripts/migrate_vector_dim.sql
-.idea/
-.vscode/
-output.txt
 
-# Prompt engineering (proprietary)
-# config/prompts.py  ← 민감 정보 없음, 빌드에 포함 필요
-
-# Raw scraped data
-scraped_posts/json/
-scraped_posts/txt/
-scraped_posts/done.txt
-
-# Batch results & embeddings
-data/raw/
-data/batches/
+# Batch results
 eval_data/gold_review.txt
 
-# Coverage
+# Test / Coverage
 .coverage
 coverage.xml
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+output.txt
+*.log
+.benchmarks/

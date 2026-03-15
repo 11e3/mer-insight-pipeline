@@ -1,11 +1,12 @@
 # mer-insight-pipeline
 
-**mer-insight-pipeline**은 메르(ranto28)의 2,193개 블로그 포스트에서 금융 예측을 자동 추출·추적·검증하는 파이프라인입니다.
+**mer-insight-pipeline**은 [메르(ranto28)](https://blog.naver.com/ranto28)의 2,193개 한국 경제 블로그 포스트에서 금융 예측을 자동으로 추적하고 검증하는 파이프라인입니다. FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News 등 6개 외부 소스의 매크로 데이터를 활용합니다.
 
-[메르(ranto28)](https://blog.naver.com/ranto28)는 한국 경제 블로거로, 2,193개 포스트에 걸쳐 매크로 예측을 발표합니다. 이 파이프라인은 Claude Batch API로 예측을 추출하고, 6개 외부 소스(FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News)에서 실제 시장 데이터를 수집하며, Claude Haiku를 자동 심판으로 활용해 매일 각 예측을 검증합니다 — 현재 5,010건의 예측을 추적 중입니다. 검색은 하이브리드 BM25 + pgvector(25,090개 인사이트, α=0.6 프로덕션 기본값)로 구동되며, 벤더 종속 없이 PostgreSQL 위에서 동작합니다.
+Claude Batch API로 예측을 추출하고, 실시간 시장 데이터를 수집하며, Claude Haiku가 자동 심판으로 매일 각 예측을 검증합니다 — 현재 5,010건 추적 중. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
 
+[![CI](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml/badge.svg)](https://github.com/11e3/mer-insight-pipeline/actions)
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
-[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](http://34.50.19.176:8501)
+[![Dashboard](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B?logo=streamlit)](http://34.50.19.176:8501)
 
 [English README](README.md)
 
@@ -15,14 +16,14 @@
 
 ```mermaid
 flowchart TD
-    A[메르 네이버 블로그] -->|RSS / 스크래핑| B[mer_monitor]
+    A[네이버 블로그<br>2,193개 포스트] -->|RSS / 스크래핑| B[mer_monitor]
     B --> C[(PostgreSQL<br>+ pgvector)]
 
     subgraph 배치 파이프라인
-        C -->|2,193개 포스트| D[Claude Batch API<br>batch_api.py]
+        C -->|포스트| D[Claude Batch API<br>batch_api.py]
         D -->|JSONL 결과| E[parse_results.py]
-        E -->|규칙 / 예측<br>평가 / 거시 관점| C
-        C --> F[local_embedder.py<br>multilingual-e5-large 1024차원]
+        E -->|규칙 / 예측<br>평가 / 매크로뷰| C
+        C --> F[local_embedder.py<br>multilingual-e5-large 1024-dim]
         F -->|1024차원 벡터| C
         C --> G[cluster_insights.py<br>DBSCAN 중복 제거]
     end
@@ -45,54 +46,50 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-
     subgraph 평가 파이프라인
         EV[eval_runner.py] --> HS3
         EV --> LJ[LLM 심판<br>Claude Sonnet]
         EV --> RPT[마크다운 리포트]
     end
 
-    C --> Q[Streamlit 대시보드<br>포트 8501]
+    C --> Q[Streamlit 대시보드<br>port 8501]
 ```
 
 ---
 
-## 예측 자동 검증 파이프라인
+## 예측 검증 파이프라인
 
-메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Haiku가 자동 심판을 수행합니다.
+메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Haiku가 자동 심판으로 검증합니다.
 
 **배치당 Claude에 제공되는 컨텍스트:**
 
-| 소스 | 내용 |
-|------|------|
-| 월별 매크로 요약 | KOSPI 고/저/평균, 달러/원, WTI, US10Y, Fed 금리, VIX, BTC — FRED + 한국은행 ECOS |
-| 네이버 금융 주가 | 주요 10개 종목 — 과거분 월별 고/저/말일종가(H/L/C) + 최근 90일 일간 종가 |
+| 소스 | 포함 내용 |
+|------|----------|
+| 월별 매크로 요약 | KOSPI 고/저/평균, USD/KRW, WTI, US10Y, 기준금리, VIX, BTC — FRED + BOK ECOS |
+| 네이버 금융 주식 | 월별 고/저/종가 + 최근 30일 일간 종가 (주요 10개 종목) |
 | DART 공시 + 뉴스 | 가장 오래된 미검증 예측일 이후 수집된 기업 이벤트 |
-| 자동 분석 | 동일 기간 메르 포스트 분석 내용 |
 
 **판정 기준**
 
 | 판정 | 조건 |
 |------|------|
-| `CORRECT` | 컨텍스트 또는 Claude 지식으로 예측 내용 확인됨 |
+| `CORRECT` | 컨텍스트 또는 Claude 지식으로 예측 내용이 확인됨 |
 | `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
 | `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
 
-만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 전체 미검증 예측을 검증합니다.
+만기 없이 확정될 때까지 큐에 유지. `BATCH_SIZE=40` 예측을 Haiku에 전달하며, **프롬프트 캐싱** 적용 (캐시된 컨텍스트 input 비용 ~90% 절감).
 
 ---
 
 ## 매크로 데이터 파이프라인
 
-6개 외부 소스에서 금융·경제 데이터를 스케줄에 따라 수집하여 `macro_daily` 및 `events` 테이블에 저장합니다. 예측 검증과 리포트 생성에 활용됩니다.
-
-| 소스 | 데이터 | 스케줄 | 모듈 |
-|------|--------|--------|------|
-| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, Fed 기금금리, CPI YoY, 실업률 | 매 30분 | `src/ingest/load_macro.py` |
-| 한국은행 ECOS | 달러/원 환율, KOSPI, KOSDAQ, 기준금리 | 매 30분 | `src/ingest/load_macro.py` |
-| 네이버 금융 | 주요 한국 10개 종목 일간 종가 (삼성전자, SK하이닉스, 현대차, 기아, LG에너지솔루션, 포스코홀딩스, 삼성SDI, 카카오, 네이버, 셀트리온) | 검증 시 | `src/pipeline/prediction_verifier.py` |
-| DART | 기업 공시 (사업보고서, 주요사항보고서, M&A 등) RSS | 매 10분, 8–18시 (평일) | `src/pipeline/dart_collector.py` |
-| 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정, 통화정책 | 매 30분 | `src/pipeline/news_collector.py` |
+| 소스 | 데이터 | 주기 | 모듈 |
+|------|--------|------|------|
+| FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, 기준금리, CPI YoY, 실업률 | 매 30분 | `src/ingest/load_macro.py` |
+| 한국은행 ECOS | USD/KRW, KOSPI, KOSDAQ, 한국 기준금리 | 매 30분 | `src/ingest/load_macro.py` |
+| 네이버 금융 | 주요 한국 주식 10종목 일간 종가 | 검증 시 | `src/pipeline/prediction_verifier.py` |
+| DART | 기업 공시 (사업보고서, 주요사항보고서 등) RSS | 매 10분, 8–18시 평일 | `src/pipeline/dart_collector.py` |
+| 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정 | 매 30분 | `src/pipeline/news_collector.py` |
 | Google News | 지정학 이벤트 — 제재, 관세, 무역전쟁 키워드 | 매 30분 | `src/pipeline/news_collector.py` |
 
 모든 매크로 데이터는 **예측 검증 컨텍스트**로 활용됩니다 — 월별 집계 + 최근 30일 일간 수치를 Claude Haiku에 예측 판정 근거로 제공합니다.
@@ -101,58 +98,19 @@ flowchart TD
 
 ## 검색 인프라
 
-하이브리드 BM25 + 벡터 검색은 컨텍스트 조합과 평가 파이프라인의 검색 백본으로 기능합니다.
+하이브리드 BM25 + 벡터 검색이 컨텍스트 조립과 평가 파이프라인의 검색 백본입니다.
 
-쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024-dim)을 사용합니다 — DB 인덱싱에 사용한 것과 동일한 모델.
+쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024차원) — 프로덕션 DB 인덱싱에 사용된 동일 모델.
 
-```bash
-python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
-```
-
-**Alpha ablation** — N=200 쿼리, K=5:
+**알파 ablation** — N=200 쿼리, K=5:
 
 | α (BM25 가중치) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
 | **α=0.0** | 0.199 | 0.995 | **0.995** |
-| α=0.2 | 0.199 | 0.995 | 0.995 |
-| α=0.3 | 0.199 | 0.995 | 0.990 |
-| α=0.4 | 0.199 | 0.995 | 0.986 |
 | **α=0.6** ★ | **0.200** | **1.000** | 0.968 |
-| α=0.8 | 0.199 | 0.995 | 0.960 |
 | α=1.0 | 0.196 | 0.980 | 0.935 |
 
-프로덕션 기본값: **α=0.6**.
-
-**핵심 관찰**:
-- α=0.6은 유일하게 완전한 Recall(1.000)과 최고 Precision(0.200)을 달성 — 예측 누락 방지를 위해 프로덕션 기본값으로 채택
-- 최고 MRR은 순수 벡터(α=0.0, MRR=0.995). 하이브리드는 MRR을 소폭 낮추는 대신(−2.7%p) 완전한 Recall을 확보
-- BM25 단독(α=1.0)은 Recall(0.980)과 MRR(0.935) 모두 순수 벡터(0.995)보다 낮음 — 한국 금융 텍스트에서도 의미 검색이 키워드 단독보다 효과적
-
-**왜 차이가 나는가**
-
-- **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하며, MRR에서 우위
-- **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
-- **RRF α=0.6**으로 결합하면 순수 벡터의 Recall 공백을 커버하면서 Precision도 유지
-
----
-
-## 평가 파이프라인
-
-```bash
-# 검색만 평가 (Claude 호출 없음, 빠름)
-python -m src.eval.eval_runner --mode retrieval_only --k 5
-
-# 전체 평가 (검색 + LLM 심판)
-python -m src.eval.eval_runner --mode full --k 5
-```
-
-**LLM 심판 지표** (Claude Sonnet, 1–5점 → 0–1 정규화):
-
-| 지표 | 설명 |
-|------|------|
-| 컨텍스트 관련성 | 검색 결과↔쿼리 관련성 |
-| 충실도 | 분석이 원본에만 근거하는지 (환각의 역수) |
-| 답변 관련성 | 분석이 질문에 얼마나 답하는지 |
+프로덕션 기본값: **α=0.6** — 완전한 Recall(1.000)을 달성하는 유일한 설정.
 
 ---
 
@@ -164,88 +122,59 @@ python -m src.eval.eval_runner --mode full --k 5
 | LLM (추출) | `claude-haiku-4-5-20251001` |
 | 배치 API | Anthropic Batch API |
 | 임베딩 | `intfloat/multilingual-e5-large` (1024차원, 로컬) |
-| 벡터 DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW 인덱스) |
+| 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
-| 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
-| 데이터 | FRED, 한국은행 ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News |
+| 스케줄러 | APScheduler (로컬) / GCP Cloud Scheduler + Cloud Run Jobs |
+| 데이터 소스 | FRED, BOK ECOS, DART, 네이버 금융, 연준/한국은행 RSS, Google News |
 | 대시보드 | Streamlit |
-| 인프라 | GCP Cloud Run Jobs + Cloud SQL |
 
 ---
 
-## 주요 수치
+## 지표
 
 | 지표 | 값 |
-|------|-----|
+|------|---|
 | 처리된 포스트 | 2,193개 |
 | 추출된 인사이트 | 25,090개 |
-| 추적 중인 예측 | 5,010개 |
-| 인사이트 유형 | 4가지 (규칙, 예측, 평가, 거시 관점) |
+| 추적 중인 예측 | 5,010건 |
+| 인사이트 유형 | 4가지 (rule, prediction, evaluation, macro_view) |
 | 임베딩 차원 | 1024 |
-| BM25 인덱스 크기 | 정규 문서 16,126개 |
-| GCP Cloud Run 잡 | 4개 |
-| 추적 거시 지표 | KOSPI, 달러/원, WTI, VIX, BTC, US10Y, Fed 금리, CPI, 실업률 |
+| BM25 인덱스 크기 | 19,702개 문서 |
 
 ---
 
-## 시작하기
+## 설치
 
-### 사전 준비
+### 사전 요구사항
 
-**로컬 개발**
 - Docker & Docker Compose
 - Anthropic API 키
 
-**운영 (GCP)**
-- GCP 계정 + `gcloud` CLI
-- Anthropic API 키
-- 전체 설정은 [docs/gcp_setup.md](docs/gcp_setup.md) 참조
-
-### 로컬 빠른 시작
+### 빠른 시작
 
 ```bash
 # 1. 클론 및 설정
 git clone https://github.com/11e3/mer-insight-pipeline.git
 cd mer-insight-pipeline
-cp .env.example .env          # API 키 입력
+cp .env.example .env        # API 키 입력
 cp config/prompts.example.py config/prompts.py
 
-# 2. DB 시작
+# 2. 데이터베이스 시작
 docker compose up -d db
 
-# 3. 배치 추출 (포스트 2,193개 → 인사이트 25,090개)
+# 3. 배치 추출 실행 (2,193 포스트 → 25,090 인사이트)
 python scripts/run_batch.py all
 
 # 4. BM25 인덱스 캐시 빌드
-python -c "
-import asyncio, asyncpg, os
-from src.search.bm25_index import BM25Index
-from dotenv import load_dotenv
-load_dotenv()
-async def build():
-    conn = await asyncpg.connect(os.environ['DATABASE_URL'])
-    idx = BM25Index()
-    await idx.build(conn)
-    idx.save('data/bm25_cache.pkl')
-    await conn.close()
-asyncio.run(build())
-"
+python -m src.search.bm25_index
 
-# 5. 단일 잡 실행 또는 상시 디스패처
+# 5. 단일 잡 실행 또는 상시 디스패처 시작
 python -m scripts.run_job --job mer_check
-python -m src.pipeline.event_dispatcher   # 상시 실행 (로컬 전용)
+python -m src.pipeline.event_dispatcher   # 상시 모드
 ```
 
-### 운영 배포 (GCP Cloud Run)
-
-```bash
-IMAGE="asia-northeast3-docker.pkg.dev/YOUR_PROJECT_ID/mer-pipeline/app:latest"
-docker build -t $IMAGE . && docker push $IMAGE
-# 전체 배포 절차: docs/gcp_setup.md 참조
-```
-
-Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
+### Cloud Run 잡
 
 | 잡 | 스케줄 |
 |----|--------|
@@ -254,34 +183,29 @@ Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 | `macro_check` | 매 30분 |
 | `verify_predictions` | 매일 20:00 |
 
-`macro_check`는 매크로 데이터 갱신, 급변 알림, 뉴스 수집을 단일 잡 실행으로 통합합니다.
-
-### 예측 대시보드
+### 대시보드
 
 ```bash
 streamlit run src/dashboard/prediction_dashboard.py   # http://localhost:8501
 ```
 
-### 평가 실행
+### 평가
 
 ```bash
 python -m src.eval.eval_runner --mode retrieval_only
-python -m src.search.experiment --k 5
+python -m src.search.experiment --mode ablation --k 5
 ```
 
 ---
 
 ## 환경 변수
 
-전체 변수 목록은 [.env.example](.env.example) 참조.
-
-| 환경변수 | 필수 여부 | 설명 |
-|----------|----------|------|
-| `DATABASE_URL` | ✓ 필수 | PostgreSQL 연결 문자열 |
-| `ANTHROPIC_API_KEY` | ✓ 필수 | Claude API 키 |
-| `GCP_PROJECT_ID` | 운영 | GCP 프로젝트 ID |
-| `GCP_LOCATION` | 운영 | Vertex AI 리전 (기본: us-central1) |
-| `FRED_API_KEY` | 선택 | FRED 경제 데이터 (무료) |
+| 변수 | 필수 | 설명 |
+|------|------|------|
+| `DATABASE_URL` | ✓ | PostgreSQL 연결 문자열 |
+| `ANTHROPIC_API_KEY` | ✓ | Claude API 키 |
+| `GCP_PROJECT_ID` | 선택 | GCP 프로젝트 ID (Vertex AI 임베딩용) |
+| `FRED_API_KEY` | 선택 | FRED 거시경제 데이터 (무료) |
 | `BOK_API_KEY` | 선택 | 한국은행 ECOS API (무료) |
 
 ---
@@ -291,49 +215,44 @@ python -m src.search.experiment --k 5
 ```
 mer-insight-pipeline/
 ├── config/
-│   ├── settings.py               # 전체 설정 (.env에서 로드)
+│   ├── settings.py               # 전체 설정, .env에서 로드
 │   └── prompts.example.py        # 프롬프트 구조 템플릿
 ├── src/
 │   ├── search/                   # 검색 인프라
-│   │   ├── bm25_index.py         # BM25 + kiwipiepy 토크나이저 + pickle 캐시
+│   │   ├── bm25_index.py         # kiwipiepy 토크나이저 + pickle 캐시
 │   │   ├── vector_index.py       # pgvector HNSW 래퍼 (1024차원)
 │   │   ├── hybrid.py             # RRF 융합 (α=0.6)
-│   │   └── experiment.py         # A/B 실험: 벡터 vs BM25 vs 하이브리드
+│   │   └── experiment.py         # Ablation: 벡터 vs BM25 vs 하이브리드
 │   ├── eval/                     # 평가 파이프라인
-│   │   ├── eval_runner.py        # 메인 실행기 (--mode retrieval_only | full)
+│   │   ├── eval_runner.py        # 메인 러너 (--mode retrieval_only | full)
 │   │   ├── metrics.py            # Precision@K, Recall@K, MRR
-│   │   ├── llm_judge.py          # 컨텍스트 관련성 / 충실도 / 답변 관련성
-│   │   ├── eval_dataset.py       # 골드 데이터셋 로더
+│   │   ├── llm_judge.py          # Context Relevance / Faithfulness / Answer Relevance
 │   │   └── report.py             # 마크다운 + JSON 리포트 생성기
 │   ├── extract/
 │   │   ├── batch_api.py          # Claude Batch API 오케스트레이션
-│   │   ├── local_embedder.py     # multilingual-e5-large 1024차원 (기본)
 │   │   ├── embedder.py           # Embedder 프로토콜 + 팩토리 (LocalEmbedder 기본)
-│   │   ├── parse_results.py      # 배치 결과 파싱 → DB 저장
+│   │   ├── local_embedder.py     # multilingual-e5-large 1024차원
+│   │   ├── parse_results.py      # 배치 결과 파싱 → DB
 │   │   └── realtime_extractor.py # 실시간 인사이트 추출 (Haiku)
 │   ├── ingest/
-│   │   ├── load_posts.py
-│   │   └── load_macro.py         # FRED / 한국은행 ECOS 매크로 데이터 수집
+│   │   ├── load_macro.py         # FRED / 한국은행 ECOS 매크로 데이터 수집
+│   │   └── date_parser.py        # 한국어 날짜 문자열 파서
 │   ├── pipeline/
-│   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler, 로컬 6개 스케줄)
-│   │   ├── mer_monitor.py        # 블로그 RSS 감시 (1차 데이터 소스)
-│   │   ├── dart_collector.py     # DART 기업 공시
+│   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler, 6개 스케줄)
+│   │   ├── mer_monitor.py        # 블로그 RSS 감시
+│   │   ├── dart_collector.py     # DART 공시 (한국 기업 공시)
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
-│   │   ├── analysis_generator.py # Claude Sonnet 포스트 분석
-│   │   └── prediction_verifier.py # 매일 Claude Haiku 배치 검증
-│   │   └── formatters.py
+│   │   └── prediction_verifier.py # 일일 Claude Haiku 배치 검증
 │   └── dashboard/
-│       ├── observability.py      # 비용·지연 대시보드 (로컬 참고용)
 │       └── prediction_dashboard.py # 예측 적중률 대시보드
-├── app.py                        # Streamlit Cloud 진입점 → prediction_dashboard
+├── app.py                        # Streamlit Cloud 진입점
 ├── eval_data/
 │   └── gold_extended.json        # 골드 데이터셋: 200개 쿼리 + 관련 인사이트 ID
-├── results/                      # 평가 리포트 & 실험 결과
 ├── scripts/
 │   ├── init_db.sql               # PostgreSQL 스키마
 │   ├── run_batch.py              # 배치 추출 오케스트레이터
-│   ├── run_job.py                # Cloud Run Job 진입점 (mer_check / dart_check / macro_check / verify_predictions)
-│   └── migrate_predictions.py    # 1회성: mer_insights → mer_predictions 소급 적재
+│   ├── run_job.py                # Cloud Run Job 진입점
+│   └── migrate_predictions.py    # 일회성: mer_insights → mer_predictions 소급 적재
 ├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt
