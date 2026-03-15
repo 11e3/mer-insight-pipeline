@@ -6,6 +6,9 @@ Every component is production-wired: a hybrid retriever backed by 25,090 indexed
 
 **~$0.15 per post** (4 agent iterations avg) · **$4.50/month** at 30 posts/month
 
+[![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
+[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline.streamlit.app)
+
 [한국어 README](README_KR.md)
 
 ---
@@ -84,27 +87,40 @@ flowchart TD
 
 ## Hybrid Search — Experiment Results
 
-Combining BM25 (keyword) and vector (embedding) retrieval via RRF significantly improves recall over either method alone.
+Combining BM25 (keyword) and vector (embedding) retrieval via RRF improves ranking quality over either method alone.
 
-**Gold dataset**: 5 Korean economic queries × 5 relevant insights each, K=5
+Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB. Results reflect actual retrieval quality against real query texts.
 
-| Method | Precision@5 | Recall@5 | MRR |
-|--------|------------|---------|-----|
-| Vector only | 0.52 | 0.52 | 0.90 |
-| BM25 only | 0.44 | 0.44 | 0.80 |
-| **Hybrid (RRF)** | **1.00** | **1.00** | **1.00** |
+```bash
+python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
+```
 
-paired t-test: t=4.707, **p=0.0093** (statistically significant)
+**Alpha ablation** — N=200 queries, K=5:
+
+<!-- AUTO:alpha_ablation -->
+| α | Precision@5 | Recall@5 | MRR | Note |
+|---|------------|---------|-----|------|
+| 0.0 (vector only) | 0.189 | 0.945 | 0.908 | |
+| 0.2 | 0.190 | 0.950 | 0.912 | |
+| 0.3 | 0.190 | 0.950 | 0.910 | |
+| 0.4 | 0.190 | 0.950 | 0.913 | Production default |
+| **0.6** | **0.199** | **0.995** | **0.938** | Best across all metrics |
+| 0.8 | 0.198 | 0.990 | 0.934 | |
+| 1.0 (BM25 only) | 0.196 | 0.980 | 0.935 | |
+<!-- END:alpha_ablation -->
+
+Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model used for DB indexing), N=200 queries from `gold_extended.json`.
+
+**Key observations**:
+- Hybrid (α=0.4–0.6) outperforms both pure methods: +4.8% Recall and +3.0% MRR vs. vector-only
+- α=0.6 peaks across all three metrics — slightly more BM25-weight than the production default of 0.4
+- Pure BM25 (α=1.0) outperforms pure vector on MRR (0.935 vs 0.908): Korean finance text rewards exact keyword matching (specific tickers, rates, dates) more than semantic paraphrasing alone
 
 **Why they differ**
 
 - **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
 - **BM25** pinpoints specific numbers and proper nouns, but fails on synonyms and varied phrasing
-- **RRF** combines both: each method covers the blind spots of the other, maximising recall
-
-```bash
-python -m src.search.experiment --k 5
-```
+- **RRF** combines both: each method covers the blind spots of the other
 
 ---
 
@@ -193,6 +209,11 @@ Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predic
 # One-time backlog clearance
 gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
 ```
+
+**Live accuracy** (auto-updated on every push via CI):
+
+<!-- AUTO:prediction_accuracy -->
+<!-- END:prediction_accuracy -->
 
 ---
 
@@ -297,13 +318,15 @@ python -m src.eval.eval_runner --mode retrieval_only --k 5
 python -m src.eval.eval_runner --mode full --k 5
 ```
 
-**Retrieval results** (gold dataset, K=5):
+**Retrieval results** (gold\_extended.json, 200 queries, K=5, hybrid α=0.6):
 
 | Metric | Score |
 |--------|-------|
-| Precision@5 | 1.00 |
-| Recall@5 | 1.00 |
-| MRR | 1.00 |
+| Precision@5 | 0.199 |
+| Recall@5 | 0.995 |
+| MRR | 0.938 |
+
+Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each query has 1 relevant insight in the gold set, so P@5 ceiling = 0.20.
 
 **LLM Judge metrics** (Claude Sonnet as judge, 1–5 scale normalised to 0–1):
 

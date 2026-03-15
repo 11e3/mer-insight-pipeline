@@ -1,0 +1,2204 @@
+{
+  "test_cases": [
+    {
+      "id": "ext_001",
+      "query": "대서양 횡단 LNG 터미널 확충이 에너지 공급 전략의 핵심 인프라인 이유와 파이프라인 대체 역할",
+      "relevant_insight_ids": [
+        6316
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_002",
+      "query": "집단행동의 성공 경험이 전략 반복에 미치는 영향에 관한 연구",
+      "relevant_insight_ids": [
+        23013
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_003",
+      "query": "명절 귀성 시간대 선택의 게임이론적 분석과 혼잡 상황에서의 전략 역설",
+      "relevant_insight_ids": [
+        16029
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_004",
+      "query": "원료 공급망 이동에 따른 중간 거래층 증가와 원재료 가격 상승 및 제품 품질 저하 현상",
+      "relevant_insight_ids": [
+        1
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_005",
+      "query": "수온 상승에 따른 수산자원 북상이 지역 어업 산업과 수급에 미치는 영향",
+      "relevant_insight_ids": [
+        2
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_006",
+      "query": "원료 등급이 낮아지면 최종 제품의 식감 맛 색감 품질에 미치는 영향",
+      "relevant_insight_ids": [
+        3
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_007",
+      "query": "천연 색소 소비자 거부감과 비건 표시 강화에 따른 대체 색소 전환 시 색감 재현 문제",
+      "relevant_insight_ids": [
+        4
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_008",
+      "query": "해상 통로 봉쇄 시 통과권 국가의 해운업과 에너지 경쟁력 강화 영향",
+      "relevant_insight_ids": [
+        16
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_009",
+      "query": "원유 종류별 정제 수율 차이, 중질유와 경질유의 제품 비율 비교",
+      "relevant_insight_ids": [
+        25
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_010",
+      "query": "유종 공급 부족시 대체 유종 생산으로 인한 공급 감소 현상",
+      "relevant_insight_ids": [
+        26
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_011",
+      "query": "상용차 물류업체 비용상승 대비 선제적 가격인상 수요 동향",
+      "relevant_insight_ids": [
+        27
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_012",
+      "query": "전략적 요충지 독립 운동이 주변 강대국의 경제적 이익과 충돌할 때 어떻게 진행되는지",
+      "relevant_insight_ids": [
+        38
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_013",
+      "query": "약소국의 도구화와 전략적 이용가치 상실 후 버려지는 국제정치 패턴 분석",
+      "relevant_insight_ids": [
+        39
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_014",
+      "query": "국제유가 하락 시 유류세 할인 축소에 따른 국내 휘발유 가격 변동",
+      "relevant_insight_ids": [
+        53
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_015",
+      "query": "주유소의 비대칭적 가격 결정 행태와 유가 변동에 따른 휘발유 가격 인상과 인하 속도 차이",
+      "relevant_insight_ids": [
+        54
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_016",
+      "query": "글쓰기 실력 향상 효과적인 방법 글쓰기 연습",
+      "relevant_insight_ids": [
+        62
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_017",
+      "query": "금융 리서치에서 정보 압축과 요약 기법은 무엇인가",
+      "relevant_insight_ids": [
+        64
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_018",
+      "query": "이란 라흐바르 종교 최고지도자 권력 구조 및 헌법상 지위와 영향력",
+      "relevant_insight_ids": [
+        68
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_019",
+      "query": "기업 후계자 선출 순위 변동에 따른 경제적 영향 및 주가 변동 분석",
+      "relevant_insight_ids": [
+        69
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_020",
+      "query": "종교 조직에서 지도자의 순교가 정통성 강화와 후계자 선정에 미치는 영향",
+      "relevant_insight_ids": [
+        70
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_021",
+      "query": "에너지 공급 위기 시 석유제품 수출 중단과 IEA 권고 소비절감을 적용한 순수입량 기준 버틸 수 있는 기간 산출",
+      "relevant_insight_ids": [
+        81
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_022",
+      "query": "에너지 비상사태 선포 시 원유 배분 우선순위 및 산업별 가동 축소 정책",
+      "relevant_insight_ids": [
+        82
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_023",
+      "query": "유조선 배송 지연이 한국 원유 공급망에 미치는 영향",
+      "relevant_insight_ids": [
+        90
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_024",
+      "query": "무기 시스템 실전 성능 평가 vs 시뮬레이션 테스트의 신뢰도 비교",
+      "relevant_insight_ids": [
+        94
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_025",
+      "query": "국방력 약한 국가의 무기 체계 구성 시 성능과 가성비 고려 전략",
+      "relevant_insight_ids": [
+        95
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_026",
+      "query": "기술이전과 군사협력이 경제협력 프로젝트 수주 확대에 미치는 영향",
+      "relevant_insight_ids": [
+        96
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_027",
+      "query": "국경을 초월하는 유전과 가스전 개발로 인한 국제 분쟁 사례 및 해결 방안",
+      "relevant_insight_ids": [
+        105
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_028",
+      "query": "소국이 강대국에 군사기지 제공과 인프라 투자로 경제적 이득을 주면서 문화적 유연성을 보일 때 강대국의 동맹 선호도 변화",
+      "relevant_insight_ids": [
+        106
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_029",
+      "query": "글로벌 단일 공급처 생산 차질로 인한 국제 상품 가격 급등 사례",
+      "relevant_insight_ids": [
+        107
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_030",
+      "query": "에너지 수출 인프라 중단이 글로벌 공급 부족과 가격 급등에 미치는 영향",
+      "relevant_insight_ids": [
+        117
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_031",
+      "query": "LNG 공급 부족 문제 단기 해결 방안과 생산 인프라 확장 시간",
+      "relevant_insight_ids": [
+        118
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_032",
+      "query": "소수 종교 집단의 지하 조직화와 내부 분파 증가가 경제·금융에 미치는 영향을 분석한 연구",
+      "relevant_insight_ids": [
+        133
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_033",
+      "query": "부동산 수익률 하락 시 월세 전환 현상 분석",
+      "relevant_insight_ids": [
+        142
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_034",
+      "query": "금리 규제와 비공식 금융 시장 활성화의 관계에 대한 연구",
+      "relevant_insight_ids": [
+        143
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_035",
+      "query": "주택 공급 부족 시 전세의 자산 형성 효과와 세입자 대출 제약의 관계",
+      "relevant_insight_ids": [
+        144
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_036",
+      "query": "이란 최고지도자 라흐바르의 권한이 대통령의 실질적 권력을 제한하는 구조",
+      "relevant_insight_ids": [
+        153
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_037",
+      "query": "이란 혁명수비대의 정규군 통제 메커니즘과 헌법적 위상이 소수 병력으로 체제 통제를 가능하게 하는 구조",
+      "relevant_insight_ids": [
+        154
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_038",
+      "query": "종교지도자가 헌법 개정으로 자격요건을 낮춰 권력을 확대하고 후계 선정을 통제하는 사례",
+      "relevant_insight_ids": [
+        155
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_039",
+      "query": "전세가격이 매매가격을 초과할 때 임차인 보증금 반환 문제와 전세사기 위험성",
+      "relevant_insight_ids": [
+        165
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_040",
+      "query": "전세사기 예방을 위한 임대인 임차인 신원확인 시스템 도입 효과 분석",
+      "relevant_insight_ids": [
+        166
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_041",
+      "query": "호르무즈 해협 유조선 통행 제약 및 이란 영해 봉쇄 영향 분석",
+      "relevant_insight_ids": [
+        175
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_042",
+      "query": "에너지 수입 지정학적 병목이 경제에 미치는 영향",
+      "relevant_insight_ids": [
+        176
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_043",
+      "query": "성공의 조건 실력 성실함 운의 역할 장기 성공",
+      "relevant_insight_ids": [
+        185
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_044",
+      "query": "지방 출신 공무원의 승진 지연 현상과 네트워크의 영향",
+      "relevant_insight_ids": [
+        186
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_045",
+      "query": "과거시험 응시 비용과 기회 비용이 지방 출신 합격 지연에 미치는 영향",
+      "relevant_insight_ids": [
+        187
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_046",
+      "query": "전근대 동아시아 형벌 제도에서 태형의 강도가 나무 재질과 두께, 길이에 따라 어떻게 결정되었는지에 관한 연구",
+      "relevant_insight_ids": [
+        189
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_047",
+      "query": "조선시대 속전 제도 신체 형벌 면제 돈으로 형벌 대체",
+      "relevant_insight_ids": [
+        190
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_048",
+      "query": "호르무즈해협 봉쇄 시 원유와 천연가스 가격 급등 시나리오 분석",
+      "relevant_insight_ids": [
+        193
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_049",
+      "query": "등기부 등재 전 단계에서 담보서류로 인정되는 자산에 대한 이중 대출 위험성과 제도 개선안",
+      "relevant_insight_ids": [
+        201
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_050",
+      "query": "단기 대출 반복 롤오버시 담보 재검증 회피 가능성",
+      "relevant_insight_ids": [
+        202
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_051",
+      "query": "비은행 금융기관 담보심사 부실이 은행 시스템 리스크로 전이되는 메커니즘",
+      "relevant_insight_ids": [
+        203
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_052",
+      "query": "저비용 소비 무기로 고가 방어체계를 무력화하는 군사 경제학 분석",
+      "relevant_insight_ids": [
+        214
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_053",
+      "query": "OS 기반 통합 제어 시스템으로 하드웨어 플랫폼화하는 방법",
+      "relevant_insight_ids": [
+        215
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_054",
+      "query": "파생상품 선물 계약이 현물을 초과할 때 만기 인도 부담과 공급 위기",
+      "relevant_insight_ids": [
+        229
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_055",
+      "query": "거래중단 시 가격갭 발생으로 손절매 주문이 미체결되는 갭리스크와 손실 확대 문제",
+      "relevant_insight_ids": [
+        230
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_056",
+      "query": "거래 중단 후 재개되는 종목이 초기 급등 이후 조정을 받는 이유와 사례를 알고 싶습니다",
+      "relevant_insight_ids": [
+        231
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_057",
+      "query": "AI 기술이 고소득 전문직 일자리를 대체하면서 고소득층 소득이 감소하고 이것이 부동산 시장에 미치는 영향",
+      "relevant_insight_ids": [
+        240
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_058",
+      "query": "경제 악순환 구조 고용 감소가 소비 침체로 이어지고 기업 매출 감소로 악화되는 메커니즘은",
+      "relevant_insight_ids": [
+        241
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_059",
+      "query": "부동산 가격 하락이 은행 부실채권 증가로 이어지는 금융위기 메커니즘을 알아보고 싶습니다.",
+      "relevant_insight_ids": [
+        242
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_060",
+      "query": "다방향 동시 공격에 따른 방어 시스템 효율성 저하 메커니즘",
+      "relevant_insight_ids": [
+        260
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_061",
+      "query": "전자전 환경에서 지휘체계 연속성 유지를 위한 사전 지정 타겟과 지휘관 체계의 중요성",
+      "relevant_insight_ids": [
+        261
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_062",
+      "query": "의료비 부담 증가로 인한 건강수명과 기대수명의 격차 문제",
+      "relevant_insight_ids": [
+        7701
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_063",
+      "query": "신약 개발 과정에서 전임상 검증 난이도와 동물실험 사용량의 상관관계",
+      "relevant_insight_ids": [
+        269
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_064",
+      "query": "에너지 효율이 높은 시스템의 경제성 분석 및 비용 효과 비교",
+      "relevant_insight_ids": [
+        270
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_065",
+      "query": "디스크 탈출증 신경 압박과 염증 반응의 통증 발생 메커니즘",
+      "relevant_insight_ids": [
+        281
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_066",
+      "query": "만성 요통 치료의 단계별 접근법과 각 단계별 권장 치료 기간",
+      "relevant_insight_ids": [
+        282
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_067",
+      "query": "장기 침상 안정의 부작용과 조기 활동 재개의 중요성",
+      "relevant_insight_ids": [
+        283
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_068",
+      "query": "추간판 수분 함량과 요통 수술 결과 및 통증 회복의 관계에 대한 연구",
+      "relevant_insight_ids": [
+        284
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_069",
+      "query": "척추 디스크 질환 예방을 위한 유연성과 근력 운동의 효과 비교 연구",
+      "relevant_insight_ids": [
+        285
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_070",
+      "query": "비만이 척추 추간판 퇴행을 가속화시키는 의료경제적 영향과 치료비용 분석",
+      "relevant_insight_ids": [
+        286
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_071",
+      "query": "데이터센터 전력밀도 증가에 따른 냉각 시스템 고도화 및 건축 구조 보강의 필요성",
+      "relevant_insight_ids": [
+        292
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_072",
+      "query": "산업용 부지 기존 인프라 활용 재개발 비용 및 기간 단축 효과",
+      "relevant_insight_ids": [
+        293
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_073",
+      "query": "고용창출 효과가 낮은 산업시설 유치의 지역갈등 사례",
+      "relevant_insight_ids": [
+        294
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_074",
+      "query": "영해 봉쇄가 국제 해협 통행에 미치는 경제적 영향",
+      "relevant_insight_ids": [
+        303
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_075",
+      "query": "에너지 공급망 충격이 수출국과 수입국의 경제에 미치는 상반된 영향",
+      "relevant_insight_ids": [
+        304
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_076",
+      "query": "다층 환율 시스템이 차익거래와 정치 불안정에 미치는 영향",
+      "relevant_insight_ids": [
+        305
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_077",
+      "query": "정부금융기관을 통한 자산 재매입으로 중앙은행 양적긴축을 상쇄하는 방법",
+      "relevant_insight_ids": [
+        316
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_078",
+      "query": "MBS 매입이 주택담보대출 금리 인하에 미치는 영향 메커니즘",
+      "relevant_insight_ids": [
+        317
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_079",
+      "query": "은 제련 공정에서 납과 아연 같은 불순물을 제거하는 분리 기술과 비용 효율성",
+      "relevant_insight_ids": [
+        329
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_080",
+      "query": "광산 기술 혁신이 저품질 광산의 경쟁력을 어떻게 향상시키는지 분석한 사례",
+      "relevant_insight_ids": [
+        330
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_081",
+      "query": "정부 규제가 기술 유출을 막지 못하고 경제 손실을 야기하는 메커니즘",
+      "relevant_insight_ids": [
+        331
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_082",
+      "query": "수입 원재료 확보가 국내 기술 경쟁력과 시장 점유율에 미치는 영향",
+      "relevant_insight_ids": [
+        339
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_083",
+      "query": "기술 유출과 기술 이전이 국가 경쟁력에 미치는 영향",
+      "relevant_insight_ids": [
+        340
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_084",
+      "query": "산란기 갑각류 가격 상승 및 수급 동향",
+      "relevant_insight_ids": [
+        349
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_085",
+      "query": "3차 전지 방사성 동위원소 반감기 수명 관계",
+      "relevant_insight_ids": [
+        356
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_086",
+      "query": "저출력 배터리의 원격 지역 응용과 교체 어려움에 따른 실용적 가치",
+      "relevant_insight_ids": [
+        357
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_087",
+      "query": "선물 계약 규모가 실물 재고를 초과할 때 거래소런 위험이 증가하는 메커니즘은 무엇인가",
+      "relevant_insight_ids": [
+        366
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_088",
+      "query": "파생상품 증거금 인상이 가격 폭락을 초래하는 메커니즘과 사례",
+      "relevant_insight_ids": [
+        367
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_089",
+      "query": "하천 유량 감소가 하류 염도 상승과 담수어류 산란에 미치는 영향",
+      "relevant_insight_ids": [
+        374
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_090",
+      "query": "시스템 구조 변화가 수급 불균형에 미치는 영향을 분석한 투자 사례 연구",
+      "relevant_insight_ids": [
+        375
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_091",
+      "query": "세포 재프로그래밍 기술의 낮은 성공률이 대량 생산과 임상 응용에 미치는 경제적 영향",
+      "relevant_insight_ids": [
+        384
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_092",
+      "query": "세포 재프로그래밍 기술의 암 발생 위험성과 안전성 규제 현황",
+      "relevant_insight_ids": [
+        5415
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_093",
+      "query": "주담대 한도 LTV 구매력 제약 비교",
+      "relevant_insight_ids": [
+        395
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "hard",
+      "source_insight_type": "rule"
+    },
+    {
+      "id": "ext_094",
+      "query": "KRX 금 현물 수급 변화와 프리미엄 추이를 활용한 단기 트레이딩 전략",
+      "relevant_insight_ids": [
+        7970
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_095",
+      "query": "구리 가격 급락 경기침체 신호 무역 위축",
+      "relevant_insight_ids": [
+        24241
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_096",
+      "query": "고금리 시대 은행주 매수 추천의 문제점 연체율 급등과 대손충당금 증가 리스크",
+      "relevant_insight_ids": [
+        19383
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_097",
+      "query": "한반도 수역 명태 어획량 감소와 러시아 베링해로의 어장 이동이 한국 수산업 공급망에 미친 영향",
+      "relevant_insight_ids": [
+        8
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_098",
+      "query": "부산 게맛살 어묵 산업 러시아산 명태 가공 중국 태국 이전 공동화 인건비 원료 공급 비용 상승 경쟁력",
+      "relevant_insight_ids": [
+        9
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_099",
+      "query": "명태산 수리미 FA SA등급 공급 부족 프리미엄화 가격 상승",
+      "relevant_insight_ids": [
+        10
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_100",
+      "query": "코치닐 색소 사용 감소와 비건 트렌드에 따른 대체 색소 시장 및 게맛살 품질 영향",
+      "relevant_insight_ids": [
+        12
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_101",
+      "query": "중국 이란 협상 호르무즈해협 통과권 확보 지정학적 이점",
+      "relevant_insight_ids": [
+        20
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_102",
+      "query": "미국-이스라엘 이란 군사 행동이 호르무즈해협 봉쇄로 인한 글로벌 석유 공급 차질과 국제 해운 에너지 시장 혼란에 미치는 영향",
+      "relevant_insight_ids": [
+        21
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_103",
+      "query": "호르무즈해협 유조선 봉쇄로 인한 글로벌 석유 공급 차질 및 경제적 영향",
+      "relevant_insight_ids": [
+        22
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_104",
+      "query": "S-OIL 샤힌 프로젝트 경유 생산량 감소 석유화학 원료 비중 증가 문제",
+      "relevant_insight_ids": [
+        32
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_105",
+      "query": "EU의 러시아산 경유 공급 차단으로 인한 글로벌 경유 가격 상승 영향 분석",
+      "relevant_insight_ids": [
+        33
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_106",
+      "query": "호르무즈해협 봉쇄가 경유 가격에 미치는 영향 및 중동 원유 공급 차단의 경유 시장 충격",
+      "relevant_insight_ids": [
+        34
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_107",
+      "query": "IMEC 인도-중동-유럽 경제회랑이 이란 견제와 중국 일대일로 대항 전략으로 미국 인도가 추진하는 지정학적 의미",
+      "relevant_insight_ids": [
+        11631
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_108",
+      "query": "쿠르드족 독립운동의 현실적 한계와 강대국들의 배신 사례",
+      "relevant_insight_ids": [
+        46
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_109",
+      "query": "시리아 반군 HTS의 알카에다 출신 지도부와 터키 지원, 아사드 정권 붕괴 이후 극단주의 위협 평가",
+      "relevant_insight_ids": [
+        3182
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_110",
+      "query": "트럼프 행정부의 중동 전략에서 쿠르드족 활용 방식의 변화와 한계",
+      "relevant_insight_ids": [
+        48
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_111",
+      "query": "국내 주유소 휘발유 가격 인상은 빠르고 인하는 느린 비대칭적 가격 조정 문제",
+      "relevant_insight_ids": [
+        57
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_112",
+      "query": "유류세 할인 정책 변화 2022년 37% 급등 2024년 점진적 축소 국제유가 반영",
+      "relevant_insight_ids": [
+        58
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_113",
+      "query": "글쓰기 실력을 향상시키기 위해 유시민의 글쓰기 특강을 추천하는 이유가 뭘까요?",
+      "relevant_insight_ids": [
+        66
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_114",
+      "query": "박경철 주식투자란 무엇인가 통계적 오류 심리적 편향 주식시장",
+      "relevant_insight_ids": [
+        67
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_115",
+      "query": "모즈타바 하메네이 이란 라흐바르 후계자 가능성 정치 권력 권승 구도 변화",
+      "relevant_insight_ids": [
+        74
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_116",
+      "query": "이란 최고지도자 하메네이 건강 악화와 후계 구도 변화 전망",
+      "relevant_insight_ids": [
+        75
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_117",
+      "query": "페제시키안 이란 대통령 라이시 헬기 추락 사건 의혹 스파이 미국 영향력",
+      "relevant_insight_ids": [
+        76
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_118",
+      "query": "이스라엘의 이란 공격이 이란 내 권력 구도 변화와 강경파 부상에 미친 영향",
+      "relevant_insight_ids": [
+        77
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_119",
+      "query": "한국 석유 비축량 210일 충분성 검증 실제 소비 기준 67일에 불과",
+      "relevant_insight_ids": [
+        86
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_120",
+      "query": "호르무즈해협 폐쇄 시 LNG 수입 차단 위험과 대체에너지 단기 한계를 고려한 에너지 안보 전략은?",
+      "relevant_insight_ids": [
+        87
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_121",
+      "query": "호르무즈 해협 이란 봉쇄 한국 에너지 공급 리스크",
+      "relevant_insight_ids": [
+        91
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_122",
+      "query": "HD현대오일뱅크 VLCC 유조선 도입 지정학적 리스크 영향",
+      "relevant_insight_ids": [
+        92
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_123",
+      "query": "UAE 천궁-2 미사일 요격 성공률 90% 실전 검증 패트리어트 에로우-3보다 저가 경쟁력",
+      "relevant_insight_ids": [
+        99
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_124",
+      "query": "UAE 이란 탄도미사일 공격 방어 체계 천궁-2 요격률 성능",
+      "relevant_insight_ids": [
+        100
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_125",
+      "query": "천궁-Ⅱ 실전 성공이 한국 방위산업의 국제 경쟁력을 입증한 가운데 LIG넥스원, 한화에어로스페이스, 한화시스템의 독자 기술 개발과 수출 성공 현황",
+      "relevant_insight_ids": [
+        101
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_126",
+      "query": "카타르의 지정학적 위험과 국방력 현황, 미국과 이란 사이의 외교 균형 전략",
+      "relevant_insight_ids": [
+        111
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_127",
+      "query": "천연가스 LNG 가격 폭등 원인 카타르 이스라엘 공급 차질 물가 영향",
+      "relevant_insight_ids": [
+        112
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_128",
+      "query": "이스라엘 이란 종교지도자 회의 폭격으로 인한 중동 긴장 고조가 석유 가격과 글로벌 경제에 미치는 영향",
+      "relevant_insight_ids": [
+        113
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_129",
+      "query": "카타르 라스라판 LNG 터미널 세계 최대 수출시설 전략적 중요성 증설 계획",
+      "relevant_insight_ids": [
+        124
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_130",
+      "query": "셀 노스필드 유전 개발 포기 역사적 실수 1970년대 천연가스 매장량",
+      "relevant_insight_ids": [
+        125
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_131",
+      "query": "미국 셰일가스 신규 LNG 수출 프로젝트 2030년까지 완공 계획 및 글로벌 시장 30% 점유율 달성 전망",
+      "relevant_insight_ids": [
+        126
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_132",
+      "query": "카타르 노스필드 증설 프로젝트 완공 후 생산능력 60% 증대로 2030년 글로벌 시장 25% 점유율 목표와 미국 경쟁력 확보 전망",
+      "relevant_insight_ids": [
+        127
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_133",
+      "query": "카타르의 무상주택 교육의료 공공요금과 월 600만원대 기초연금으로 실현된 초고복지 정책",
+      "relevant_insight_ids": [
+        128
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_134",
+      "query": "이란 혁명체제의 종교적 통합력과 젊은 세대 반발이 글로벌 테러 위협에 미치는 영향",
+      "relevant_insight_ids": [
+        136
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_135",
+      "query": "헤즈볼라의 이스라엘 국경 분쟁과 이란의 저항의 축 전략이 중동 불안정성에 미치는 영향",
+      "relevant_insight_ids": [
+        137
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_136",
+      "query": "후티 반군의 홍해 해상 공격이 글로벌 해운과 무역에 미치는 경제적 영향과 지정학적 리스크",
+      "relevant_insight_ids": [
+        138
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_137",
+      "query": "사우디아라비아와 UAE의 이란 견제 및 예멘 개입이 중동 지정학과 경제에 미치는 영향",
+      "relevant_insight_ids": [
+        139
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_138",
+      "query": "한국의 전세제도가 일본 데마에에서 유래했으며 자발적으로 확산된 역사와 시장 수용 배경",
+      "relevant_insight_ids": [
+        147
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_139",
+      "query": "1970년대 전세제도가 서민층 자산축적과 주택소유 기회 제공에 미친 긍정적 역할",
+      "relevant_insight_ids": [
+        148
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_140",
+      "query": "2006년 전세자금 대출 보증보험 정책이 월세 계층을 전세로 유도한 효과",
+      "relevant_insight_ids": [
+        149
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_141",
+      "query": "모즈타바 하메네이 후계 가능성과 이란 권력 구도 변화",
+      "relevant_insight_ids": [
+        158
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_142",
+      "query": "이란 최고지도자 알리 하메네이의 권력 구조와 후계자 문제 전망",
+      "relevant_insight_ids": [
+        159
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_143",
+      "query": "이란 혁명수비대의 예산 규모와 조직 구조가 이란 정권 안정성에 미치는 영향",
+      "relevant_insight_ids": [
+        160
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_144",
+      "query": "바시즈 민병조직의 청소년 조직 구조와 국가 이념 교육 체계가 체제 안정성에 미치는 영향",
+      "relevant_insight_ids": [
+        161
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_145",
+      "query": "조선시대 족보를 통한 신용도 검증이 전세사기 방지에 미친 영향",
+      "relevant_insight_ids": [
+        169
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_146",
+      "query": "조선시대 17-18세기 전세사기 사건과 부동산 가격 상승으로 인한 자동 정산 사례",
+      "relevant_insight_ids": [
+        170
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_147",
+      "query": "정약용 다산이 귀양 기간 동안 서울 집값 상승으로 집을 팔았다가 복귀 후 재구입하지 못한 사연",
+      "relevant_insight_ids": [
+        171
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_148",
+      "query": "호르무즈 해협 봉쇄 시 한국의 에너지 공급 차질 위험과 비축량 부족 문제",
+      "relevant_insight_ids": [
+        180
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_149",
+      "query": "호르무즈 해협 우회를 위한 UAE 푸자이라 항만 준설 계획의 지정학적 위험과 환경 문제 평가",
+      "relevant_insight_ids": [
+        181
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_150",
+      "query": "호르무즈 해협 봉쇄 시 현대오일뱅크 롯데케미칼 LG화학의 원유 공급 차질과 생산 영향",
+      "relevant_insight_ids": [
+        182
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_151",
+      "query": "조선시대 속전 제도와 곤장 형벌의 역사적 기록",
+      "relevant_insight_ids": [
+        191
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_152",
+      "query": "이 아가타 순교자 태형 장형 390대 시성 1984년",
+      "relevant_insight_ids": [
+        192
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_153",
+      "query": "트럼프 정부의 이란 핵 프로그램 및 미사일 개발 위협 평가와 군사 대응 방안",
+      "relevant_insight_ids": [
+        196
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_154",
+      "query": "트럼프 행정부의 이란 군사작전과 호르무즈해협 제어 전략",
+      "relevant_insight_ids": [
+        197
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_155",
+      "query": "이스라엘의 이란 선제 공격 전략과 미국 군사동맹이 중동 지역 경제에 미치는 영향",
+      "relevant_insight_ids": [
+        198
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_156",
+      "query": "마켓 파이낸셜 솔루션즈 MFS 이중담보 사기 영국 부동산 등기 시스템 악용 20억파운드 대출 사건",
+      "relevant_insight_ids": [
+        207
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_157",
+      "query": "MFS 이중담보 사기대출 스캔들로 바클레이즈 산탄데르 웰스파고 등 금융기관 대규모 손실",
+      "relevant_insight_ids": [
+        208
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_158",
+      "query": "영국 부동산 등기 시스템의 느린 처리 속도가 이중담보 사기를 조장하는 구조적 문제를 어떻게 개선할 수 있을까?",
+      "relevant_insight_ids": [
+        209
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_159",
+      "query": "사모대출 비은행금융기관 심사 부실 담보 실사 문제 2025년 First Brands Group 사건",
+      "relevant_insight_ids": [
+        210
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_160",
+      "query": "안두릴 인더스트리즈 수주 증가율과 매출총이익률 45% 달성 현황 및 미 국방부 리플리케이터 사업 공급자 지위",
+      "relevant_insight_ids": [
+        220
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_161",
+      "query": "HD현대 안두릴 MOA 미 해군 MASC 무인수상정 수상함정 차세대 성장사업",
+      "relevant_insight_ids": [
+        221
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_162",
+      "query": "대한항공 안두릴 래티스 LOWUS 무인기 ADD 공동개발 미국 방산기술 협력",
+      "relevant_insight_ids": [
+        4833
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_163",
+      "query": "미 국방부 리플리케이터 전략 저비용 대량 무인기 중국 대응 안두릴 로드러너 AI드론",
+      "relevant_insight_ids": [
+        223
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_164",
+      "query": "보호아동 자산형성 지원 디딤씨앗통장 제도의 효과와 사회적 의미는 무엇인가",
+      "relevant_insight_ids": [
+        560
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_165",
+      "query": "메세공 월별 구독자 증가 추세와 저작권료 기부 모델 그리고 텔레그램 서비스 확장에 대해 알고 싶습니다.",
+      "relevant_insight_ids": [
+        228
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_166",
+      "query": "CME 거래중단 사건과 은 실물재고 감소로 인한 파생상품 실물 갭 위험 분석",
+      "relevant_insight_ids": [
+        235
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_167",
+      "query": "중국 은 거래시장 SHFE SGE 실물 재고 급락 3만톤에서 1천톤 미만으로 감소 시장 기능 마비 위험",
+      "relevant_insight_ids": [
+        236
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_168",
+      "query": "은 가격 상승 재고 부족 공급 제약 거래소 증거금 인상 유동성 리스크",
+      "relevant_insight_ids": [
+        237
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_169",
+      "query": "AI 에이전트 소프트웨어 자동화로 인한 SaaS 시장 수요 감소 전망",
+      "relevant_insight_ids": [
+        249
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_170",
+      "query": "우버 같은 플랫폼 기업들이 AI 기반 최적화 시스템에 의해 중개 역할의 가치가 대체되면서 경쟁력이 약해지는 문제",
+      "relevant_insight_ids": [
+        250
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_171",
+      "query": "AI 인프라 확산에 따른 AI칩 반도체 수요 증가로 엔비디아 TSMC 한국 반도체 기업의 성장 전망",
+      "relevant_insight_ids": [
+        251
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_172",
+      "query": "고소득층 소비 감소가 부동산 시장에 미치는 영향과 고급주택부터 중산층 주택까지의 가격 하락 전망은?",
+      "relevant_insight_ids": [
+        252
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_173",
+      "query": "AI 기술 발전으로 회계사 변호사 세무사 등 전문직이 사라질 위험과 중개업 시장 붕괴 전망",
+      "relevant_insight_ids": [
+        253
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_174",
+      "query": "올해 상장 예정인 AI 기업 중 투자 가치가 높은 회사는 어디인가",
+      "relevant_insight_ids": [
+        254
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_175",
+      "query": "미국 연준 월러 이사 발언 너무 과장되어 있다 평가 시트리니 리서치",
+      "relevant_insight_ids": [
+        255
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_176",
+      "query": "포드 항모전단 크레타 배치 이란 군사 작전 대비 F-35C 토마호크 미사일 배치 현황",
+      "relevant_insight_ids": [
+        264
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_177",
+      "query": "이란 방공 시스템의 구조적 취약점과 미국의 전자전 능력을 고려한 방어 효율성 평가",
+      "relevant_insight_ids": [
+        265
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_178",
+      "query": "미국-이란 핵협상 제네바 2026년 트럼프 항복 요구 협상 결렬 군사 행동 가능성",
+      "relevant_insight_ids": [
+        266
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_179",
+      "query": "오가노이드 기술이 신약개발 효율성을 높이고 동물실험을 대체하며 규제기관의 지원을 받는 시장 성장 전망",
+      "relevant_insight_ids": [
+        274
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_180",
+      "query": "FDA 현대화법 2.0이 AI 독성예측 모델과 오가노이드 같은 동물실험 대체 데이터를 인정함으로써 신약개발 프로세스를 어떻게 현대화하고 오가노이드 산업 발전을 촉진할까?",
+      "relevant_insight_ids": [
+        275
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_181",
+      "query": "인간의 뇌가 20와트의 에너지로 작동하는 극도로 효율적인 생물학적 시스템이며 AI 기술이 따라올 수 없는 에너지 효율성을 가지고 있다는 점에서 가성비 측면에서 어떻게 우월한지",
+      "relevant_insight_ids": [
+        276
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_182",
+      "query": "신약개발 성공률이 낮은 이유와 오가노이드 기술이 해결책이 될 수 있는 방법에 대해 알아보고 싶습니다.",
+      "relevant_insight_ids": [
+        277
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_183",
+      "query": "AI 데이터센터가 기존 IDC와 다른 이유와 신규 전용시설 필요성은 무엇인가요?",
+      "relevant_insight_ids": [
+        298
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_184",
+      "query": "캔자스시티 신문 인쇄공장을 AI 데이터센터로 전환하는 프로젝트가 2025년 말 완공 예정이지만 민주당 다수 의회의 규제 강화로 사용승인이 거부되고 고용 창출이 미흡해 제약을",
+      "relevant_insight_ids": [
+        299
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_185",
+      "query": "AI 데이터센터 입지로 주목받는 폐공장과 폐발전소의 재활용 가능성과 경제성 분석",
+      "relevant_insight_ids": [
+        300
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_186",
+      "query": "트럼프 행정부 이란 제재가 미국 셰일유 수출과 에너지 패권에 미치는 긍정적 영향",
+      "relevant_insight_ids": [
+        310
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_187",
+      "query": "호르무즈해협 봉쇄가 미국 셰일유 수출과 동아시아 에너지 수입에 미치는 비대칭적 영향",
+      "relevant_insight_ids": [
+        311
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_188",
+      "query": "이란 혁명수비대 부정부패 환율제도 청년실업 인플레이션 민심이탈",
+      "relevant_insight_ids": [
+        312
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_189",
+      "query": "케빈 워시 연준 의장 내정자의 양적긴축과 금리인하 정책 방향 및 재무부 양적완화와의 충돌 가능성",
+      "relevant_insight_ids": [
+        321
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_190",
+      "query": "트럼프 정부 MBS 2천억달러 매입이 연방준비제도 독립성과 인플레이션에 미치는 영향",
+      "relevant_insight_ids": [
+        322
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_191",
+      "query": "연준 양적긴축이 재무부 우회 매입으로 인해 실효성을 상실할 수 있다는 평가와 인플레이션 억제 목표 달성 어려움",
+      "relevant_insight_ids": [
+        323
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_192",
+      "query": "정부주택금융기관 패니매와 프레디맥의 MBS 매입을 통한 주택시장 활성화 역할과 중앙은행 정책과의 관계",
+      "relevant_insight_ids": [
+        324
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_193",
+      "query": "연은분리법 명나라 천공개물 고순도 납 은 분리 기술",
+      "relevant_insight_ids": [
+        332
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "medium",
+      "source_insight_type": "evaluation"
+    },
+    {
+      "id": "ext_194",
+      "query": "중국 일대일로와 중국몢의 지정학적 목표 및 쿼드 형성에 따른 미중 전략 대립과 글로벌 진영 재편",
+      "relevant_insight_ids": [
+        21101
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    },
+    {
+      "id": "ext_195",
+      "query": "중동 지정학 불안정 속 한국 방산 수출의 외교 안보 리스크와 중동 군사 균형에 미치는 영향",
+      "relevant_insight_ids": [
+        3952
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    },
+    {
+      "id": "ext_196",
+      "query": "한반도 해수온도 상승에 따른 명태 북상 현상이 국내 수산업과 어업 기반에 미치는 경제적 영향",
+      "relevant_insight_ids": [
+        13
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    },
+    {
+      "id": "ext_197",
+      "query": "한국 인건비 상승에 따른 노동집약적 가공산업의 해외 이전과 지역 산업공동화 현황 및 중간상인층 확대에 따른 원가 상승 구조",
+      "relevant_insight_ids": [
+        14
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    },
+    {
+      "id": "ext_198",
+      "query": "동물성 색소 대체 식물성 색소의 품질 문제와 식품 산업의 대응 과제",
+      "relevant_insight_ids": [
+        15
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    },
+    {
+      "id": "ext_199",
+      "query": "호르무즈해협 봉쇄 시나리오에서 중국의 이란 협상 전략과 글로벌 에너지 가격 파급 효과",
+      "relevant_insight_ids": [
+        23
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    },
+    {
+      "id": "ext_200",
+      "query": "트럼프 행정부의 중동 정책이 호르무즈해협 통과와 유가에 미치는 영향",
+      "relevant_insight_ids": [
+        24
+      ],
+      "expected_topics": [],
+      "expected_stance": "",
+      "difficulty": "easy",
+      "source_insight_type": "macro_view"
+    }
+  ]
+}

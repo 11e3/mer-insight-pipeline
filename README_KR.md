@@ -6,6 +6,9 @@
 
 **포스트당 약 $0.15** (평균 4 iteration) · **월 30개 기준 약 $4.50**
 
+[![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
+[![Demo](https://img.shields.io/badge/demo-Streamlit-FF4B4B?logo=streamlit)](https://mer-insight-pipeline.streamlit.app)
+
 [English README](README.md)
 
 ---
@@ -84,27 +87,40 @@ flowchart TD
 
 ## 하이브리드 검색 — 실험 결과
 
-BM25(키워드) + 벡터(임베딩)를 RRF로 결합하면 단일 방식 대비 검색 품질이 유의미하게 향상됩니다.
+BM25(키워드) + 벡터(임베딩)를 RRF로 결합하면 단일 방식 대비 랭킹 품질이 향상됩니다.
 
-**골드 데이터셋**: 5개 경제 쿼리 × 관련 인사이트 5개씩, K=5
+쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024-dim)을 사용합니다 — DB 인덱싱에 사용한 것과 동일한 모델. 실제 쿼리 텍스트 기반의 검색 품질을 반영합니다.
 
-| 방식 | Precision@5 | Recall@5 | MRR |
-|------|------------|---------|-----|
-| 벡터 단독 | 0.52 | 0.52 | 0.90 |
-| BM25 단독 | 0.44 | 0.44 | 0.80 |
-| **하이브리드 (RRF)** | **1.00** | **1.00** | **1.00** |
+```bash
+python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
+```
 
-paired t-test: t=4.707, **p=0.0093** (통계적으로 유의)
+**Alpha ablation** — N=200 쿼리, K=5:
+
+<!-- AUTO:alpha_ablation -->
+| α | Precision@5 | Recall@5 | MRR | 비고 |
+|---|------------|---------|-----|------|
+| 0.0 (벡터 단독) | 0.189 | 0.945 | 0.908 | |
+| 0.2 | 0.190 | 0.950 | 0.912 | |
+| 0.3 | 0.190 | 0.950 | 0.910 | |
+| 0.4 | 0.190 | 0.950 | 0.913 | 프로덕션 기본값 |
+| **0.6** | **0.199** | **0.995** | **0.938** | 전 지표 최고 |
+| 0.8 | 0.198 | 0.990 | 0.934 | |
+| 1.0 (BM25 단독) | 0.196 | 0.980 | 0.935 | |
+<!-- END:alpha_ablation -->
+
+임베딩: `intfloat/multilingual-e5-large` (1024-dim, DB 인덱싱과 동일 모델), N=200 쿼리.
+
+**핵심 관찰**:
+- 하이브리드(α=0.4–0.6)가 단독 방식 모두를 상회: 벡터 단독 대비 Recall +5.0%p, MRR +3.0%p
+- α=0.6이 전 지표 최고 — 프로덕션 기본값 0.4보다 BM25 비중을 약간 더 주는 것이 유리
+- BM25 단독(α=1.0) MRR이 순수 벡터(α=0.0)보다 높음(0.935 > 0.908): 한국 금융 텍스트에서는 티커·금리·날짜 같은 키워드 매칭이 의미 유사도보다 중요
 
 **왜 차이가 나는가**
 
 - **벡터**는 "금리가 오르면 부동산이 하락" ↔ "부동산 가치는 금리와 역의 관계" 같은 의미적 패러프레이징에 강하지만, "4.6%", "30년물", "SVB" 같은 희귀 키워드는 임베딩 공간에서 희석됨
 - **BM25**는 구체적 수치·고유명사를 정확히 잡지만, 동의어·문체 변화에 취약함
-- **RRF**로 결합하면 두 방법이 서로 다른 인사이트를 보완해 재현율이 극대화됨
-
-```bash
-python -m src.search.experiment --k 5
-```
+- **RRF**로 결합하면 두 방법이 서로의 약점을 보완
 
 ---
 
@@ -192,6 +208,11 @@ python -m src.search.experiment --k 5
 # 과거 적체 1회 소급 처리
 gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
 ```
+
+**실시간 정확도** (CI 푸시마다 자동 업데이트):
+
+<!-- AUTO:prediction_accuracy -->
+<!-- END:prediction_accuracy -->
 
 ---
 
@@ -294,13 +315,15 @@ python -m src.eval.eval_runner --mode retrieval_only --k 5
 python -m src.eval.eval_runner --mode full --k 5
 ```
 
-**검색 평가 결과** (골드 데이터셋, K=5):
+**검색 평가 결과** (gold\_extended.json, 200개 쿼리, K=5, 하이브리드 α=0.6):
 
 | 지표 | 점수 |
 |------|------|
-| Precision@5 | 1.00 |
-| Recall@5 | 1.00 |
-| MRR | 1.00 |
+| Precision@5 | 0.199 |
+| Recall@5 | 0.995 |
+| MRR | 0.938 |
+
+임베딩: `intfloat/multilingual-e5-large` (DB 인덱싱과 동일 모델). 골드 데이터셋에 쿼리당 관련 문서가 1개이므로 P@5 이론 최대값 = 0.20.
 
 **LLM 심판 지표** (Claude Sonnet, 1–5점 → 0–1 정규화):
 

@@ -42,7 +42,7 @@ MACRO_ALERT_THRESHOLDS = {
 }
 
 # ─── GCP ──────────────────────────────────────────────────────────────────────
-GCP_PROJECT_ID = os.environ["GCP_PROJECT_ID"]
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 GCP_LOCATION   = os.environ.get("GCP_LOCATION", "us-central1")
 
 # ─── 임베딩 ───────────────────────────────────────────────────────────────────
