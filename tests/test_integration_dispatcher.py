@@ -127,28 +127,3 @@ async def test_cascade_delete(pg_conn):
     )
     assert count_after == 0
 
-
-@pytest.mark.asyncio
-async def test_post_enricher_related_posts_empty_db(pg_conn):
-    """DB가 비어 있을 때 related_posts는 빈 리스트."""
-    import sys
-    from unittest.mock import AsyncMock, MagicMock, patch
-
-    # vertexai가 없는 환경(CI)에서는 mock으로 대체
-    if "vertexai" not in sys.modules:
-        sys.modules["vertexai"] = MagicMock()
-        sys.modules["vertexai.language_models"] = MagicMock()
-
-    # config.settings가 필수로 요구하는 env vars
-    os.environ.setdefault("DATABASE_URL", os.environ.get("TEST_DATABASE_URL", "test"))
-    os.environ.setdefault("ANTHROPIC_API_KEY", "test")
-
-    with patch("src.pipeline.post_enricher.anthropic.AsyncAnthropic"):
-        from src.pipeline.post_enricher import PostEnricher
-
-    mock_embedder = MagicMock()
-    mock_embedder.embed_passages = AsyncMock(return_value=[[0.0] * 768])
-
-    enricher = PostEnricher(pg_conn, mock_embedder)
-    result = await enricher._related_posts([0.0] * 768, "https://example.com")
-    assert result == []

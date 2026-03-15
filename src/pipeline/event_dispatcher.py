@@ -144,11 +144,6 @@ class EventDispatcher:
                 log.info(f"  인사이트 {count}개 추출 ({post.get('title', '')[:40]})")
 
             # 새 예측 건수 집계 후 텔레그램 알림
-            pred_count = sum(
-                1 for p in new_posts
-                for _ in range(1)  # placeholder
-            )
-            # 실제 예측 건수는 mer_predictions에서 최근 삽입 카운트로 확인
             pred_count = await self.conn.fetchval("""
                 SELECT COUNT(*) FROM mer_predictions
                 WHERE created_at >= NOW() - INTERVAL '10 minutes'
@@ -180,7 +175,7 @@ class EventDispatcher:
             await self._alert(f"news_check 실패: {e}")
 
     async def _update_macro_data(self):
-        """오늘 매크로 데이터 갱신 (yfinance 장중 데이터)."""
+        """오늘 매크로 데이터 갱신 (FRED + BOK ECOS)."""
         try:
             from src.ingest.load_macro import load_macro
             today = date.today().isoformat()

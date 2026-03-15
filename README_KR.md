@@ -41,13 +41,11 @@ flowchart TD
         ED --> NC[news_collector<br>연준 · 한국은행 RSS]
         ED --> LM[load_macro<br>FRED · 한국은행 ECOS]
         ED --> PV[prediction_verifier<br>Claude Haiku 심판]
-        DC & NC & LM --> CA[context_assembler]
-        CA --> HS3
-        CA --> AG2[analysis_generator<br>Claude Sonnet]
+        DC & NC & LM --> C
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    AG2 --> TG[텔레그램]
+    ED --> TG[텔레그램]
 
     subgraph 평가 파이프라인
         EV[eval_runner.py] --> HS3
@@ -97,8 +95,6 @@ flowchart TD
 | DART | 기업 공시 (사업보고서, 주요사항보고서, M&A 등) RSS | 매 10분, 8–18시 (평일) | `src/pipeline/dart_collector.py` |
 | 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정, 통화정책 | 매 30분 | `src/pipeline/news_collector.py` |
 | Google News | 지정학 이벤트 — 제재, 관세, 무역전쟁 키워드 | 매 30분 | `src/pipeline/news_collector.py` |
-
-`config/settings.py`에 추가 데이터 소스용 API 키 지원: BLS (미국 노동통계), MOLIT (국토부 부동산), KOSIS (통계청 무역통계).
 
 모든 매크로 데이터는 **예측 검증 컨텍스트**로 활용됩니다 — 월별 집계 + 최근 30일 일간 수치를 Claude Haiku에 예측 판정 근거로 제공합니다.
 
@@ -292,9 +288,6 @@ python -m src.search.experiment --k 5
 | `GCP_LOCATION` | 운영 | Vertex AI 리전 (기본: us-central1) |
 | `FRED_API_KEY` | 선택 | FRED 경제 데이터 (무료) |
 | `BOK_API_KEY` | 선택 | 한국은행 ECOS API (무료) |
-| `BLS_API_KEY` | 선택 | 미국 노동통계국 (무료) |
-| `MOLIT_API_KEY` | 선택 | 국토부 부동산 데이터 / data.go.kr (무료) |
-| `KOSIS_API_KEY` | 선택 | 통계청 KOSIS 무역통계 (무료) |
 
 ---
 
@@ -331,7 +324,6 @@ mer-insight-pipeline/
 │   │   ├── mer_monitor.py        # 블로그 RSS 감시 (1차 데이터 소스)
 │   │   ├── dart_collector.py     # DART 기업 공시
 │   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
-│   │   ├── context_assembler.py  # RAG 컨텍스트 빌더
 │   │   ├── analysis_generator.py # Claude Sonnet 포스트 분석
 │   │   └── prediction_verifier.py # 매일 Claude Haiku 배치 검증
 │   ├── delivery/

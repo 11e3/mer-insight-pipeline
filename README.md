@@ -41,13 +41,11 @@ flowchart TD
         ED --> NC[news_collector<br>Fed · BOK RSS]
         ED --> LM[load_macro<br>FRED · BOK ECOS]
         ED --> PV[prediction_verifier<br>Claude Haiku judge]
-        DC & NC & LM --> CA[context_assembler]
-        CA --> HS3
-        CA --> AG2[analysis_generator<br>Claude Sonnet]
+        DC & NC & LM --> C
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    AG2 --> TG[Telegram]
+    ED --> TG[Telegram]
 
     subgraph Eval Pipeline
         EV[eval_runner.py] --> HS3
@@ -97,8 +95,6 @@ The pipeline collects financial and economic data from 6 external sources on sch
 | DART | Corporate disclosure filings (사업보고서, 주요사항보고서, M&A, etc.) via RSS | Every 10 min, 8–18h (weekdays) | `src/pipeline/dart_collector.py` |
 | Fed / BOK RSS | Central bank press releases, rate decisions, monetary policy | Every 30 min | `src/pipeline/news_collector.py` |
 | Google News | Geopolitical events — sanctions, tariffs, trade war keywords | Every 30 min | `src/pipeline/news_collector.py` |
-
-Additional API keys supported in `config/settings.py` for future data sources: BLS (US labor statistics), MOLIT (Korea real estate), KOSIS (Korea trade statistics).
 
 All macro data feeds into **prediction verification context** — monthly aggregates + recent 30-day daily values provided to Claude Haiku as evidence for judging predictions.
 
@@ -295,9 +291,6 @@ See [.env.example](.env.example) for all required variables.
 | `GCP_LOCATION` | production | Vertex AI region (default: us-central1) |
 | `FRED_API_KEY` | optional | FRED economic data (free) |
 | `BOK_API_KEY` | optional | Bank of Korea ECOS API (free) |
-| `BLS_API_KEY` | optional | US Bureau of Labor Statistics (free) |
-| `MOLIT_API_KEY` | optional | Korea real estate data / data.go.kr (free) |
-| `KOSIS_API_KEY` | optional | Korea trade statistics / KOSIS (free) |
 
 ---
 
@@ -334,7 +327,6 @@ mer-insight-pipeline/
 │   │   ├── mer_monitor.py        # Blog RSS watcher (primary data source)
 │   │   ├── dart_collector.py     # DART filings (Korean corporate disclosure)
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
-│   │   ├── context_assembler.py  # RAG context builder
 │   │   ├── analysis_generator.py # Claude Sonnet post analysis
 │   │   └── prediction_verifier.py # Daily Claude Haiku batch verification
 │   ├── delivery/

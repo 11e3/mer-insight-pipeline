@@ -20,12 +20,6 @@ TELEGRAM_TIER1_CHAT_ID = os.environ.get("TELEGRAM_TIER1_CHAT_ID", "")
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
 BOK_API_KEY  = os.environ.get("BOK_API_KEY", "")
 
-# 한국은행 기준금리 시리즈 코드
-BOK_BASE_RATE_URL = (
-    "https://ecos.bok.or.kr/api/StatisticSearch"
-    "/{api_key}/json/kr/1/1000/722Y001/D/{start}/{end}/0101000"
-)
-
 # ─── 블로그 ──────────────────────────────────────────────────────────────────
 BLOG_ID  = "ranto28"
 BLOG_RSS = f"https://rss.blog.naver.com/{BLOG_ID}.xml"
@@ -54,11 +48,6 @@ EMBEDDING_BATCH_SIZE   = 32
 # ─── 데이터 경로 ──────────────────────────────────────────────────────────────
 DATA_DIR     = os.path.join(os.path.dirname(__file__), "..", "data")
 RAW_JSON_DIR = os.path.join(DATA_DIR, "raw", "json")
-
-# ─── 신규 데이터 소스 API ──────────────────────────────────────────────────────
-BLS_API_KEY   = os.environ.get("BLS_API_KEY", "")       # 미국 노동통계국
-MOLIT_API_KEY = os.environ.get("MOLIT_API_KEY", "")     # 국토교통부 공공데이터
-KOSIS_API_KEY = os.environ.get("KOSIS_API_KEY", "")     # 통계청 KOSIS (관세청 수출입)
 
 # ─── RSS 소스 URL ─────────────────────────────────────────────────────────────
 FED_RSS_URL   = "https://www.federalreserve.gov/feeds/press_all.xml"

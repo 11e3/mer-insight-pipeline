@@ -105,9 +105,6 @@ scripts/
 | `GCP_LOCATION` | 선택 | Vertex AI 리전 (기본: us-central1) |
 | `FRED_API_KEY` | 선택 | FRED 거시경제 데이터 |
 | `BOK_API_KEY` | 선택 | 한국은행 ECOS |
-| `BLS_API_KEY` | 선택 | 미국 노동통계국 |
-| `MOLIT_API_KEY` | 선택 | 국토부 부동산 공공데이터 |
-| `KOSIS_API_KEY` | 선택 | 통계청 KOSIS 무역통계 |
 
 ## 검색 실험 결과 (search_experiment.json 기준)
 

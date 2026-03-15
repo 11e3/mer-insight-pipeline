@@ -41,35 +41,6 @@ def _extract_content(item: dict, insight_type: str) -> str:
 
 
 
-
-ECONOMIC_TOPICS = {
-    "거시경제", "기업분석", "부동산", "금융시장", "정책", "산업분석",
-}
-
-# 제목/본문에 이 키워드가 포함되면 비경제로 강제 판정 (topic 오분류 보정)
-_NON_ECON_OVERRIDES = {
-    "조선시대", "고려시대", "조선왕조", "삼국시대",
-    "법제", "형벌", "처벌", "사형", "옥사",
-    "건강관리", "건강법", "식이요법", "다이어트",
-    "의학", "질병", "치료", "수술", "의약",
-    "음식", "요리", "레시피", "맛집",
-    "여행", "관광", "육아", "보육",
-    "종교", "불교", "기독교", "명상",
-    "스포츠", "운동법", "체력",
-    "문학", "소설", "영화", "드라마",
-}
-
-
-def is_economic(primary_topic: str, title: str = "", content: str = "") -> bool:
-    """primary_topic 기반 판정 + 제목/본문 블랙리스트 보정."""
-    if primary_topic not in ECONOMIC_TOPICS:
-        return False
-    # 경제 토픽으로 분류됐어도 제목/본문에 비경제 키워드가 지배적이면 비경제
-    text = (title + " " + content[:500]).lower()
-    hits = sum(1 for kw in _NON_ECON_OVERRIDES if kw in text)
-    return hits < 2  # 비경제 키워드 2개 이상이면 비경제로 판정
-
-
 async def extract_and_save(
     conn: asyncpg.Connection,
     embedder: Embedder,
