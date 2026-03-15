@@ -15,7 +15,7 @@
 
 ```mermaid
 flowchart TD
-    A[메르 네이버 블로그<br>한국 경제 블로그] -->|RSS / 스크래핑| B[mer_monitor]
+    A[메르 네이버 블로그] -->|RSS / 스크래핑| B[mer_monitor]
     B --> C[(PostgreSQL<br>+ pgvector)]
 
     subgraph 배치 파이프라인
@@ -30,7 +30,7 @@ flowchart TD
     subgraph 하이브리드 검색
         HS1[BM25 인덱스<br>kiwipiepy + rank_bm25]
         HS2[벡터 인덱스<br>pgvector HNSW]
-        HS1 & HS2 -->|RRF 융합 α=0.4| HS3[HybridSearcher]
+        HS1 & HS2 -->|RRF 융합 α=0.6| HS3[HybridSearcher]
     end
 
     HS3 --> C
@@ -195,7 +195,7 @@ python -m src.eval.eval_runner --mode full --k 5
 | 임베딩 | Vertex AI `text-multilingual-embedding-002` (1024차원) |
 | 벡터 DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
-| 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.4) |
+| 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
 | 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
 | 전송 | python-telegram-bot 21 |
 | 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, 네이버 금융 |
@@ -339,7 +339,7 @@ mer-insight-pipeline/
 │   ├── search/                   # 검색 인프라
 │   │   ├── bm25_index.py         # BM25 + kiwipiepy 토크나이저 + pickle 캐시
 │   │   ├── vector_index.py       # pgvector HNSW 래퍼 (1024차원)
-│   │   ├── hybrid.py             # RRF 융합 (α=0.4)
+│   │   ├── hybrid.py             # RRF 융합 (α=0.6)
 │   │   └── experiment.py         # A/B 실험: 벡터 vs BM25 vs 하이브리드
 │   ├── eval/                     # 평가 파이프라인
 │   │   ├── eval_runner.py        # 메인 실행기 (--mode retrieval_only | full)

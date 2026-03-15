@@ -50,7 +50,7 @@ class HybridSearcher:
         conn: asyncpg.Connection,
         embedder: Embedder,
         bm25_index: BM25Index,
-        alpha: float = 0.4,
+        alpha: float = 0.6,
     ):
         self._vector = VectorIndex(conn, embedder)
         self._bm25 = bm25_index

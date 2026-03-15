@@ -30,7 +30,7 @@ flowchart TD
     subgraph Hybrid Search
         HS1[BM25 Index<br>kiwipiepy + rank_bm25]
         HS2[Vector Index<br>pgvector HNSW]
-        HS1 & HS2 -->|RRF fusion α=0.4| HS3[HybridSearcher]
+        HS1 & HS2 -->|RRF fusion α=0.6| HS3[HybridSearcher]
     end
 
     HS3 --> C
@@ -195,7 +195,7 @@ Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each q
 | Embeddings | Vertex AI `text-multilingual-embedding-002` (1024 dims) |
 | Vector DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
-| Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.4) |
+| Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
 | Scheduler | GCP Cloud Scheduler + Cloud Run Jobs |
 | Delivery | python-telegram-bot 21 |
 | Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, Naver Finance |
@@ -344,7 +344,7 @@ mer-insight-pipeline/
 │   ├── search/                   # Search Infrastructure
 │   │   ├── bm25_index.py         # BM25 with kiwipiepy tokenizer + pickle cache
 │   │   ├── vector_index.py       # pgvector HNSW wrapper (1024-dim)
-│   │   ├── hybrid.py             # RRF fusion (α=0.4)
+│   │   ├── hybrid.py             # RRF fusion (α=0.6)
 │   │   └── experiment.py         # A/B comparison: vector vs BM25 vs hybrid
 │   ├── eval/                     # Eval Pipeline
 │   │   ├── eval_runner.py        # Main runner (--mode retrieval_only | full)
