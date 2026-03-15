@@ -119,7 +119,7 @@ def load_monthly_trends():
 
 
 @st.cache_data(ttl=60)
-def load_recent_verified(limit: int = 20):
+def load_all_predictions():
     async def _():
         conn = await _get_conn()
         rows = await conn.fetch("""
@@ -130,10 +130,9 @@ def load_recent_verified(limit: int = 20):
             FROM mer_predictions mp
             LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
             LEFT JOIN mer_posts p ON p.id = mi.post_id
-            WHERE mp.is_correct IS NOT NULL
-            ORDER BY mp.verification_date DESC
-            LIMIT $1
-        """, limit)
+            WHERE mp.skipped_at IS NULL
+            ORDER BY mp.prediction_date DESC
+        """)
         await conn.close()
         return [dict(r) for r in rows]
     return run_async(_())
@@ -267,35 +266,70 @@ else:
 
 st.divider()
 
-# ─── 4. 최근 검증된 예측 ─────────────────────────────────────────────────────
+# ─── 4. 전체 예측 목록 ────────────────────────────────────────────────────────
 
-st.subheader("최근 검증된 예측")
+st.subheader("전체 예측 목록")
 
-recent_limit = st.slider("표시 건수", 10, 50, 20)
-recent = load_recent_verified(recent_limit)
+all_preds = load_all_predictions()
 
-if recent:
-    for r in recent:
-        verdict = "CORRECT" if r["is_correct"] else "INCORRECT"
-        icon = "✅" if r["is_correct"] else "❌"
+if all_preds:
+    # 필터
+    col_f1, col_f2, col_f3 = st.columns(3)
+    verdict_filter = col_f1.selectbox("판정", ["전체", "CORRECT", "INCORRECT", "PENDING"])
+    topics = sorted({classify_topic(p["prediction_text"]) for p in all_preds})
+    topic_filter = col_f2.selectbox("주제", ["전체"] + topics)
+    direction_filter = col_f3.selectbox("방향", ["전체", "up", "down", "neutral"])
+
+    filtered = all_preds
+    if verdict_filter != "전체":
+        if verdict_filter == "PENDING":
+            filtered = [p for p in filtered if p["is_correct"] is None]
+        elif verdict_filter == "CORRECT":
+            filtered = [p for p in filtered if p["is_correct"] is True]
+        else:
+            filtered = [p for p in filtered if p["is_correct"] is False]
+    if topic_filter != "전체":
+        filtered = [p for p in filtered if classify_topic(p["prediction_text"]) == topic_filter]
+    if direction_filter != "전체":
+        filtered = [p for p in filtered if p["predicted_direction"] == direction_filter]
+
+    st.caption(f"{len(filtered):,}건 표시 (전체 {len(all_preds):,}건)")
+
+    # 페이지네이션
+    PAGE_SIZE = 20
+    total_pages = max(1, (len(filtered) + PAGE_SIZE - 1) // PAGE_SIZE)
+    page = st.number_input("페이지", min_value=1, max_value=total_pages, value=1)
+    page_items = filtered[(page - 1) * PAGE_SIZE : page * PAGE_SIZE]
+
+    for r in page_items:
+        if r["is_correct"] is True:
+            icon, verdict = "✅", "CORRECT"
+        elif r["is_correct"] is False:
+            icon, verdict = "❌", "INCORRECT"
+        else:
+            icon, verdict = "⏳", "PENDING"
+
         pred_date = r["prediction_date"].strftime("%Y-%m-%d") if r["prediction_date"] else ""
         asset = r["target_asset"] or ""
         short = (r["prediction_text"] or "")[:50]
         label = f"{icon} [{pred_date}] {asset} — {short}"
 
         with st.expander(label):
-            st.markdown(f"**예측 내용**")
             pred_text = r["prediction_text"] or ""
             if r.get("post_url"):
                 st.markdown(f"{pred_text}\n\n🔗 [원글 보기]({r['post_url']})")
             else:
                 st.write(pred_text)
 
-            st.markdown(f"**판정: {verdict}** | 방향: `{r['predicted_direction']}` | "
-                        f"검증일: {r['verification_date']}")
+            parts = [f"**판정: {verdict}**", f"방향: `{r['predicted_direction']}`"]
+            if r.get("verification_date"):
+                parts.append(f"검증일: {r['verification_date']}")
+            st.markdown(" | ".join(parts))
 
             outcome = r.get("actual_outcome") or ""
             if outcome:
                 st.markdown(f"**근거:** {outcome}")
+
+    st.caption(f"페이지 {page}/{total_pages}")
 else:
-    st.info("검증된 예측이 없습니다.")
+    st.info("예측 데이터가 없습니다.")
