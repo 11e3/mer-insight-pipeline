@@ -53,7 +53,7 @@ bm25 = build_bm25(insights) if insights else None
 
 page = st.sidebar.selectbox(
     "페이지",
-    ["About", "인사이트 검색", "예측 정확도", "최근 분석"],
+    ["About", "인사이트 검색", "예측 정확도", "예측 대시보드", "최근 분석"],
 )
 
 if data.get("exported_at"):
@@ -167,6 +167,23 @@ elif page == "예측 정확도":
 | `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
 | `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
         """
+    )
+
+# ── 예측 대시보드 (Full) ──────────────────────────────────────────────────────
+
+elif page == "예측 대시보드":
+    st.title("예측 검증 대시보드")
+    st.markdown(
+        "주제별 적중률, 월별 추이, 최근 검증 내역을 포함한 전체 예측 대시보드는 "
+        "DB 연결이 필요합니다."
+    )
+    st.code("streamlit run src/dashboard/prediction_dashboard.py", language="bash")
+    st.markdown(
+        "**포함 항목:**\n"
+        "1. 전체 요약 — 총 예측 수, CORRECT/INCORRECT/PENDING 비율 (파이 차트)\n"
+        "2. 주제별 적중률 — 금리, 환율, 부동산, 주식, 원자재 분류별 accuracy\n"
+        "3. 월별 추이 — 예측 수 + 적중률 변화 라인 차트\n"
+        "4. 최근 검증 테이블 — 날짜, 예측 내용, 판정, 근거 요약"
     )
 
 # ── 최근 분석 ─────────────────────────────────────────────────────────────────

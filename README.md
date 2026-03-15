@@ -1,8 +1,8 @@
 # mer-insight-pipeline
 
-**mer-insight-pipeline** monitors [Mer's Korean finance blog](https://blog.naver.com/ranto28), extracts structured insights from 2,193 posts using the Claude Batch API, and delivers citation-grounded analysis to Telegram subscribers within minutes of each new post.
+**mer-insight-pipeline** automates financial prediction tracking and verification using Korean macro data (FRED, BOK ECOS, DART, Naver Finance) with LLM-powered analysis.
 
-Every component is production-wired: a hybrid retriever backed by 25,090 indexed insights, an LLM agent loop that decides its own tool calls, a hallucination guard that blocks uncited claims, a daily prediction verification pipeline (Claude Haiku as judge, 5,368 tracked predictions), per-call cost/latency tracing, and an eval harness with an LLM judge — all running on PostgreSQL + pgvector with no vector-DB vendor lock-in.
+[Mer (ranto28)](https://blog.naver.com/ranto28), a Korean finance blogger, publishes macro predictions across 2,193 posts. This pipeline extracts those predictions, collects real market data from 6 external sources, and uses Claude Haiku as an automated judge to verify each prediction daily — 5,368 predictions tracked so far. The infrastructure includes a hybrid retriever (25,090 indexed insights), an LLM agent loop, a hallucination guard, hierarchical report generation, and per-call cost/latency tracing — all on PostgreSQL + pgvector with no vector-DB vendor lock-in.
 
 **~$0.15 per post** (4 agent iterations avg) · **$4.50/month** at 30 posts/month
 
@@ -85,54 +85,65 @@ flowchart TD
 
 ---
 
-## Hybrid Search — Experiment Results
+## Prediction Verification Pipeline
 
-Combining BM25 (keyword) and vector (embedding) retrieval via RRF improves ranking quality over either method alone.
+Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge.
 
-Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB. Results reflect actual retrieval quality against real query texts.
+**Context fed to Claude per batch:**
 
-```bash
-python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
-```
+| Source | What's included |
+|--------|----------------|
+| Monthly macro summary | KOSPI hi/lo/avg, USD/KRW, WTI, US10Y, Fed rate, VIX, BTC — from FRED + BOK ECOS |
+| Naver Finance stocks | Monthly H/L/close for historical data + daily close for recent 90 days (10 major equities) |
+| DART filings + news | Corporate events collected since the oldest pending prediction date |
+| Auto-analyses | Mer post analyses from the same period |
 
-**Alpha ablation** — N=200 queries, K=5:
+**Verdicts**
 
-<!-- AUTO:alpha_ablation -->
-| α (BM25 weight) | Precision@5 | Recall@5 | MRR |
-|----------------|-------------|----------|-----|
-| α=0.0 | 0.20 | 0.99 | 0.99 |
-| α=0.2 | 0.20 | 0.99 | 0.99 |
-| α=0.3 | 0.20 | 0.99 | 0.99 |
-| α=0.4 | 0.20 | 0.99 | 0.99 |
-| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
-| α=0.8 | 0.20 | 0.99 | 0.96 |
-| α=1.0 | 0.20 | 0.98 | 0.94 |
+| Verdict | Condition |
+|---------|-----------|
+| `CORRECT` | Predicted outcome confirmed by context or Claude's knowledge |
+| `INCORRECT` | Predicted outcome contradicted by evidence |
+| `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
 
-Best α=0.6 across all metrics (Precision@5=0.20).
+Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predictions per Haiku call; the daily 20:00 run processes all open predictions before the daily report is generated.
 
 ```bash
-python -m src.search.experiment --mode ablation --k 5
+# One-time backlog clearance
+gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
 ```
-<!-- END:alpha_ablation -->
 
-Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model used for DB indexing), N=200 queries from `gold_extended.json`.
+**Live accuracy** (auto-updated on every push via CI):
 
-**Key observations**:
-- Hybrid (α=0.4–0.6) outperforms both pure methods: +4.8% Recall and +3.0% MRR vs. vector-only
-- α=0.6 peaks across all three metrics — slightly more BM25-weight than the production default of 0.4
-- Pure BM25 (α=1.0) outperforms pure vector on MRR (0.935 vs 0.908): Korean finance text rewards exact keyword matching (specific tickers, rates, dates) more than semantic paraphrasing alone
+<!-- AUTO:prediction_accuracy -->
+<!-- END:prediction_accuracy -->
 
-**Why they differ**
+---
 
-- **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
-- **BM25** pinpoints specific numbers and proper nouns, but fails on synonyms and varied phrasing
-- **RRF** combines both: each method covers the blind spots of the other
+## Macro Data Pipeline
+
+The pipeline collects financial and economic data from 6 external sources on scheduled intervals, stored in `macro_daily` and `events` tables for prediction verification and report generation.
+
+| Source | Data | Schedule | Module |
+|--------|------|----------|--------|
+| FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment | Hourly | `src/ingest/load_macro.py` |
+| BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate | Hourly | `src/ingest/load_macro.py` |
+| Naver Finance | Daily close prices for 10 major Korean stocks (Samsung Electronics, SK Hynix, Hyundai Motor, Kia, LG Energy Solution, POSCO Holdings, Samsung SDI, Kakao, Naver, Celltrion) | On verification | `src/pipeline/prediction_verifier.py` |
+| DART | Corporate disclosure filings (사업보고서, 주요사항보고서, M&A, etc.) via RSS | Every 10 min, 8–18h | `src/pipeline/dart_collector.py` |
+| Fed / BOK RSS | Central bank press releases, rate decisions, monetary policy | Every 30 min | `src/pipeline/news_collector.py` |
+| Google News | Geopolitical events — sanctions, tariffs, trade war keywords | Every 30 min | `src/pipeline/news_collector.py` |
+
+Additional API keys supported in `config/settings.py` for future data sources: BLS (US labor statistics), MOLIT (Korea real estate), KOSIS (Korea trade statistics).
+
+All macro data feeds into two downstream consumers:
+1. **Prediction verification context** — monthly aggregates + recent 30-day daily values provided to Claude Haiku as evidence for judging predictions
+2. **Report generation fallback** — when sub-reports are missing, raw macro numbers (KOSPI, rates, VIX, trade balance) are used to generate commentary directly
 
 ---
 
 ## Agent Loop — Why Not a Fixed Prompt?
 
-The original pipeline ran a fixed prompt on every new post. The agent loop lets the LLM **decide what information it needs** and call tools in sequence.
+When a new Mer blog post arrives, the agent loop lets the LLM **decide what information it needs** and call tools in sequence — rather than running a fixed prompt on every post.
 
 ```
 New post received
@@ -188,38 +199,48 @@ Citations are verified by the Hallucination Guard before delivery.
 
 ---
 
-## Prediction Verification Pipeline
+## Search Infrastructure
 
-Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge.
+Hybrid BM25 + vector search serves as the retrieval backbone for the agent loop and context assembly.
 
-**Context fed to Claude per batch:**
-
-| Source | What's included |
-|--------|----------------|
-| Monthly macro summary | KOSPI hi/lo/avg, USD/KRW, WTI, US10Y, Fed rate, VIX, BTC — from FRED + BOK ECOS |
-| Naver Finance stocks | Monthly H/L/close for historical data + daily close for recent 90 days (10 major equities) |
-| DART filings + news | Corporate events collected since the oldest pending prediction date |
-| Auto-analyses | Mer post analyses from the same period |
-
-**Verdicts**
-
-| Verdict | Condition |
-|---------|-----------|
-| `CORRECT` | Predicted outcome confirmed by context or Claude's knowledge |
-| `INCORRECT` | Predicted outcome contradicted by evidence |
-| `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
-
-Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predictions per Haiku call; the daily 20:00 run processes all open predictions before the daily report is generated.
+Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB. Results reflect actual retrieval quality against real query texts.
 
 ```bash
-# One-time backlog clearance
-gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
+python -m src.search.experiment --mode ablation --dataset eval_data/gold_extended.json --k 5
 ```
 
-**Live accuracy** (auto-updated on every push via CI):
+**Alpha ablation** — N=200 queries, K=5:
 
-<!-- AUTO:prediction_accuracy -->
-<!-- END:prediction_accuracy -->
+<!-- AUTO:alpha_ablation -->
+| α (BM25 weight) | Precision@5 | Recall@5 | MRR |
+|----------------|-------------|----------|-----|
+| α=0.0 | 0.20 | 0.99 | 0.99 |
+| α=0.2 | 0.20 | 0.99 | 0.99 |
+| α=0.3 | 0.20 | 0.99 | 0.99 |
+| α=0.4 | 0.20 | 0.99 | 0.99 |
+| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
+| α=0.8 | 0.20 | 0.99 | 0.96 |
+| α=1.0 | 0.20 | 0.98 | 0.94 |
+
+Best α=0.6 across all metrics (Precision@5=0.20).
+
+```bash
+python -m src.search.experiment --mode ablation --k 5
+```
+<!-- END:alpha_ablation -->
+
+Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model as DB indexing), N=200 queries from `gold_extended.json`.
+
+**Key observations**:
+- Hybrid (α=0.4–0.6) outperforms both pure methods: +4.8% Recall and +3.0% MRR vs. vector-only
+- α=0.6 peaks across all three metrics — slightly more BM25-weight than the production default of 0.4
+- Pure BM25 (α=1.0) outperforms pure vector on MRR (0.935 vs 0.908): Korean finance text rewards exact keyword matching (specific tickers, rates, dates) more than semantic paraphrasing alone
+
+**Why they differ**
+
+- **Vector** excels at semantic paraphrasing — "rate hike hurts real estate" ↔ "property values are inversely correlated with interest rates" — but dilutes rare keywords like "4.6%", "30Y", "SVB" in embedding space
+- **BM25** pinpoints specific numbers and proper nouns, but fails on synonyms and varied phrasing
+- **RRF** combines both: each method covers the blind spots of the other
 
 ---
 
@@ -471,6 +492,12 @@ streamlit run src/dashboard/observability.py   # http://localhost:8501
 # Production: Cloud Run Service (see docs/gcp_setup.md)
 ```
 
+### Prediction Dashboard
+
+```bash
+streamlit run src/dashboard/prediction_dashboard.py   # http://localhost:8501
+```
+
 ### Run Eval
 
 ```bash
@@ -511,7 +538,7 @@ mer-insight-pipeline/
 │   │   ├── tools.py              # 5 tools: search / contradiction / novelty / history / compare
 │   │   ├── prompts.py            # System prompt with citation tagging instructions
 │   │   └── state.py              # Message history & iteration state
-│   ├── search/                   # Hybrid Search
+│   ├── search/                   # Search Infrastructure
 │   │   ├── bm25_index.py         # BM25 with kiwipiepy tokenizer + pickle cache
 │   │   ├── vector_index.py       # pgvector HNSW wrapper
 │   │   ├── hybrid.py             # RRF fusion (α=0.4)
@@ -536,14 +563,14 @@ mer-insight-pipeline/
 │   │   └── realtime_extractor.py # Real-time insight extraction (Haiku)
 │   ├── ingest/
 │   │   ├── load_posts.py
-│   │   ├── load_macro.py         # FRED / BOK ECOS (yfinance removed — GCP blocked)
+│   │   ├── load_macro.py         # FRED / BOK ECOS macro data collection
 │   │   ├── load_bls.py
 │   │   ├── load_realestate.py
 │   │   └── load_trade.py
 │   ├── pipeline/
 │   │   ├── event_dispatcher.py   # Main runtime (APScheduler) + agent integration
-│   │   ├── mer_monitor.py        # Blog RSS watcher
-│   │   ├── dart_collector.py     # DART filings (Korean stock exchange)
+│   │   ├── mer_monitor.py        # Blog RSS watcher (primary data source)
+│   │   ├── dart_collector.py     # DART filings (Korean corporate disclosure)
 │   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
 │   │   ├── context_assembler.py  # RAG context builder
 │   │   ├── analysis_generator.py # Claude analysis (fallback)
@@ -553,8 +580,8 @@ mer-insight-pipeline/
 │   │   ├── telegram_bot.py       # Two-tier Telegram delivery
 │   │   └── formatters.py
 │   └── dashboard/
-│       ├── app.py                # Main dashboard
-│       └── observability.py      # LLM cost / latency / error dashboard
+│       ├── observability.py      # LLM cost / latency / error dashboard
+│       └── prediction_dashboard.py # Prediction accuracy dashboard
 ├── eval_data/
 │   └── gold.json                 # Gold dataset: 5 queries × 5 relevant insight IDs
 ├── results/                      # Eval reports & experiment outputs
