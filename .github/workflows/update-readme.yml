@@ -36,18 +36,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install test dependencies
-        run: pip install pytest pytest-asyncio anyio anthropic asyncpg pytest-cov requests
-
-      - name: Diagnose imports
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -c "import pytest; print('pytest', pytest.__version__)"
-          python -c "import pytest_asyncio; print('pytest-asyncio', pytest_asyncio.__version__)"
-          python -c "import pytest_cov; print('pytest-cov OK')"
-          python -c "from src.delivery.formatters import _esc; print('formatters OK')"
-          python -c "from scripts.update_readme import update_section; print('update_readme OK')"
-          python -c "import os; [os.environ.setdefault(k,'test') for k in ('DATABASE_URL','ANTHROPIC_API_KEY','GCP_PROJECT_ID','TELEGRAM_BOT_TOKEN','TELEGRAM_TIER1_CHAT_ID','DART_API_KEY','BOK_API_KEY','NAVER_CLIENT_ID','NAVER_CLIENT_SECRET')]; from src.pipeline.prediction_verifier import PredictionVerifier; print('prediction_verifier OK')"
-        continue-on-error: true
+        run: pip install pytest pytest-asyncio anyio anthropic asyncpg pytest-cov requests python-dotenv
 
       - name: Run unit tests
         run: pytest tests/ -v --ignore=tests/test_integration_dispatcher.py --cov=src --cov-report=xml --tb=short
