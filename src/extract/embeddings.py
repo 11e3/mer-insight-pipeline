@@ -1,6 +1,6 @@
 """
 mer_insights 테이블의 embedding 컬럼 채우기.
-Vertex AI text-multilingual-embedding-002 사용 (768dim).
+intfloat/multilingual-e5-large (1024-dim) 사용.
 
 Usage:
     python -m src.extract.embeddings
@@ -11,12 +11,12 @@ import asyncpg
 from tqdm import tqdm
 
 from config.settings import DATABASE_URL, EMBEDDING_BATCH_SIZE
-from src.extract.vertex_embedder import VertexEmbedder, vec_str
+from src.extract.vertex_embedder import get_embedder, vec_str
 
 
 async def fill_embeddings():
     conn = await asyncpg.connect(DATABASE_URL)
-    embedder = VertexEmbedder()
+    embedder = get_embedder()
 
     rows = await conn.fetch("""
         SELECT id, content FROM mer_insights

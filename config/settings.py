@@ -47,7 +47,8 @@ GCP_LOCATION   = os.environ.get("GCP_LOCATION", "us-central1")
 
 # ─── 임베딩 ───────────────────────────────────────────────────────────────────
 VERTEX_EMBEDDING_MODEL = "text-multilingual-embedding-002"
-EMBEDDING_DIM          = 768
+LOCAL_EMBEDDING_MODEL  = "intfloat/multilingual-e5-large"
+EMBEDDING_DIM          = 1024   # DB 실제 차원 (intfloat/multilingual-e5-large)
 EMBEDDING_BATCH_SIZE   = 32
 
 # ─── 데이터 경로 ──────────────────────────────────────────────────────────────

@@ -6,13 +6,13 @@ Returns: [(insight_id, similarity_score), ...] top_k 개
 
 import asyncpg
 
-from src.extract.vertex_embedder import VertexEmbedder, vec_str
+from src.extract.vertex_embedder import Embedder, vec_str
 
 
 class VectorIndex:
     """pgvector HNSW 코사인 유사도 검색."""
 
-    def __init__(self, conn: asyncpg.Connection, embedder: VertexEmbedder):
+    def __init__(self, conn: asyncpg.Connection, embedder: Embedder):
         self.conn = conn
         self.embedder = embedder
 

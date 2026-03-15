@@ -17,13 +17,13 @@ import asyncpg
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from src.pipeline.types import EnrichResult, Post
-from src.extract.vertex_embedder import VertexEmbedder
+from src.extract.vertex_embedder import Embedder
 
 log = logging.getLogger(__name__)
 
 
 class PostEnricher:
-    def __init__(self, conn: asyncpg.Connection, embedder: VertexEmbedder):
+    def __init__(self, conn: asyncpg.Connection, embedder: Embedder):
         self.conn = conn
         self.embedder = embedder
         self._claude = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)

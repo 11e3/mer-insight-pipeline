@@ -91,6 +91,18 @@ class TelegramBot:
                 return False
 
 
+    async def send_alert(self, message: str) -> bool:
+        """크리티컬 에러 알림을 tier1 채널로 발송."""
+        if not self.bot:
+            log.warning(f"[텔레그램 비활성화] alert: {message[:80]}")
+            return False
+        chat_id = TELEGRAM_TIER1_CHAT_ID
+        if not chat_id:
+            return False
+        text = f"[ALERT] pipeline error\n\n{message}"
+        return await self._send(chat_id, text)
+
+
 def _split_message(text: str) -> list[str]:
     if len(text) <= MAX_MESSAGE_LEN:
         return [text]

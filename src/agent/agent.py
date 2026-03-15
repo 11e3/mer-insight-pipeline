@@ -16,7 +16,7 @@ import anthropic
 import asyncpg
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_SONNET
-from src.extract.vertex_embedder import VertexEmbedder
+from src.extract.vertex_embedder import Embedder
 from src.search.bm25_index import BM25Index
 from src.agent.prompts import AGENT_SYSTEM_PROMPT
 from src.agent.state import AgentState
@@ -37,7 +37,7 @@ class MerAgent:
     def __init__(
         self,
         conn: asyncpg.Connection,
-        embedder: VertexEmbedder,
+        embedder: Embedder,
         bm25_index: BM25Index,
         max_iterations: int = _MAX_ITERATIONS,
     ):

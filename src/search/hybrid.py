@@ -12,7 +12,7 @@ Hybrid Search: BM25 + 벡터 검색 → Reciprocal Rank Fusion (RRF)
 
 import asyncpg
 
-from src.extract.vertex_embedder import VertexEmbedder
+from src.extract.vertex_embedder import Embedder
 from src.search.bm25_index import BM25Index
 from src.search.vector_index import VectorIndex
 
@@ -48,7 +48,7 @@ class HybridSearcher:
     def __init__(
         self,
         conn: asyncpg.Connection,
-        embedder: VertexEmbedder,
+        embedder: Embedder,
         bm25_index: BM25Index,
         alpha: float = 0.4,
     ):
@@ -114,7 +114,7 @@ async def hybrid_search(
     query: str,
     top_k: int,
     conn: asyncpg.Connection,
-    embedder: VertexEmbedder,
+    embedder: Embedder,
     bm25_index: BM25Index,
     alpha: float = 0.4,
 ) -> list[dict]:
