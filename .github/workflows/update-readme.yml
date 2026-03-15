@@ -36,7 +36,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install test dependencies
-        run: pip install pytest pytest-asyncio anyio anthropic asyncpg pytest-cov
+        run: pip install pytest pytest-asyncio anyio anthropic asyncpg pytest-cov requests
 
       - name: Run unit tests
         run: pytest tests/ -v --ignore=tests/test_integration_dispatcher.py --cov=src --cov-report=xml
