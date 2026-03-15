@@ -88,7 +88,7 @@ Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=40` pred
 | FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment | Daily (before verification) | `src/ingest/load_macro.py` |
 | BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate | Daily (before verification) | `src/ingest/load_macro.py` |
 | Naver Finance | Daily close prices for 10 major Korean stocks | On verification | `src/pipeline/prediction_verifier.py` |
-| DART | Corporate disclosure filings via RSS | Every 10 min, 8–18h (weekdays) | `src/pipeline/dart_collector.py` |
+| DART | Corporate disclosure filings via RSS | Daily (before verification) | `src/pipeline/dart_collector.py` |
 | Fed / BOK RSS | Central bank press releases, rate decisions | Daily (before verification) | `src/pipeline/news_collector.py` |
 | Google News | Geopolitical events — sanctions, tariffs, trade war keywords | Daily (before verification) | `src/pipeline/news_collector.py` |
 
@@ -179,8 +179,7 @@ python -m src.pipeline.event_dispatcher   # always-on mode
 | Job | Schedule |
 |-----|----------|
 | `mer_check` | every 5 min |
-| `dart_check` | every 10 min, 8–18h (weekdays) |
-| `verify_predictions` | 20:00 daily (includes macro/news collection) |
+| `verify_predictions` | 20:00 daily (DART + macro + news collection, then verification) |
 
 ### Dashboard
 

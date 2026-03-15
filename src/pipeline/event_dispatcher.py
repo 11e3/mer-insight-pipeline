@@ -63,15 +63,12 @@ class EventDispatcher:
 
         job 값:
           mer_check          — 메르 신규 글 확인 + 예측 추출
-          dart_check         — DART 공시 확인
-          verify_predictions — 매크로/뉴스 수집 + 예측 자동 검증
+          verify_predictions — DART/매크로/뉴스 수집 + 예측 자동 검증
         """
         await self._init()
         try:
             if job == "mer_check":
                 await self._check_mer_new_posts()
-            elif job == "dart_check":
-                await self._check_dart_filings()
             elif job == "verify_predictions":
                 await self._collect_and_verify()
             else:
@@ -88,11 +85,7 @@ class EventDispatcher:
         self.scheduler.add_job(
             self._check_mer_new_posts, "interval", minutes=5, id="mer"
         )
-        self.scheduler.add_job(
-            self._check_dart_filings, "cron",
-            minute="*/10", hour="8-18", day_of_week="mon-fri", id="dart"
-        )
-        # 예측 검증: 매일 20:00 (매크로/뉴스 수집 포함)
+        # 예측 검증: 매일 20:00 (DART/매크로/뉴스 수집 포함)
         self.scheduler.add_job(
             self._collect_and_verify, "cron",
             hour=20, minute=0, id="verify_predictions"
@@ -184,8 +177,9 @@ class EventDispatcher:
     # --- 데이터 수집 + 예측 검증 (일 1회) ---
 
     async def _collect_and_verify(self):
-        """매크로/뉴스 수집 후 예측 검증 — 하루 1회 실행."""
-        log.info("데이터 수집 시작 (매크로 + 뉴스)")
+        """DART/매크로/뉴스 수집 후 예측 검증 — 하루 1회 실행."""
+        log.info("데이터 수집 시작 (DART + 매크로 + 뉴스)")
+        await self._check_dart_filings()
         await self._update_macro_data()
         await self._check_macro_alerts()
         await self._check_news()

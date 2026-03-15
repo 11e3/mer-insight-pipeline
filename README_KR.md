@@ -88,7 +88,7 @@ flowchart TD
 | FRED API | VIX, 미국 10년물 국채, WTI 원유, BTC/USD, 기준금리, CPI YoY, 실업률 | 매일 (검증 전) | `src/ingest/load_macro.py` |
 | 한국은행 ECOS | USD/KRW, KOSPI, KOSDAQ, 한국 기준금리 | 매일 (검증 전) | `src/ingest/load_macro.py` |
 | 네이버 금융 | 주요 한국 주식 10종목 일간 종가 | 검증 시 | `src/pipeline/prediction_verifier.py` |
-| DART | 기업 공시 (사업보고서, 주요사항보고서 등) RSS | 매 10분, 8–18시 평일 | `src/pipeline/dart_collector.py` |
+| DART | 기업 공시 (사업보고서, 주요사항보고서 등) RSS | 매일 (검증 전) | `src/pipeline/dart_collector.py` |
 | 연준 / 한국은행 RSS | 중앙은행 보도자료, 금리 결정 | 매일 (검증 전) | `src/pipeline/news_collector.py` |
 | Google News | 지정학 이벤트 — 제재, 관세, 무역전쟁 키워드 | 매일 (검증 전) | `src/pipeline/news_collector.py` |
 
@@ -179,8 +179,7 @@ python -m src.pipeline.event_dispatcher   # 상시 모드
 | 잡 | 스케줄 |
 |----|--------|
 | `mer_check` | 매 5분 |
-| `dart_check` | 매 10분, 8–18시 (평일) |
-| `verify_predictions` | 매일 20:00 (매크로/뉴스 수집 포함) |
+| `verify_predictions` | 매일 20:00 (DART + 매크로 + 뉴스 수집 후 검증) |
 
 ### 대시보드
 
