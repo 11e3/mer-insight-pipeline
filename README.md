@@ -81,12 +81,7 @@ Every `prediction`-type insight extracted from Mer's posts is stored in `mer_pre
 | `INCORRECT` | Predicted outcome contradicted by evidence |
 | `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
 
-Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predictions per Haiku call; the daily 20:00 run processes all open predictions before the daily report is generated.
-
-```bash
-# One-time backlog clearance
-gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
-```
+Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predictions per Haiku call; the daily 20:00 run processes all open predictions.
 
 **Live accuracy** (auto-updated on every push via CI):
 

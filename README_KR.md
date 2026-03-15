@@ -15,7 +15,7 @@
 
 ```mermaid
 flowchart TD
-    A[네이버 블로그<br>한국 경제 블로그] -->|RSS / 스크래핑| B[mer_monitor]
+    A[메르 네이버 블로그<br>한국 경제 블로그] -->|RSS / 스크래핑| B[mer_monitor]
     B --> C[(PostgreSQL<br>+ pgvector)]
 
     subgraph 배치 파이프라인
@@ -81,12 +81,7 @@ flowchart TD
 | `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
 | `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
 
-만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 일간 리포트 생성 전에 전체 미검증 예측을 검증합니다.
-
-```bash
-# 과거 적체 1회 소급 처리
-gcloud run jobs execute report-generator --args="--job,verify_predictions" --region=asia-northeast3
-```
+만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 전체 미검증 예측을 검증합니다.
 
 **실시간 정확도** (CI 푸시마다 자동 업데이트):
 
