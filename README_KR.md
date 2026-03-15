@@ -277,8 +277,6 @@ docker build -t $IMAGE . && docker push $IMAGE
 
 Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 
-| 잡 | 스케줄 |
-|----|--------|
 <!-- AUTO:jobs -->
 | 잡 | 스케줄 |
 |----|--------|

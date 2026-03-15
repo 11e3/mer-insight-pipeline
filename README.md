@@ -282,8 +282,6 @@ docker build -t $IMAGE . && docker push $IMAGE
 
 Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 
-| Job | Schedule |
-|-----|----------|
 <!-- AUTO:jobs -->
 | Job | Schedule |
 |-----|----------|
