@@ -6,7 +6,6 @@ Cloud Run Job 진입점.
 Usage (로컬):
     python -m scripts.run_job --job mer_check
     python -m scripts.run_job --job dart_check
-    python -m scripts.run_job --job macro_check
     python -m scripts.run_job --job verify_predictions
 
 Cloud Run Job 배포 시 --args 에 해당 값 전달.
@@ -25,7 +24,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 VALID_JOBS = {
-    "mer_check", "dart_check", "macro_check",
+    "mer_check", "dart_check",
     "verify_predictions",
 }
 
