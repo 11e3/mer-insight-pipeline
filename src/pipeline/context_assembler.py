@@ -10,7 +10,7 @@ import anthropic
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from config.prompts import ENTITY_EXTRACT_PROMPT
-from src.extract.vertex_embedder import VertexEmbedder, vec_str
+from src.extract.vertex_embedder import Embedder, vec_str
 from src.pipeline.event_types import AnalysisConfig
 
 client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
@@ -18,7 +18,7 @@ client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
 class ContextAssembler:
 
-    def __init__(self, conn: asyncpg.Connection, embedder: VertexEmbedder):
+    def __init__(self, conn: asyncpg.Connection, embedder: Embedder):
         self.conn = conn
         self.embedder = embedder
 

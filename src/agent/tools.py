@@ -9,7 +9,7 @@ import logging
 
 import asyncpg
 
-from src.extract.vertex_embedder import VertexEmbedder
+from src.extract.vertex_embedder import Embedder
 from src.search.bm25_index import BM25Index
 from src.search.hybrid import HybridSearcher
 
@@ -131,7 +131,7 @@ class ToolExecutor:
     def __init__(
         self,
         conn: asyncpg.Connection,
-        embedder: VertexEmbedder,
+        embedder: Embedder,
         bm25_index: BM25Index,
     ):
         self._conn = conn

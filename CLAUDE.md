@@ -31,24 +31,14 @@ python -m scripts.run_job --job mer_check
 
 ## 핵심 Gotcha
 
-### DB 임베딩 차원 불일치
-- **`init_db.sql`에는 `vector(768)`로 표기되어 있지만 실제 DB 컬럼은 `vector(1024)`**
-- 2023년 `intfloat/multilingual-e5-large` (1024-dim)으로 인덱싱 후 스키마만 768로 변경됨 (DB 재생성 없음)
-- 실제 차원 확인: `SELECT vector_dims(embedding) FROM mer_insights WHERE embedding IS NOT NULL LIMIT 1`
-- `EMBEDDING_DIM = 768` (settings.py)은 **실제 DB와 다름** — 믿지 말 것
+### 임베딩 차원 (1024-dim 통일 완료)
+- DB, `init_db.sql`, `settings.py` 모두 **1024-dim** (`intfloat/multilingual-e5-large`)으로 통일
+- 기본 임베더: `LocalEmbedder` (`src/extract/local_embedder.py`) — GCP 불필요
+- `VertexEmbedder` (768-dim)는 GCP_PROJECT_ID 설정 시에만 사용 (DB 재인덱싱 필요)
+- `get_embedder()` 팩토리 함수가 환경에 따라 자동 선택
 
-### VertexEmbedder vs 실험용 임베더
-- `VertexEmbedder` (Vertex AI `text-multilingual-embedding-002`) → **768-dim** — 현재 DB(1024-dim)와 호환 불가
-- 검색 실험(`experiment.py`)은 `intfloat/multilingual-e5-large` (1024-dim) 사용 — DB와 일치
-- 프로덕션 재인덱싱 전까지 벡터 검색은 반드시 1024-dim 쿼리 필요
-
-### src/search/__init__.py eager import
-```python
-from src.search.hybrid import hybrid_search, HybridSearcher  # ← 이게 문제
-```
-`python -m src.search.experiment` 실행 시 `__init__.py`가 먼저 로드되면서
-`hybrid.py` → `vertex_embedder.py` → `config/settings.py` 체인이 실행됨.
-GCP 환경변수가 없으면 import 시점에 크래시. `GCP_PROJECT_ID`는 optional로 처리됨(`os.environ.get`).
+### src/search/__init__.py lazy import (수정 완료)
+`__getattr__` 기반 lazy import로 변경 — GCP 환경변수 없이도 `src.search.experiment` 등 실행 가능.
 
 ### scripts 실행 경로
 `scripts/` 하위 모듈은 **프로젝트 루트에서** 실행해야 함:

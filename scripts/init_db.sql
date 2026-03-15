@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS mer_insights (
     content         TEXT NOT NULL,
     structured_data JSONB,
     confidence      FLOAT CHECK (confidence BETWEEN 0 AND 1),
-    embedding       vector(768),
+    embedding       vector(1024),
     cluster_id      INTEGER,
     is_canonical    BOOLEAN,
     created_at      TIMESTAMP DEFAULT NOW()
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS events (
     title       TEXT,
     content     TEXT,
     event_date  TIMESTAMP,
-    embedding   vector(768),   -- 유사 이벤트 검색용
+    embedding   vector(1024),  -- 유사 이벤트 검색용
     created_at  TIMESTAMP DEFAULT NOW()
 );
 

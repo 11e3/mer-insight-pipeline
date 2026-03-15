@@ -16,7 +16,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from config.settings import (
     DATABASE_URL, MACRO_ALERT_THRESHOLDS,
 )
-from src.extract.vertex_embedder import VertexEmbedder, vec_str
+from src.extract.vertex_embedder import get_embedder, vec_str
 from src.pipeline.event_types import EventType, ANALYSIS_CONFIGS
 from src.pipeline.context_assembler import ContextAssembler
 from src.pipeline.analysis_generator import AnalysisGenerator
@@ -42,7 +42,7 @@ class EventDispatcher:
     def __init__(self):
         self.pool: asyncpg.Pool | None = None
         self.conn: asyncpg.Connection | None = None
-        self.embedder: VertexEmbedder | None = None
+        self.embedder = None
         self.assembler: ContextAssembler | None = None
         self.generator = AnalysisGenerator()
         self.telegram  = TelegramBot()
@@ -61,7 +61,7 @@ class EventDispatcher:
         from pathlib import Path
         self.pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
         self.conn = await self.pool.acquire()
-        self.embedder = VertexEmbedder()
+        self.embedder = get_embedder()
         self.assembler = ContextAssembler(self.conn, self.embedder)
         self.mer_monitor = MerMonitor(self.conn)
         self.dart = DartCollector(self.conn)
@@ -76,6 +76,13 @@ class EventDispatcher:
         self.mer_agent = MerAgent(self.conn, self.embedder, self.bm25_index)
         self.enricher = PostEnricher(self.conn, self.embedder)
         self.verifier = PredictionVerifier(self.conn)
+
+    async def _alert(self, msg: str) -> None:
+        """크리티컬 에러 텔레그램 알림. 알림 실패는 무시."""
+        try:
+            await self.telegram.send_alert(msg)
+        except Exception:
+            log.warning("텔레그램 에러 알림 발송 실패")
 
     async def run_job(self, job: str) -> None:
         """
@@ -199,6 +206,7 @@ class EventDispatcher:
                     log.info(f"  비경제 포스팅 ({topic}) — 알림 스킵")
         except Exception as e:
             log.error(f"메르 신규 글 체크 오류: {e}")
+            await self._alert(f"mer_check 실패: {e}")
 
     async def _process_mer_post_with_agent(self, post: Post):
         """MER 신규 포스트를 에이전트 루프로 분석. 실패 시 기존 방식 fallback."""
@@ -268,6 +276,7 @@ class EventDispatcher:
                 await self._process_event(event)
         except Exception as e:
             log.error(f"DART 공시 체크 오류: {e}")
+            await self._alert(f"dart_check 실패: {e}")
 
     async def _check_news(self):
         try:
@@ -283,6 +292,7 @@ class EventDispatcher:
                 await self._process_event(event)
         except Exception as e:
             log.error(f"뉴스 체크 오류: {e}")
+            await self._alert(f"news_check 실패: {e}")
 
     async def _update_macro_data(self):
         """오늘 매크로 데이터 갱신 (yfinance 장중 데이터)."""
@@ -292,6 +302,7 @@ class EventDispatcher:
             await load_macro(start=today, end=today)
         except Exception as e:
             log.error(f"매크로 업데이트 오류: {e}")
+            await self._alert(f"macro_update 실패: {e}")
 
     async def _check_macro_alerts(self):
         """전일 대비 급변 감지 → MACRO_ALERT 이벤트 생성."""
@@ -332,6 +343,7 @@ class EventDispatcher:
                 await self._process_event(event)
         except Exception as e:
             log.error(f"매크로 알림 체크 오류: {e}")
+            await self._alert(f"macro_alert 실패: {e}")
 
     # ─── 주기 리포트 ─────────────────────────────────────────────────────────
 
@@ -341,36 +353,42 @@ class EventDispatcher:
             log.info(f"예측 검증 완료: {resolved}건 확정")
         except Exception as e:
             log.error(f"예측 검증 오류: {e}")
+            await self._alert(f"verify_predictions 실패: {e}")
 
     async def _send_daily_report(self):
         try:
             await self.reporter.generate_daily()
         except Exception as e:
             log.error(f"일간 리포트 오류: {e}")
+            await self._alert(f"daily_report 실패: {e}")
 
     async def _send_weekly_report(self):
         try:
             await self.reporter.generate_weekly()
         except Exception as e:
             log.error(f"주간 리포트 오류: {e}")
+            await self._alert(f"weekly_report 실패: {e}")
 
     async def _send_monthly_report(self):
         try:
             await self.reporter.generate_monthly()
         except Exception as e:
             log.error(f"월간 리포트 오류: {e}")
+            await self._alert(f"monthly_report 실패: {e}")
 
     async def _send_quarterly_report(self):
         try:
             await self.reporter.generate_quarterly()
         except Exception as e:
             log.error(f"분기 리포트 오류: {e}")
+            await self._alert(f"quarterly_report 실패: {e}")
 
     async def _send_annual_report(self):
         try:
             await self.reporter.generate_annual()
         except Exception as e:
             log.error(f"연간 리포트 오류: {e}")
+            await self._alert(f"annual_report 실패: {e}")
 
     # ─── 이벤트 처리 ─────────────────────────────────────────────────────────
 

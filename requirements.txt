@@ -11,9 +11,10 @@ pandas==2.2.0
 fredapi==0.5.1
 requests==2.31.0
 
-# 벡터 임베딩 (Vertex AI)
-google-cloud-aiplatform==1.60.0
-vertexai==1.60.0
+# 벡터 임베딩
+google-cloud-aiplatform==1.60.0     # Vertex AI (optional, GCP 환경)
+vertexai==1.60.0                    # Vertex AI (optional, GCP 환경)
+sentence-transformers>=2.2.0        # 로컬 임베딩 (intfloat/multilingual-e5-large, 1024-dim)
 
 # 스케줄러
 APScheduler==3.10.4

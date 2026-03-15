@@ -10,7 +10,7 @@ import anthropic
 import asyncpg
 
 from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
-from src.extract.vertex_embedder import VertexEmbedder, vec_str
+from src.extract.vertex_embedder import Embedder, vec_str
 from config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
 
 log = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ def is_economic(primary_topic: str, title: str = "", content: str = "") -> bool:
 
 async def extract_and_save(
     conn: asyncpg.Connection,
-    embedder: VertexEmbedder,
+    embedder: Embedder,
     post: dict,
 ) -> dict:
     """
