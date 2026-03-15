@@ -46,10 +46,8 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    subgraph 평가 파이프라인
-        EV[eval_runner.py] --> HS3
-        EV --> LJ[LLM 심판<br>Claude Sonnet]
-        EV --> RPT[마크다운 리포트]
+    subgraph 평가 (오프라인)
+        EV[eval_runner.py<br>검색 품질 ablation] --> HS3
     end
 
     C --> Q[Streamlit 대시보드<br>port 8501]

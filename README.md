@@ -46,10 +46,8 @@ flowchart TD
         PV -->|CORRECT/INCORRECT/PENDING| C
     end
 
-    subgraph Eval Pipeline
-        EV[eval_runner.py] --> HS3
-        EV --> LJ[LLM Judge<br>Claude Sonnet]
-        EV --> RPT[Markdown Report]
+    subgraph Eval (offline)
+        EV[eval_runner.py<br>search quality ablation] --> HS3
     end
 
     C --> Q[Streamlit Dashboard<br>port 8501]
