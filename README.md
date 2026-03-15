@@ -98,15 +98,21 @@ python -m src.search.experiment --mode ablation --dataset eval_data/gold_extende
 **Alpha ablation** — N=200 queries, K=5:
 
 <!-- AUTO:alpha_ablation -->
-| α | Precision@5 | Recall@5 | MRR | Note |
-|---|------------|---------|-----|------|
-| 0.0 (vector only) | 0.189 | 0.945 | 0.908 | |
-| 0.2 | 0.190 | 0.950 | 0.912 | |
-| 0.3 | 0.190 | 0.950 | 0.910 | |
-| 0.4 | 0.190 | 0.950 | 0.913 | Production default |
-| **0.6** | **0.199** | **0.995** | **0.938** | Best across all metrics |
-| 0.8 | 0.198 | 0.990 | 0.934 | |
-| 1.0 (BM25 only) | 0.196 | 0.980 | 0.935 | |
+| α (BM25 weight) | Precision@5 | Recall@5 | MRR |
+|----------------|-------------|----------|-----|
+| α=0.0 | 0.20 | 0.99 | 0.99 |
+| α=0.2 | 0.20 | 0.99 | 0.99 |
+| α=0.3 | 0.20 | 0.99 | 0.99 |
+| α=0.4 | 0.20 | 0.99 | 0.99 |
+| **α=0.6** ★ | **0.20** | **1.00** | **0.97** |
+| α=0.8 | 0.20 | 0.99 | 0.96 |
+| α=1.0 | 0.20 | 0.98 | 0.94 |
+
+Best α=0.6 across all metrics (Precision@5=0.20).
+
+```bash
+python -m src.search.experiment --mode ablation --k 5
+```
 <!-- END:alpha_ablation -->
 
 Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model used for DB indexing), N=200 queries from `gold_extended.json`.
