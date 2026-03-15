@@ -83,11 +83,6 @@ flowchart TD
 
 만기 없이 결론이 날 때까지 매일 재시도합니다. 배치당 20건씩 Haiku로 처리하며, 매일 20:00 전체 미검증 예측을 검증합니다.
 
-**실시간 정확도** (CI 푸시마다 자동 업데이트):
-
-<!-- AUTO:prediction_accuracy -->
-<!-- END:prediction_accuracy -->
-
 ---
 
 ## 매크로 데이터 파이프라인
@@ -121,7 +116,6 @@ python -m src.search.experiment --mode ablation --dataset eval_data/gold_extende
 
 **Alpha ablation** — N=200 쿼리, K=5:
 
-<!-- AUTO:alpha_ablation -->
 | α (BM25 가중치) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
 | α=0.0 | 0.20 | 0.99 | 0.99 |
@@ -137,13 +131,12 @@ python -m src.search.experiment --mode ablation --dataset eval_data/gold_extende
 ```bash
 python -m src.search.experiment --mode ablation --k 5
 ```
-<!-- END:alpha_ablation -->
 
 임베딩: `intfloat/multilingual-e5-large` (1024-dim, DB 인덱싱과 동일 모델), N=200 쿼리.
 
 **핵심 관찰**:
 - 하이브리드(α=0.4–0.6)가 단독 방식 모두를 상회: 벡터 단독 대비 Recall +5.0%p, MRR +3.0%p
-- α=0.6이 전 지표 최고 — 프로덕션 기본값 0.4보다 BM25 비중을 약간 더 주는 것이 유리
+- α=0.6이 전 지표 최고 — 프로덕션 기본값으로 사용
 - BM25 단독(α=1.0) MRR이 순수 벡터(α=0.0)보다 높음(0.935 > 0.908): 한국 금융 텍스트에서는 티커·금리·날짜 같은 키워드 매칭이 의미 유사도보다 중요
 
 **왜 차이가 나는가**
@@ -186,22 +179,20 @@ python -m src.eval.eval_runner --mode full --k 5
 
 ## 기술 스택
 
-<!-- AUTO:tech_stack -->
 | 레이어 | 기술 |
 |--------|------|
-| LLM (분석 · 에이전트) | `claude-sonnet-4-6` |
-| LLM (추출 · 검증) | `claude-haiku-4-5-20251001` |
+| LLM (분석 · 검증) | `claude-sonnet-4-6` |
+| LLM (추출) | `claude-haiku-4-5-20251001` |
 | 배치 API | Anthropic Batch API |
-| 임베딩 | Vertex AI `text-multilingual-embedding-002` (1024차원) |
+| 임베딩 | `intfloat/multilingual-e5-large` (1024차원, 로컬) |
 | 벡터 DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW 인덱스) |
 | 키워드 검색 | rank-bm25 + kiwipiepy (한국어 형태소 분석) |
 | 하이브리드 융합 | Reciprocal Rank Fusion (RRF, α=0.6) |
 | 스케줄러 | GCP Cloud Scheduler + Cloud Run Jobs |
 | 전송 | python-telegram-bot 21 |
-| 데이터 | FRED, 한국은행 ECOS, BLS, 국토부, DART, 네이버 금융 |
-| 대시보드 | Streamlit (Cloud Run Service) |
+| 데이터 | FRED, 한국은행 ECOS, DART, 네이버 금융 |
+| 대시보드 | Streamlit |
 | 인프라 | GCP Cloud Run Jobs + Cloud SQL |
-<!-- END:tech_stack -->
 
 ---
 
@@ -277,21 +268,14 @@ docker build -t $IMAGE . && docker push $IMAGE
 
 Cloud Scheduler가 각 Cloud Run Job을 독립적으로 트리거:
 
-<!-- AUTO:jobs -->
 | 잡 | 스케줄 |
 |----|--------|
-| `mer` | 매 5분마다 |
-| `dart` | 매 10분, 8-18시 |
-| `macro_update` | 매 1시간마다 |
-| `macro_alert` | 매 30분마다 |
-| `news` | 매 30분마다 |
-| `verify_predictions` | 20:00 |
-| `report_daily` | 21:00 |
-| `report_weekly` | 매주 일요일 21:00 |
-| `report_monthly` | 말일 21:00 |
-| `report_quarterly` | 3/6/9/12월 말일 21:00 |
-| `report_annual` | 12월 31일 21:00 |
-<!-- END:jobs -->
+| `mer` | 매 5분 |
+| `dart` | 매 10분, 8–18시 (평일) |
+| `macro_update` | 매 1시간 |
+| `macro_alert` | 매 30분 |
+| `news` | 매 30분 |
+| `verify_predictions` | 매일 20:00 |
 
 ### 예측 대시보드
 

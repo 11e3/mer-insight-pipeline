@@ -83,11 +83,6 @@ Every `prediction`-type insight extracted from Mer's posts is stored in `mer_pre
 
 Predictions stay in the queue until resolved — no expiry. BATCH_SIZE=20 predictions per Haiku call; the daily 20:00 run processes all open predictions.
 
-**Live accuracy** (auto-updated on every push via CI):
-
-<!-- AUTO:prediction_accuracy -->
-<!-- END:prediction_accuracy -->
-
 ---
 
 ## Macro Data Pipeline
@@ -121,7 +116,6 @@ python -m src.search.experiment --mode ablation --dataset eval_data/gold_extende
 
 **Alpha ablation** — N=200 queries, K=5:
 
-<!-- AUTO:alpha_ablation -->
 | α (BM25 weight) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
 | α=0.0 | 0.20 | 0.99 | 0.99 |
@@ -137,13 +131,12 @@ Best α=0.6 across all metrics (Precision@5=0.20).
 ```bash
 python -m src.search.experiment --mode ablation --k 5
 ```
-<!-- END:alpha_ablation -->
 
 Embeddings: `intfloat/multilingual-e5-large` (1024-dim, same model as DB indexing), N=200 queries from `gold_extended.json`.
 
 **Key observations**:
 - Hybrid (α=0.4–0.6) outperforms both pure methods: +4.8% Recall and +3.0% MRR vs. vector-only
-- α=0.6 peaks across all three metrics — slightly more BM25-weight than the production default of 0.4
+- α=0.6 peaks across all three metrics — used as the production default
 - Pure BM25 (α=1.0) outperforms pure vector on MRR (0.935 vs 0.908): Korean finance text rewards exact keyword matching (specific tickers, rates, dates) more than semantic paraphrasing alone
 
 **Why they differ**
@@ -186,22 +179,20 @@ Embeddings: `intfloat/multilingual-e5-large` (same model as DB indexing). Each q
 
 ## Tech Stack
 
-<!-- AUTO:tech_stack -->
 | Layer | Technology |
 |-------|------------|
-| LLM (analysis · agent) | `claude-sonnet-4-6` |
-| LLM (extraction · verification) | `claude-haiku-4-5-20251001` |
+| LLM (analysis · verification) | `claude-sonnet-4-6` |
+| LLM (extraction) | `claude-haiku-4-5-20251001` |
 | Batch API | Anthropic Batch API |
-| Embeddings | Vertex AI `text-multilingual-embedding-002` (1024 dims) |
+| Embeddings | `intfloat/multilingual-e5-large` (1024-dim, local) |
 | Vector DB | Cloud SQL PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
 | Scheduler | GCP Cloud Scheduler + Cloud Run Jobs |
 | Delivery | python-telegram-bot 21 |
-| Data Sources | FRED, BOK ECOS, BLS, MOLIT, DART, Naver Finance |
-| Dashboard | Streamlit (Cloud Run Service) |
+| Data Sources | FRED, BOK ECOS, DART, Naver Finance |
+| Dashboard | Streamlit |
 | Infra | GCP Cloud Run Jobs + Cloud SQL |
-<!-- END:tech_stack -->
 
 ---
 
@@ -282,21 +273,14 @@ docker build -t $IMAGE . && docker push $IMAGE
 
 Cloud Scheduler triggers each Cloud Run Job on its own schedule:
 
-<!-- AUTO:jobs -->
 | Job | Schedule |
 |-----|----------|
 | `mer` | every 5 min |
-| `dart` | every 10 min, 8-18h |
+| `dart` | every 10 min, 8–18h (weekdays) |
 | `macro_update` | every 1h |
 | `macro_alert` | every 30 min |
 | `news` | every 30 min |
-| `verify_predictions` | 20:00 |
-| `report_daily` | 21:00 |
-| `report_weekly` | Sun 21:00 |
-| `report_monthly` | last day 21:00 |
-| `report_quarterly` | 3/6/9/12 last day 21:00 |
-| `report_annual` | 12/31 21:00 |
-<!-- END:jobs -->
+| `verify_predictions` | 20:00 daily |
 
 ### Prediction Dashboard
 
