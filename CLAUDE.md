@@ -35,12 +35,12 @@ python -m scripts.run_job --job verify_predictions
 
 ### 임베딩 차원 (1024-dim 통일)
 - DB, `init_db.sql`, `settings.py` 모두 **1024-dim** (`intfloat/multilingual-e5-large`)
-- 기본 임베더: `LocalEmbedder` (`src/extract/local_embedder.py`) — GCP 불필요
-- `VertexEmbedder` (768-dim)는 `GCP_PROJECT_ID` 설정 시에만 사용 (DB 재인덱싱 필요)
-- `get_embedder()` 팩토리 함수가 환경에 따라 자동 선택
+- `src/extract/embedder.py`: `Embedder` 프로토콜 + `get_embedder()` 팩토리 + `vec_str()`
+- 기본: `LocalEmbedder` (`src/extract/local_embedder.py`) — GCP 불필요
+- `VertexEmbedder` (768-dim)는 `GCP_PROJECT_ID` 설정 시에만 활성화 (DB 비호환, 재인덱싱 필요)
 
 ### src/search/__init__.py lazy import
-`__getattr__` 기반 lazy import — `HybridSearcher` / `hybrid_search`만 노출. GCP 환경변수 없이도 `src.search.experiment` 등 실행 가능.
+`__getattr__` 기반 lazy import — `hybrid.py → embedder.py` 체인이 GCP 없이도 크래시하지 않도록.
 
 ### scripts 실행 경로
 `scripts/` 하위 모듈은 **프로젝트 루트에서** 실행해야 함:
@@ -59,6 +59,20 @@ python scripts/expand_eval_dataset.py  # ✓
 ### Telegram — Tier 1 단일 채널
 `TELEGRAM_TIER1_CHAT_ID` 하나만 존재. Tier 2 구현 없음. 전체 알림(예측 추출 / verdict 변경 / 에러)이 동일 채널로 발송.
 
+### Prediction Verifier 비용 최적화
+- Prompt caching 적용 (`cache_control` on system + context) → 2번째 배치부터 input 90% 할인
+- `BATCH_SIZE=40` (20→40): API 호출 수 절반
+- 일간 주가 30일, DART/뉴스 20건으로 context 크기 제한
+- `max_tokens=4096` 필수 (1024이면 JSON 응답 truncation → 파싱 실패)
+- 한국어 context는 토큰 소비 2-3배 → 비용 견적 시 영어 기준의 2배로 계산
+
+### 삭제된 모듈 (리팩토링 완료)
+- `src/agent/`, `src/guard/`, `src/observability/` — 에이전트/가드/트레이서 삭제
+- `src/pipeline/context_assembler.py`, `post_enricher.py`, `types.py`, `event_types.py` — import 0건
+- `src/delivery/formatters.py` — production import 0건
+- `scripts/update_readme.py`, `generate_report.py`, `send_examples.py` — 불필요
+- 미사용 deps 제거: yfinance, psycopg2-binary, fredapi, matplotlib, pydantic
+
 ## 아키텍처 요약
 
 ```
@@ -67,13 +81,23 @@ src/
 │   ├── bm25_index.py     # kiwipiepy 형태소 분석 + rank-bm25 + pickle 캐시
 │   ├── vector_index.py   # pgvector HNSW 래퍼 (1024-dim)
 │   ├── hybrid.py         # RRF 융합 (α=0.6)
-│   └── experiment.py     # ablation 실험 (multilingual-e5-large)
+│   └── experiment.py     # ablation 실험 (metrics.py에서 지표 import)
 ├── extract/        # Claude Batch API 인사이트 추출 + 임베딩
-├── pipeline/       # 이벤트 디스패처, 모니터, 컨텍스트 어셈블러
+│   ├── embedder.py       # Embedder 프로토콜 + 팩토리 (vertex_embedder.py에서 리네임)
+│   ├── local_embedder.py # multilingual-e5-large 1024-dim (기본)
+│   ├── parse_results.py  # JSONL → DB (INSIGHT_TYPE_MAP, extract_content 정본)
+│   └── realtime_extractor.py # 실시간 인사이트 추출 (parse_results에서 import)
+├── pipeline/       # 이벤트 디스패처, 모니터
+│   ├── event_dispatcher.py   # APScheduler 6개 스케줄 / Cloud Run Job 진입점
+│   ├── prediction_verifier.py # Claude Haiku 배치 검증 (prompt caching 적용)
+│   ├── mer_monitor.py        # 블로그 RSS 감시
+│   ├── dart_collector.py     # DART 공시 수집
+│   └── news_collector.py     # 연준/한국은행/지정학 뉴스
 ├── eval/           # LLM 심판 평가 파이프라인
+│   └── metrics.py        # precision_at_k/recall_at_k/MRR (experiment.py에서도 사용)
 ├── ingest/         # FRED / 한국은행 ECOS 매크로 수집
-├── delivery/       # 텔레그램 전송 (Tier 1 단일 채널)
-└── dashboard/      # Streamlit 대시보드 (비용·지연 / 예측 적중률)
+├── delivery/       # 텔레그램 전송 (Tier 1 단일 채널, telegram_bot.py만 존재)
+└── dashboard/      # Streamlit 예측 적중률 대시보드
 
 scripts/
 ├── run_job.py            # GCP Cloud Run Job 진입점

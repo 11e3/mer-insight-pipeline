@@ -26,7 +26,7 @@ class GenerationMetrics:
     context_relevance: float = 0.0   # 1-5 → normalize 0-1
     faithfulness: float = 0.0        # 1-5 → normalize 0-1
     answer_relevance: float = 0.0    # 1-5 → normalize 0-1
-    hallucination_rate: float = 0.0  # Guard의 ungrounded_ratio
+    hallucination_rate: float = 0.0  # LLM judge 평가 (미사용)
 
 
 @dataclass

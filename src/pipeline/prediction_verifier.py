@@ -4,7 +4,7 @@ PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증
 컨텍스트:
   - 가장 오래된 예측일 ~ 오늘까지 월별 macro 요약
   - 주요 한국 주식 월별 종가 (네이버 금융)
-  - 해당 기간 auto_analyses
+  - DART 공시 + 뉴스
 
 판단:
   - CORRECT/INCORRECT → 확정
@@ -164,27 +164,7 @@ class PredictionVerifier:
         if stock_ctx:
             parts.append(stock_ctx)
 
-        # 3. 해당 기간 메르 분석
-        analysis_rows = await self.conn.fetch("""
-            SELECT e.title, aa.analysis_text, e.event_date
-            FROM events e
-            JOIN auto_analyses aa ON aa.event_id = e.id
-            WHERE e.event_type = 'mer_new_post'
-              AND e.event_date::date BETWEEN $1 AND $2
-            ORDER BY e.event_date DESC
-            LIMIT 10
-        """, since, until)
-
-        if analysis_rows:
-            lines = [f"[메르 분석: {since} ~ {until}]"]
-            for r in analysis_rows:
-                lines.append(
-                    f"[{r['event_date'].strftime('%Y-%m-%d')}] {r['title']}\n"
-                    f"{(r['analysis_text'] or '')[:300]}"
-                )
-            parts.append("\n\n".join(lines))
-
-        # 4. DART 공시 + 뉴스 (기업 이벤트 검증용)
+        # 3. DART 공시 + 뉴스 (기업 이벤트 검증용)
         event_rows = await self.conn.fetch("""
             SELECT event_type, title, content, event_date
             FROM events
