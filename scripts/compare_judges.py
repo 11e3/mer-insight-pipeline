@@ -81,13 +81,13 @@ async def main():
         if (i + 1) % 20 == 0:
             print(f"진행: {i+1}/100 (동의={agree}, 불일치={disagree}, 에러={errors})")
 
-    print(f"\n=== 최종 결과 ===")
+    print("\n=== 최종 결과 ===")
     print(f"동의: {agree}/100 ({agree}%)")
     print(f"불일치: {disagree}/100 ({disagree}%)")
     print(f"에러: {errors}")
 
     if disagree_details:
-        print(f"\n=== 불일치 상세 (상위 10건) ===")
+        print("\n=== 불일치 상세 (상위 10건) ===")
         for d in disagree_details[:10]:
             print(f"  #{d['id']} Haiku={d['haiku']} Sonnet={d['sonnet']}: {d['pred']}")
             print(f"    이유: {d['reason']}")
