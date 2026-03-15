@@ -25,7 +25,7 @@ from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 
 log = logging.getLogger(__name__)
 
-BATCH_SIZE = 20
+BATCH_SIZE = 40
 
 # 예측에 자주 등장하는 한국 주식 종목코드
 KR_STOCKS = {
@@ -191,7 +191,7 @@ class PredictionVerifier:
             WHERE event_type IN ('dart', 'news')
               AND event_date::date BETWEEN $1 AND $2
             ORDER BY event_date DESC
-            LIMIT 50
+            LIMIT 20
         """, since, until)
 
         if event_rows:
@@ -209,7 +209,7 @@ class PredictionVerifier:
     def _fetch_stock_context(self, since: date, until: date) -> str:
         """네이버 금융에서 주요 종목 주가 수집.
 
-        - 최근 90일: 일간 종가
+        - 최근 30일: 일간 종가
         - 이전: 월별 고/저/말일 종가 (H/L/C)
         """
         days = (until - since).days
@@ -217,7 +217,7 @@ class PredictionVerifier:
         cutoff = date(until.year, until.month, until.day)
         # 최근 90일 기준일
         from datetime import timedelta
-        recent_since = until - timedelta(days=90)
+        recent_since = until - timedelta(days=30)
 
         lines = ["[주요 한국 주식 주가]"]
         fetched = 0
@@ -232,7 +232,7 @@ class PredictionVerifier:
                 root = ET.fromstring(resp.content.decode("euc-kr", errors="replace"))
 
                 by_month: dict[str, list[int]] = {}  # ym -> [closes]
-                daily_recent: list[str] = []          # 최근 90일 일간
+                daily_recent: list[str] = []          # 최근 30일 일간
 
                 for item in root.findall(".//item"):
                     raw = item.get("data", "")
@@ -266,9 +266,9 @@ class PredictionVerifier:
                     )
                     parts_line.append(monthly)
 
-                # 최근 90일 일간 종가
+                # 최근 30일 일간 종가
                 if daily_recent:
-                    parts_line.append("최근90일:" + " ".join(daily_recent))
+                    parts_line.append("최근30일:" + " ".join(daily_recent))
 
                 if parts_line:
                     lines.append(f"{name}: " + " | ".join(parts_line))
