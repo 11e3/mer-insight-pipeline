@@ -244,12 +244,14 @@ if monthly:
     fig_trend.add_trace(go.Bar(
         x=df_m["month"], y=df_m["total"],
         name="예측 수", marker_color="#3498db", opacity=0.7,
+        hovertemplate="월: %{x}<br>예측 수: %{y}건<extra></extra>",
     ))
 
     fig_trend.add_trace(go.Scatter(
         x=df_m["month"], y=df_m["accuracy"],
         name="적중률 (%)", yaxis="y2",
         mode="lines+markers", marker_color="#e74c3c",
+        hovertemplate="월: %{x}<br>적중률: %{y:.1f}%<extra></extra>",
     ))
 
     fig_trend.update_layout(
@@ -293,12 +295,41 @@ if all_preds:
     if direction_filter != "전체":
         filtered = [p for p in filtered if p["predicted_direction"] == direction_filter]
 
-    st.caption(f"{len(filtered):,}건 표시 (전체 {len(all_preds):,}건)")
-
     # 페이지네이션
     PAGE_SIZE = 20
     total_pages = max(1, (len(filtered) + PAGE_SIZE - 1) // PAGE_SIZE)
-    page = st.number_input("페이지", min_value=1, max_value=total_pages, value=1)
+
+    if "pred_page" not in st.session_state:
+        st.session_state.pred_page = 1
+    # 필터 변경 시 페이지 리셋
+    if st.session_state.pred_page > total_pages:
+        st.session_state.pred_page = 1
+
+    page = st.session_state.pred_page
+
+    st.caption(f"{len(filtered):,}건 표시 (전체 {len(all_preds):,}건) — 페이지 {page}/{total_pages}")
+
+    # 상단 페이지 네비게이션
+    nav_cols = st.columns([1, 1, 1, 1, 1, 3])
+    if nav_cols[0].button("⏮ 처음", disabled=page <= 1):
+        st.session_state.pred_page = 1
+        st.rerun()
+    if nav_cols[1].button("◀ 이전", disabled=page <= 1):
+        st.session_state.pred_page = page - 1
+        st.rerun()
+    if nav_cols[2].button("다음 ▶", disabled=page >= total_pages):
+        st.session_state.pred_page = page + 1
+        st.rerun()
+    if nav_cols[3].button("마지막 ⏭", disabled=page >= total_pages):
+        st.session_state.pred_page = total_pages
+        st.rerun()
+    jump = nav_cols[4].selectbox(
+        "이동", range(1, total_pages + 1), index=page - 1, label_visibility="collapsed",
+    )
+    if jump != page:
+        st.session_state.pred_page = jump
+        st.rerun()
+
     page_items = filtered[(page - 1) * PAGE_SIZE : page * PAGE_SIZE]
 
     for r in page_items:
@@ -329,7 +360,5 @@ if all_preds:
             outcome = r.get("actual_outcome") or ""
             if outcome:
                 st.markdown(f"**근거:** {outcome}")
-
-    st.caption(f"페이지 {page}/{total_pages}")
 else:
     st.info("예측 데이터가 없습니다.")
