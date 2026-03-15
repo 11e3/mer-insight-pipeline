@@ -16,41 +16,34 @@ Claude Batch API로 예측을 추출하고, 실시간 시장 데이터를 수집
 
 ```mermaid
 flowchart TD
-    A[네이버 블로그<br>2,193개 포스트] -->|RSS / 스크래핑| B[mer_monitor]
-    B --> C[(PostgreSQL<br>+ pgvector)]
+    subgraph 배치 추출
+        A[네이버 블로그<br>2,193개 포스트] -->|스크래핑| B[parse_results.py]
+        B -->|규칙 / 예측<br>평가 / 매크로뷰| C[(PostgreSQL<br>+ pgvector)]
+        C --> EMB[local_embedder.py<br>1024차원 벡터]
+        EMB --> C
+    end
 
-    subgraph 배치 파이프라인
-        C -->|포스트| D[Claude Batch API<br>batch_api.py]
-        D -->|JSONL 결과| E[parse_results.py]
-        E -->|규칙 / 예측<br>평가 / 매크로뷰| C
-        C --> F[local_embedder.py<br>multilingual-e5-large 1024-dim]
-        F -->|1024차원 벡터| C
-        C --> G[cluster_insights.py<br>DBSCAN 중복 제거]
+    subgraph "일일 파이프라인 (20:00)"
+        ED[event_dispatcher.py] -->|1| MER[mer_monitor<br>신규 글 수집]
+        ED -->|2| DC[dart_collector<br>DART 공시]
+        ED -->|2| LM[load_macro<br>FRED · 한국은행 ECOS]
+        ED -->|2| NC[news_collector<br>연준 · 한국은행 · Google News]
+        ED -->|3| PV[prediction_verifier<br>Claude Haiku 심판]
+        MER --> C
+        DC & LM & NC --> C
+        PV -->|CORRECT / INCORRECT / PENDING| C
     end
 
     subgraph 하이브리드 검색
-        HS1[BM25 인덱스<br>kiwipiepy + rank_bm25]
-        HS2[벡터 인덱스<br>pgvector HNSW]
-        HS1 & HS2 -->|RRF 융합 α=0.6| HS3[HybridSearcher]
+        HS1[BM25<br>kiwipiepy] & HS2[pgvector<br>HNSW] -->|RRF α=0.6| HS3[HybridSearcher]
     end
 
+    PV -.->|컨텍스트 조회| HS3
     HS3 --> C
 
-    subgraph 실시간 파이프라인
-        ED[event_dispatcher.py<br>APScheduler] --> B
-        ED --> DC[dart_collector]
-        ED --> NC[news_collector<br>연준 · 한국은행 RSS]
-        ED --> LM[load_macro<br>FRED · 한국은행 ECOS]
-        ED --> PV[prediction_verifier<br>Claude Haiku 심판]
-        DC & NC & LM --> C
-        PV -->|CORRECT/INCORRECT/PENDING| C
-    end
-
-    subgraph 평가 (오프라인)
-        EV[eval_runner.py<br>검색 품질 ablation] --> HS3
-    end
-
     C --> Q[Streamlit 대시보드<br>port 8501]
+
+    EV[eval_runner.py<br>오프라인 ablation] -.-> HS3
 ```
 
 ---

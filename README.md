@@ -16,41 +16,34 @@ The pipeline extracts predictions with Claude Batch API, collects real market da
 
 ```mermaid
 flowchart TD
-    A[Naver Blog<br>2,193 posts] -->|RSS / scrape| B[mer_monitor]
-    B --> C[(PostgreSQL<br>+ pgvector)]
+    subgraph Batch Extraction
+        A[Naver Blog<br>2,193 posts] -->|scrape| B[parse_results.py]
+        B -->|rules / predictions<br>evaluations / macro_views| C[(PostgreSQL<br>+ pgvector)]
+        C --> EMB[local_embedder.py<br>1024-dim vectors]
+        EMB --> C
+    end
 
-    subgraph Batch Pipeline
-        C -->|posts| D[Claude Batch API<br>batch_api.py]
-        D -->|JSONL results| E[parse_results.py]
-        E -->|rules / predictions<br>evaluations / macro_views| C
-        C --> F[local_embedder.py<br>multilingual-e5-large 1024-dim]
-        F -->|1024-dim vectors| C
-        C --> G[cluster_insights.py<br>DBSCAN dedup]
+    subgraph "Daily Pipeline (20:00)"
+        ED[event_dispatcher.py] -->|1| MER[mer_monitor<br>신규 글 수집]
+        ED -->|2| DC[dart_collector<br>DART 공시]
+        ED -->|2| LM[load_macro<br>FRED · BOK ECOS]
+        ED -->|2| NC[news_collector<br>Fed · BOK · Google News]
+        ED -->|3| PV[prediction_verifier<br>Claude Haiku judge]
+        MER --> C
+        DC & LM & NC --> C
+        PV -->|CORRECT / INCORRECT / PENDING| C
     end
 
     subgraph Hybrid Search
-        HS1[BM25 Index<br>kiwipiepy + rank_bm25]
-        HS2[Vector Index<br>pgvector HNSW]
-        HS1 & HS2 -->|RRF fusion α=0.6| HS3[HybridSearcher]
+        HS1[BM25<br>kiwipiepy] & HS2[pgvector<br>HNSW] -->|RRF α=0.6| HS3[HybridSearcher]
     end
 
+    PV -.->|context lookup| HS3
     HS3 --> C
 
-    subgraph Real-time Pipeline
-        ED[event_dispatcher.py<br>APScheduler] --> B
-        ED --> DC[dart_collector]
-        ED --> NC[news_collector<br>Fed · BOK RSS]
-        ED --> LM[load_macro<br>FRED · BOK ECOS]
-        ED --> PV[prediction_verifier<br>Claude Haiku judge]
-        DC & NC & LM --> C
-        PV -->|CORRECT/INCORRECT/PENDING| C
-    end
-
-    subgraph Eval (offline)
-        EV[eval_runner.py<br>search quality ablation] --> HS3
-    end
-
     C --> Q[Streamlit Dashboard<br>port 8501]
+
+    EV[eval_runner.py<br>offline ablation] -.-> HS3
 ```
 
 ---
