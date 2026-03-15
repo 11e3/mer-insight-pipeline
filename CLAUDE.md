@@ -51,7 +51,7 @@ python scripts/expand_eval_dataset.py  # ✓
 단위 테스트는 `DATABASE_URL` 불필요. 통합 테스트는 `TEST_DATABASE_URL` 별도 설정 필요 (미설정 시 자동 스킵).
 
 ### GCP Cloud Run Job vs 로컬 APScheduler
-- **로컬**: `event_dispatcher.py`가 APScheduler로 매일 20:00 단일 잡 실행
+- **로컬**: `event_dispatcher.py`가 APScheduler로 매일 22:00 단일 잡 실행
 - **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 + DART/매크로/뉴스 수집 + 검증)
 
 ### Prediction Verifier 비용 최적화
@@ -106,7 +106,7 @@ scripts/
 
 | 잡 이름 | 동작 | 스케줄 |
 |---------|------|--------|
-| `daily_pipeline` | 메르 글 수집 + DART/매크로/뉴스 수집 + 예측 검증 | 매일 20:00 |
+| `daily_pipeline` | 메르 글 수집 + DART/매크로/뉴스 수집 + 예측 검증 | 매일 22:00 |
 
 ## 환경변수
 
