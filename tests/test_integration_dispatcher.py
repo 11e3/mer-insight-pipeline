@@ -23,9 +23,9 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-@pytest_asyncio.fixture(scope="module")
+@pytest_asyncio.fixture
 async def pg_conn():
-    """테스트용 PostgreSQL 연결. 모듈 종료 시 테스트 데이터 정리."""
+    """테스트용 PostgreSQL 연결. 각 테스트 종료 시 데이터 정리."""
     import asyncpg
     conn = await asyncpg.connect(os.environ["TEST_DATABASE_URL"])
     await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
