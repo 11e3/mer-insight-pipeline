@@ -230,9 +230,22 @@ if preds:
                 "total": len(g),
                 "correct": (g["verdict"] == "CORRECT").sum(),
                 "accuracy": f"{(g['verdict'] == 'CORRECT').mean() * 100:.1f}%",
-            })
+            }),
+            include_groups=False,
         ).reset_index()
+        topic_acc = topic_acc.sort_values("correct", ascending=False)
         st.dataframe(topic_acc, use_container_width=True, hide_index=True)
+
+        # 주제 선택 → session_state에 저장 (전체 예측 목록 필터와 연동)
+        selected = st.selectbox(
+            "주제 선택 → 아래 예측 목록 필터",
+            ["전체"] + topic_acc["topic"].tolist(),
+            key="topic_jump",
+        )
+        if selected != "전체":
+            st.session_state["default_topic"] = selected
+        else:
+            st.session_state.pop("default_topic", None)
     else:
         st.info("검증 완료된 예측이 없습니다.")
 else:
@@ -292,7 +305,10 @@ if all_preds:
     col_f1, col_f2, col_f3 = st.columns(3)
     verdict_filter = col_f1.selectbox("판정", ["전체", "CORRECT", "INCORRECT", "PENDING"])
     topics = sorted({p.get("topic", "기타") for p in all_preds})
-    topic_filter = col_f2.selectbox("주제", ["전체"] + topics)
+    default_topic = st.session_state.get("default_topic", "전체")
+    topic_options = ["전체"] + topics
+    default_idx = topic_options.index(default_topic) if default_topic in topic_options else 0
+    topic_filter = col_f2.selectbox("주제", topic_options, index=default_idx)
     direction_filter = col_f3.selectbox("방향", ["전체", "up", "down", "neutral"])
 
     filtered = all_preds
