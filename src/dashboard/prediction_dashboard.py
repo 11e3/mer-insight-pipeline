@@ -100,7 +100,7 @@ def load_predictions_for_topics():
     async def _():
         conn = await _get_conn()
         rows = await conn.fetch("""
-            SELECT prediction_text, is_correct
+            SELECT prediction_text, is_correct, COALESCE(topic, '기타') AS topic
             FROM mer_predictions
             WHERE skipped_at IS NULL
         """)
@@ -137,6 +137,7 @@ def load_all_predictions():
             SELECT
                 mp.prediction_date, mp.prediction_text, mp.predicted_direction,
                 mp.target_asset, mp.is_correct, mp.actual_outcome, mp.verification_date,
+                COALESCE(mp.topic, '기타') AS topic,
                 p.url AS post_url
             FROM mer_predictions mp
             LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
@@ -199,7 +200,8 @@ preds = load_predictions_for_topics()
 
 if preds:
     for p in preds:
-        p["topic"] = classify_topic(p["prediction_text"])
+        if not p.get("topic"):
+            p["topic"] = classify_topic(p["prediction_text"])
         if p["is_correct"] is True:
             p["verdict"] = "CORRECT"
         elif p["is_correct"] is False:
@@ -289,7 +291,7 @@ if all_preds:
     # 필터
     col_f1, col_f2, col_f3 = st.columns(3)
     verdict_filter = col_f1.selectbox("판정", ["전체", "CORRECT", "INCORRECT", "PENDING"])
-    topics = sorted({classify_topic(p["prediction_text"]) for p in all_preds})
+    topics = sorted({p.get("topic", "기타") for p in all_preds})
     topic_filter = col_f2.selectbox("주제", ["전체"] + topics)
     direction_filter = col_f3.selectbox("방향", ["전체", "up", "down", "neutral"])
 
@@ -302,7 +304,7 @@ if all_preds:
         else:
             filtered = [p for p in filtered if p["is_correct"] is False]
     if topic_filter != "전체":
-        filtered = [p for p in filtered if classify_topic(p["prediction_text"]) == topic_filter]
+        filtered = [p for p in filtered if p.get("topic", "기타") == topic_filter]
     if direction_filter != "전체":
         filtered = [p for p in filtered if p["predicted_direction"] == direction_filter]
 
