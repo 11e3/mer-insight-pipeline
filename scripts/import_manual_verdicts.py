@@ -16,8 +16,11 @@ async def main():
 
     all_results = []
     seen_ids = set()
-    for f in sorted(glob.glob("data/manual_verify/grouped/*結果*.json")
-                    + glob.glob("data/manual_verify/grouped/*결과*.json")):
+    files = (
+        sorted(glob.glob("data/manual_verify/grouped/*결과*.json"))
+        + sorted(glob.glob("data/manual_verify/result_*.json"))
+    )
+    for f in files:
         items = json.load(open(f, encoding="utf-8"))
         for item in items:
             pid = item["id"]
