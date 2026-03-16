@@ -1,0 +1,797 @@
+[
+  {
+    "id": 5366,
+    "verdict": "CORRECT",
+    "reason": "미국·유럽 LNG 인프라→한국 LNG운반선 주문 증가 확인"
+  },
+  {
+    "id": 5368,
+    "verdict": "CORRECT",
+    "reason": "LNG추진선 수요→한국 조선3사 대규모 수주 확인"
+  },
+  {
+    "id": 5331,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선 신조 발주 지속 증가 확인"
+  },
+  {
+    "id": 5332,
+    "verdict": "INCORRECT",
+    "reason": "유가 지속 상승 예측. 2022 하반기 유가 하락"
+  },
+  {
+    "id": 5327,
+    "verdict": "CORRECT",
+    "reason": "미국발 LNG운반선 추가 발주 확인"
+  },
+  {
+    "id": 5328,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선 수주 못 받을 정도까지 증가 확인"
+  },
+  {
+    "id": 5323,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선 수주 계속 이어짐 확인"
+  },
+  {
+    "id": 5304,
+    "verdict": "PENDING",
+    "reason": "우크라 종전후 쇄빙LNG선 수주 재개. 전쟁 미종료"
+  },
+  {
+    "id": 5290,
+    "verdict": "CORRECT",
+    "reason": "LNG추진선 1만척 시장→보냉재 매출 LNG운반선 초과 확인"
+  },
+  {
+    "id": 5243,
+    "verdict": "CORRECT",
+    "reason": "금리인상→달러강세→유가 하방 압력 확인"
+  },
+  {
+    "id": 5240,
+    "verdict": "CORRECT",
+    "reason": "미국발 LNG운반선 발주 빠르게 증가 확인"
+  },
+  {
+    "id": 5216,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선·FSRU 수주 증가+신조선가 상승 확인"
+  },
+  {
+    "id": 5210,
+    "verdict": "CORRECT",
+    "reason": "LG·삼성 4680 물량 확보이나 가격인하 박리다매 확인"
+  },
+  {
+    "id": 5205,
+    "verdict": "CORRECT",
+    "reason": "베네수엘라 정유시설 노후→석유 회복 단기 어려움 확인"
+  },
+  {
+    "id": 5195,
+    "verdict": "PENDING",
+    "reason": "LNG추진선 비율 2025 50%→2035 75% 장기"
+  },
+  {
+    "id": 5196,
+    "verdict": "CORRECT",
+    "reason": "LNG추진선 시장이 운반선 압도 규모 성장 확인"
+  },
+  {
+    "id": 5183,
+    "verdict": "CORRECT",
+    "reason": "LNG 탄소포집 기술 개발 가속·관련 기업 성장 확인"
+  },
+  {
+    "id": 5184,
+    "verdict": "PENDING",
+    "reason": "LNG추진선+탄소포집→암모니아·수소 전환 필요성 감소 장기"
+  },
+  {
+    "id": 5159,
+    "verdict": "CORRECT",
+    "reason": "미국 LNG 수출 인프라→유럽 주요 공급국 확인"
+  },
+  {
+    "id": 5161,
+    "verdict": "CORRECT",
+    "reason": "FSRU 수요→신규 LNG운반선 발주 증가 확인"
+  },
+  {
+    "id": 5155,
+    "verdict": "CORRECT",
+    "reason": "유가 수요감소(경기침체 우려)로 하락 확인(2022 H2)"
+  },
+  {
+    "id": 5153,
+    "verdict": "CORRECT",
+    "reason": "제주도 재생에너지 30%→40% 버림 확인"
+  },
+  {
+    "id": 5137,
+    "verdict": "CORRECT",
+    "reason": "LG·삼성 4680 물량+가격인하 박리다매 확인"
+  },
+  {
+    "id": 5138,
+    "verdict": "INCORRECT",
+    "reason": "LG엔솔 2025 중국외 세계1위 매출 예측. CATL 여전히 1위"
+  },
+  {
+    "id": 5126,
+    "verdict": "CORRECT",
+    "reason": "중간선거 전 경기침체→유가 하락 확인"
+  },
+  {
+    "id": 5112,
+    "verdict": "CORRECT",
+    "reason": "비테슬라 미국 완성차→한국·일본 배터리 탑재 확인"
+  },
+  {
+    "id": 5114,
+    "verdict": "CORRECT",
+    "reason": "IRA→CATL 배제→한국 이차전지 반사이익 확인"
+  },
+  {
+    "id": 5078,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선 신조선가 270M$+ 프리미엄 수주 확인"
+  },
+  {
+    "id": 5080,
+    "verdict": "CORRECT",
+    "reason": "독일 11월까지 천연가스 95% 비축→겨울 넘김 확인"
+  },
+  {
+    "id": 5067,
+    "verdict": "CORRECT",
+    "reason": "2030까지 LNG선 860척+ 증가 확인"
+  },
+  {
+    "id": 5070,
+    "verdict": "CORRECT",
+    "reason": "LNG선 단가 2억$+→조선사 수익성 개선 확인"
+  },
+  {
+    "id": 5052,
+    "verdict": "CORRECT",
+    "reason": "베네수엘라 석유 단기 대량 공급 어려움 확인"
+  },
+  {
+    "id": 5041,
+    "verdict": "CORRECT",
+    "reason": "중국 호주산 석탄 수입 재개 확인(2023.1)"
+  },
+  {
+    "id": 5012,
+    "verdict": "INCORRECT",
+    "reason": "베네수엘라 제재 해제→유가 안정 예측. 유가 큰 변동 없었음"
+  },
+  {
+    "id": 5007,
+    "verdict": "CORRECT",
+    "reason": "디스프로슘 풍력발전기→공급 부족 확인"
+  },
+  {
+    "id": 4987,
+    "verdict": "CORRECT",
+    "reason": "핵융합 20년후 상용화·2050 탄소중립 기여 어려움 확인"
+  },
+  {
+    "id": 4982,
+    "verdict": "CORRECT",
+    "reason": "중국 2025 신에너지차 20%+ 확인. 실제 2024에 이미 달성"
+  },
+  {
+    "id": 4984,
+    "verdict": "CORRECT",
+    "reason": "제주 재생에너지 30%→40% 버림 확인"
+  },
+  {
+    "id": 4958,
+    "verdict": "CORRECT",
+    "reason": "비테슬라→한국·일본 배터리 채택 확인"
+  },
+  {
+    "id": 4903,
+    "verdict": "CORRECT",
+    "reason": "IRA→한국 이차전지 미국 시장 수혜 확인"
+  },
+  {
+    "id": 4866,
+    "verdict": "CORRECT",
+    "reason": "베네수엘라 과거 320만배럴 회복 2년+ 소요 확인"
+  },
+  {
+    "id": 4854,
+    "verdict": "PENDING",
+    "reason": "핵융합 2040이후 주력 에너지 장기"
+  },
+  {
+    "id": 4856,
+    "verdict": "CORRECT",
+    "reason": "디스프로슘 신재생 확대→공급 부족 확인"
+  },
+  {
+    "id": 4840,
+    "verdict": "CORRECT",
+    "reason": "핵융합 순에너지→상용화 일정 10년+ 단축 확인"
+  },
+  {
+    "id": 4841,
+    "verdict": "CORRECT",
+    "reason": "미국 달 기지+헬륨3→핵융합 연료 패권 추진 확인"
+  },
+  {
+    "id": 4799,
+    "verdict": "INCORRECT",
+    "reason": "LG엔솔 2025 전기차 배터리 세계 매출 1위 예측. CATL 1위"
+  },
+  {
+    "id": 4774,
+    "verdict": "CORRECT",
+    "reason": "금리인상+경기침체→유가 하락 압력 확인"
+  },
+  {
+    "id": 4727,
+    "verdict": "INCORRECT",
+    "reason": "헬리온 2024 내 순전력 시연 예측. 미실현·지연"
+  },
+  {
+    "id": 4720,
+    "verdict": "CORRECT",
+    "reason": "LNG 수요 빠르게 증가→운반선 발주 증가 확인"
+  },
+  {
+    "id": 4722,
+    "verdict": "INCORRECT",
+    "reason": "유럽 천연가스 가격 하락 일시적→재상승 예측. 2023 TTF 가격 안정 지속"
+  },
+  {
+    "id": 4723,
+    "verdict": "CORRECT",
+    "reason": "미국 LNG 수출 인프라→유럽 주요 공급국 부상 확인"
+  },
+  {
+    "id": 4661,
+    "verdict": "CORRECT",
+    "reason": "경유·천연가스 비축+따뜻한 겨울→정상화 확인"
+  },
+  {
+    "id": 4613,
+    "verdict": "CORRECT",
+    "reason": "유가 추가하락보다 현수준→천천히 상승 확인"
+  },
+  {
+    "id": 4615,
+    "verdict": "CORRECT",
+    "reason": "중국 5% 성장→원유 수요↑→유가 하락 제동 확인"
+  },
+  {
+    "id": 4597,
+    "verdict": "INCORRECT",
+    "reason": "LG엔솔 2025~2026 세계1위 매출 예측. CATL 1위"
+  },
+  {
+    "id": 4560,
+    "verdict": "CORRECT",
+    "reason": "유가 현수준→천천히 상승 확인"
+  },
+  {
+    "id": 4558,
+    "verdict": "CORRECT",
+    "reason": "전기차 확대→LNG 발전소 추가 가동 확인"
+  },
+  {
+    "id": 4559,
+    "verdict": "CORRECT",
+    "reason": "재생에너지 30%→40% 버림 확인"
+  },
+  {
+    "id": 4527,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선 수주 최소 2027까지 지속 확인"
+  },
+  {
+    "id": 4498,
+    "verdict": "PENDING",
+    "reason": "LNG추진선 2025 840척·2035 75% 장기"
+  },
+  {
+    "id": 4501,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선·FSRU 수주+신조선가 상승 확인"
+  },
+  {
+    "id": 4429,
+    "verdict": "CORRECT",
+    "reason": "2023 역대급 따뜻한 겨울 확인"
+  },
+  {
+    "id": 4396,
+    "verdict": "PENDING",
+    "reason": "LNG추진선 2035 75% 장기"
+  },
+  {
+    "id": 4398,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선+추진선→보냉제 매출 증가 확인"
+  },
+  {
+    "id": 4310,
+    "verdict": "CORRECT",
+    "reason": "니카라과 운하 없음→초대형 LNG선 수요→한국 유리 확인"
+  },
+  {
+    "id": 4304,
+    "verdict": "CORRECT",
+    "reason": "핵융합 2040 이후 상용화 확인"
+  },
+  {
+    "id": 4307,
+    "verdict": "CORRECT",
+    "reason": "디스프로슘 신재생→공급부족 심화 확인"
+  },
+  {
+    "id": 4246,
+    "verdict": "CORRECT",
+    "reason": "슈퍼 엘니뇨→폭염+폭우 확인"
+  },
+  {
+    "id": 4230,
+    "verdict": "PENDING",
+    "reason": "종전후 야말→쇄빙LNG선 발주. 전쟁 미종료"
+  },
+  {
+    "id": 4218,
+    "verdict": "CORRECT",
+    "reason": "전기차 확대→LNG 발전 추가 가동 확인"
+  },
+  {
+    "id": 4203,
+    "verdict": "CORRECT",
+    "reason": "2030 LNG운반선 860척+ 확인"
+  },
+  {
+    "id": 4204,
+    "verdict": "CORRECT",
+    "reason": "LNG운반선 한국 독점 사업 확인"
+  },
+  {
+    "id": 4205,
+    "verdict": "CORRECT",
+    "reason": "2023 LNG운반선 1000척+ 확인"
+  },
+  {
+    "id": 4184,
+    "verdict": "CORRECT",
+    "reason": "에너지 안보→유럽 원전 재가동·신규 건설 확인"
+  },
+  {
+    "id": 4191,
+    "verdict": "CORRECT",
+    "reason": "LNG 수요 증가→운반선 발주 지속 확인"
+  },
+  {
+    "id": 4172,
+    "verdict": "PENDING",
+    "reason": "상온 초전도체 성공시→핵융합 가속. 초전도체 미성공"
+  },
+  {
+    "id": 4173,
+    "verdict": "PENDING",
+    "reason": "KSTAR 2026 300초 장기"
+  },
+  {
+    "id": 4175,
+    "verdict": "PENDING",
+    "reason": "상온 초전도체→핵융합 10년 단축. 초전도체 미성공"
+  },
+  {
+    "id": 4157,
+    "verdict": "CORRECT",
+    "reason": "유가 70달러대→다시 상승 확인"
+  },
+  {
+    "id": 4141,
+    "verdict": "CORRECT",
+    "reason": "전세계 LNG 수요 지속 증가 확인"
+  },
+  {
+    "id": 4127,
+    "verdict": "CORRECT",
+    "reason": "중국 공장 가동→하반기 석유 수요 150만배럴 증가 확인"
+  },
+  {
+    "id": 3910,
+    "verdict": "CORRECT",
+    "reason": "파나마운하→LNG선 차질→아시아 LNG 비용 상승 확인"
+  },
+  {
+    "id": 3843,
+    "verdict": "CORRECT",
+    "reason": "중국 7광구 인근 채굴→빨대효과 확인"
+  },
+  {
+    "id": 3776,
+    "verdict": "CORRECT",
+    "reason": "트럼프 당선→재생에너지 보조금 폐지·화석연료 투자 확인"
+  },
+  {
+    "id": 3770,
+    "verdict": "CORRECT",
+    "reason": "유가 상승 압력 확인"
+  },
+  {
+    "id": 3764,
+    "verdict": "CORRECT",
+    "reason": "2024 유가 수요↑이나 미국·브라질·가이아나 증산→대폭 상승 어려움 확인"
+  },
+  {
+    "id": 3765,
+    "verdict": "CORRECT",
+    "reason": "수에즈 후티→유조선 우회→운송비·원유 상승 확인"
+  },
+  {
+    "id": 3766,
+    "verdict": "CORRECT",
+    "reason": "중국 리오프닝 150만배럴→유가 급등 어려움 확인"
+  },
+  {
+    "id": 3760,
+    "verdict": "CORRECT",
+    "reason": "희망봉 우회→유가+인플레 상승 압력 확인"
+  },
+  {
+    "id": 3736,
+    "verdict": "CORRECT",
+    "reason": "니카라과 운하 중단→LNG운반선 수요 유지 확인"
+  },
+  {
+    "id": 3737,
+    "verdict": "PENDING",
+    "reason": "니카라과 운하 건설시 LNG선 수요 감소. 건설 미재개"
+  },
+  {
+    "id": 3726,
+    "verdict": "CORRECT",
+    "reason": "재수압파쇄법→미국 셰일 생산량 추가 대폭 증가 확인"
+  },
+  {
+    "id": 3727,
+    "verdict": "CORRECT",
+    "reason": "수에즈 후티→단기 유가 상승 확인"
+  },
+  {
+    "id": 3728,
+    "verdict": "CORRECT",
+    "reason": "장기적 공급과잉→유가 안정/하락 확인"
+  },
+  {
+    "id": 3706,
+    "verdict": "CORRECT",
+    "reason": "가이아나 2024.12 60만배럴+추가 40만 증산 확인"
+  },
+  {
+    "id": 3587,
+    "verdict": "CORRECT",
+    "reason": "트럼프 재집권→IRA 보조금 폐지→한국 이차전지 환경 악화 확인"
+  },
+  {
+    "id": 3582,
+    "verdict": "CORRECT",
+    "reason": "니제르 우라늄 수출금지+러시아 의존→우라늄 가격 상승 확인"
+  },
+  {
+    "id": 3573,
+    "verdict": "CORRECT",
+    "reason": "천연가스 가격 장기 우하향 추세 확인"
+  },
+  {
+    "id": 3566,
+    "verdict": "CORRECT",
+    "reason": "디스프로슘 수요>공급→가격 상승 확인"
+  },
+  {
+    "id": 3553,
+    "verdict": "CORRECT",
+    "reason": "삼성SDI 전고체 가장 먼저 양산 확인(2026.2 양산 발표)"
+  },
+  {
+    "id": 3492,
+    "verdict": "CORRECT",
+    "reason": "NO96-Super+ LNG운반선 추가 수주 지속 확인"
+  },
+  {
+    "id": 3477,
+    "verdict": "CORRECT",
+    "reason": "바이든 SPR 추가방출→유가안정 어려움 확인"
+  },
+  {
+    "id": 3465,
+    "verdict": "CORRECT",
+    "reason": "2024 라니냐→중국·동남아 홍수·멕시코만 허리케인 확인"
+  },
+  {
+    "id": 3469,
+    "verdict": "CORRECT",
+    "reason": "라니냐→겨울 천연가스 수요↑·가격 상승 확인"
+  },
+  {
+    "id": 3462,
+    "verdict": "PENDING",
+    "reason": "데이터센터 2026 전력 2배 시기 미도래"
+  },
+  {
+    "id": 3339,
+    "verdict": "CORRECT",
+    "reason": "우라늄 공급불안·수요↑→가격 상승 확인"
+  },
+  {
+    "id": 3288,
+    "verdict": "PENDING",
+    "reason": "동해 가스전 시추결과 2024말~2025중 구체적 확인 필요"
+  },
+  {
+    "id": 3277,
+    "verdict": "CORRECT",
+    "reason": "브라질·가이아나 증산 80만+→유가 상승 억제 확인"
+  },
+  {
+    "id": 3278,
+    "verdict": "CORRECT",
+    "reason": "후티 등 지정학에도 유가 급등 지속 어려움 확인"
+  },
+  {
+    "id": 3258,
+    "verdict": "CORRECT",
+    "reason": "미국 2028부터 러시아 우라늄→프랑스·영국 대체 확인"
+  },
+  {
+    "id": 3239,
+    "verdict": "CORRECT",
+    "reason": "EU·미국 친환경 약화→전기차 성장 예상보다 느림 확인"
+  },
+  {
+    "id": 3221,
+    "verdict": "CORRECT",
+    "reason": "라니냐→냉방+난방→전력·천연가스 수요 상승 확인"
+  },
+  {
+    "id": 3204,
+    "verdict": "CORRECT",
+    "reason": "유가 공급측 하락요인→하락 확인(2024 H2 유가 하락)"
+  },
+  {
+    "id": 3140,
+    "verdict": "CORRECT",
+    "reason": "테슬라 4680 자체생산 중단→LG엔솔 등 외부 전환 확인"
+  },
+  {
+    "id": 3062,
+    "verdict": "CORRECT",
+    "reason": "라니냐→냉방+난방→에너지 수요 장기 상승 확인"
+  },
+  {
+    "id": 3063,
+    "verdict": "CORRECT",
+    "reason": "라니냐→EU·미국 겨울 혹한→난방→천연가스 상승 확인"
+  },
+  {
+    "id": 2923,
+    "verdict": "CORRECT",
+    "reason": "라니냐→천연가스 가격 상승 확인"
+  },
+  {
+    "id": 2806,
+    "verdict": "PENDING",
+    "reason": "상온 초전도체 상용화 가정→미실현"
+  },
+  {
+    "id": 2794,
+    "verdict": "CORRECT",
+    "reason": "위안화 원유 결제 비중 점진적 확대 확인"
+  },
+  {
+    "id": 2786,
+    "verdict": "CORRECT",
+    "reason": "원전·SMR·MMR 빅테크 전력→주가 상승세 확인"
+  },
+  {
+    "id": 2763,
+    "verdict": "CORRECT",
+    "reason": "디스프로슘 생산캐파→수요 미충당 확인"
+  },
+  {
+    "id": 2728,
+    "verdict": "CORRECT",
+    "reason": "트럼프→재생에너지 보조금 폐지·파리 탈퇴·화석연료 규제 완화 확인"
+  },
+  {
+    "id": 2631,
+    "verdict": "CORRECT",
+    "reason": "트럼프 취임→바이든 보류 LNG터미널 17개 승인 확인"
+  },
+  {
+    "id": 2633,
+    "verdict": "PENDING",
+    "reason": "미국 LNG 수출능력 4배+ 장기"
+  },
+  {
+    "id": 2634,
+    "verdict": "CORRECT",
+    "reason": "한국 조선3사 2028~2029 LNG운반선 수주공백 해소 확인"
+  },
+  {
+    "id": 2613,
+    "verdict": "CORRECT",
+    "reason": "2027 인도분 LNG운반선 수요↓+중국 캐파↑→가격 하락 압력 확인"
+  },
+  {
+    "id": 2494,
+    "verdict": "PENDING",
+    "reason": "종전후 쇄빙LNG 수주 재개. 전쟁 미종료"
+  },
+  {
+    "id": 2474,
+    "verdict": "CORRECT",
+    "reason": "한국 가스공사 미국산 LNG 수입 비중 증가 확인"
+  },
+  {
+    "id": 2475,
+    "verdict": "CORRECT",
+    "reason": "한국 조선소 2028~2029 도크 미국→EU LNG운반선 확인"
+  },
+  {
+    "id": 2407,
+    "verdict": "CORRECT",
+    "reason": "WISON 글로벌 FLNG 계약 대부분 잃음 확인"
+  },
+  {
+    "id": 2397,
+    "verdict": "CORRECT",
+    "reason": "니카라과 운하 중단→LNG운반선 수요 유지/증가 확인"
+  },
+  {
+    "id": 2330,
+    "verdict": "CORRECT",
+    "reason": "일본 알래스카 LNG 선점→미국 협상 유리 확인"
+  },
+  {
+    "id": 2331,
+    "verdict": "CORRECT",
+    "reason": "한국 조선사 알래스카 LNG 운반선 수주 가능성 확인"
+  },
+  {
+    "id": 2239,
+    "verdict": "PENDING",
+    "reason": "알래스카 LNG 완공→한국 조선 수주 장기"
+  },
+  {
+    "id": 2240,
+    "verdict": "CORRECT",
+    "reason": "알래스카 LNG 한국·일본 컨소시엄 참여 협상 확인"
+  },
+  {
+    "id": 2190,
+    "verdict": "CORRECT",
+    "reason": "2025부터 LNG 신규 공급 프로젝트→글로벌 공급 증가 확인"
+  },
+  {
+    "id": 2196,
+    "verdict": "CORRECT",
+    "reason": "종전후 유럽 러시아 가스 일부 수입이나 과거 의존비중 아님 확인"
+  },
+  {
+    "id": 2197,
+    "verdict": "CORRECT",
+    "reason": "EU 천연가스 70% LNG 방식 공급 확인"
+  },
+  {
+    "id": 2177,
+    "verdict": "CORRECT",
+    "reason": "기타지정국→한미 원자력 협상 농축·재처리 권리 어려움 확인"
+  },
+  {
+    "id": 2005,
+    "verdict": "PENDING",
+    "reason": "2028 LNG운반선 1% 미국산→2047 15% 장기"
+  },
+  {
+    "id": 2006,
+    "verdict": "CORRECT",
+    "reason": "한국 조선사 3년내 미국산 자동차운반선·LNG운반선 수주 가능 확인"
+  },
+  {
+    "id": 1994,
+    "verdict": "PENDING",
+    "reason": "알래스카 LNG 쇄빙선+FLNG 방식 검토→한화·삼성 수혜 구체적"
+  },
+  {
+    "id": 1996,
+    "verdict": "PENDING",
+    "reason": "한화오션 쇄빙LNG 3척 평가손실→알래스카 해소 구체적"
+  },
+  {
+    "id": 1980,
+    "verdict": "CORRECT",
+    "reason": "LG엔솔 나트륨 성공해도 CATL 대비 경쟁력 열위 확인"
+  },
+  {
+    "id": 1949,
+    "verdict": "CORRECT",
+    "reason": "신재생→ESS·송전·충전·전력관리 시장 성장 확인"
+  },
+  {
+    "id": 1950,
+    "verdict": "CORRECT",
+    "reason": "제주 재생에너지 30%→절반 가동중단·5100억 낭비 확인"
+  },
+  {
+    "id": 1920,
+    "verdict": "PENDING",
+    "reason": "가이아나 2025 100만배럴 연도 진행중"
+  },
+  {
+    "id": 1913,
+    "verdict": "CORRECT",
+    "reason": "외국인 국채 대규모 보유→일시 매도시 환율 급변동 리스크 확인"
+  },
+  {
+    "id": 1871,
+    "verdict": "CORRECT",
+    "reason": "제주 재생에너지 30%→40% 버림·5100억 낭비 확인"
+  },
+  {
+    "id": 1774,
+    "verdict": "PENDING",
+    "reason": "가이아나 2025 100만배럴/일 연도 진행중"
+  },
+  {
+    "id": 1758,
+    "verdict": "CORRECT",
+    "reason": "우라늄 단기 수급 꼬임 확인"
+  },
+  {
+    "id": 1759,
+    "verdict": "CORRECT",
+    "reason": "2028부터 미국 러시아산 우라늄 수입 공식 금지 확인"
+  },
+  {
+    "id": 1762,
+    "verdict": "PENDING",
+    "reason": "우라늄 수요 2040까지 60% 증가 장기"
+  },
+  {
+    "id": 1625,
+    "verdict": "PENDING",
+    "reason": "라니냐→밀·천연가스·알루미늄 상승 구체적 확인 필요"
+  },
+  {
+    "id": 1529,
+    "verdict": "CORRECT",
+    "reason": "일본 알래스카 LNG 선점→한국 LNG 카드 협상력 약화 확인"
+  },
+  {
+    "id": 1503,
+    "verdict": "PENDING",
+    "reason": "한-중 관세·에너지 패키지 딜 구체적 확인 필요"
+  },
+  {
+    "id": 1504,
+    "verdict": "PENDING",
+    "reason": "미국 LNG 수출 2026까지 24% 증가 시기 미도래"
+  },
+  {
+    "id": 1505,
+    "verdict": "CORRECT",
+    "reason": "미-EU 에너지 합의→LNG운반선 발주 증가 확인"
+  },
+  {
+    "id": 1483,
+    "verdict": "PENDING",
+    "reason": "2026 데이터센터 1000TWh·AI 75% 시기 미도래"
+  }
+]

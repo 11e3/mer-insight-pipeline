@@ -1,0 +1,1762 @@
+[
+  {
+    "id": 5312,
+    "verdict": "CORRECT",
+    "reason": "연준 금리인상→신흥국 외채 부담·자본 유출 심화 확인"
+  },
+  {
+    "id": 5285,
+    "verdict": "CORRECT",
+    "reason": "위험관리 부실 기업 도태·살아남은 기업 점프 성장 확인"
+  },
+  {
+    "id": 5286,
+    "verdict": "CORRECT",
+    "reason": "터키 환율 안정→에르도안 2023 대선 재집권 확인"
+  },
+  {
+    "id": 5233,
+    "verdict": "INCORRECT",
+    "reason": "은행주 연체율 상승→주가 하락 예측 빗나감. 2023~2024 은행주 사상 최고"
+  },
+  {
+    "id": 5226,
+    "verdict": "CORRECT",
+    "reason": "인플레 잡고 경기부양 재개 최소 3년 소요 확인. 2024.9 첫 인하"
+  },
+  {
+    "id": 5224,
+    "verdict": "PENDING",
+    "reason": "일본 2041년 세수=국채이자 장기 예측"
+  },
+  {
+    "id": 5225,
+    "verdict": "CORRECT",
+    "reason": "엔저 한동안 지속 확인. 2022~2024 엔약세 지속"
+  },
+  {
+    "id": 5188,
+    "verdict": "CORRECT",
+    "reason": "불안정 환경→부실 기업 속출·생존 기업 점프 성장 확인"
+  },
+  {
+    "id": 5179,
+    "verdict": "INCORRECT",
+    "reason": "기시다 금리인상·엔화 정상화 추진 예측. 실제 기시다 체제 YCC 유지→2024.3 우에다 전환"
+  },
+  {
+    "id": 5181,
+    "verdict": "PENDING",
+    "reason": "일본 2041년 세수=국채이자 장기 예측"
+  },
+  {
+    "id": 5182,
+    "verdict": "CORRECT",
+    "reason": "엔저 당분간 지속 확인"
+  },
+  {
+    "id": 5173,
+    "verdict": "CORRECT",
+    "reason": "완다그룹 채권 만기 결제 실패·홍콩 역외채권 부정적 영향 확인"
+  },
+  {
+    "id": 5149,
+    "verdict": "CORRECT",
+    "reason": "에르도안 비정통 금리→리라 약세·인플레 지속 확인"
+  },
+  {
+    "id": 5108,
+    "verdict": "INCORRECT",
+    "reason": "연준 금리인상 2022년 내 종료 예측 빗나감. 2023.7까지 인상 지속"
+  },
+  {
+    "id": 5104,
+    "verdict": "PENDING",
+    "reason": "일본 2041년 세수=국채이자 장기 예측"
+  },
+  {
+    "id": 5092,
+    "verdict": "CORRECT",
+    "reason": "한국 곡물발 인플레 지속 확인"
+  },
+  {
+    "id": 5087,
+    "verdict": "CORRECT",
+    "reason": "경기침체 시작→달러 추가 상승 확인. 2022 달러 스마일"
+  },
+  {
+    "id": 5071,
+    "verdict": "CORRECT",
+    "reason": "한미 금리차→외국인 이탈→원달러 1350 넘어 상승 확인. 2022 원달러 1440+"
+  },
+  {
+    "id": 5073,
+    "verdict": "CORRECT",
+    "reason": "2022 연말 미국 4.5%·한국 3.0% 1.5%p 금리차 확인"
+  },
+  {
+    "id": 5074,
+    "verdict": "INCORRECT",
+    "reason": "세계 불안→엔화 안전자산 강세 예측 빗나감. 2022 엔화 오히려 약세 지속"
+  },
+  {
+    "id": 5061,
+    "verdict": "CORRECT",
+    "reason": "은행 연체율 상승 확인. 0.2%→0.5%+ 상승(4배는 아니나 방향 맞음)"
+  },
+  {
+    "id": 5037,
+    "verdict": "CORRECT",
+    "reason": "미국 4.5%→한국 경제 심각한 압박 확인"
+  },
+  {
+    "id": 5038,
+    "verdict": "CORRECT",
+    "reason": "연준 고금리 기조 시장 예상보다 오래 지속 확인. 2023~2024.9까지 유지"
+  },
+  {
+    "id": 5021,
+    "verdict": "CORRECT",
+    "reason": "국채금리 급등→채권 보유 금융기관 위험 확인. SVB 파산(2023.3)"
+  },
+  {
+    "id": 5016,
+    "verdict": "CORRECT",
+    "reason": "금리인하 전환→은 가격 상승 확인. 2024 은 $30+"
+  },
+  {
+    "id": 5018,
+    "verdict": "CORRECT",
+    "reason": "금리인상 부작용→Fed 결국 인하 전환 확인(2024.9)"
+  },
+  {
+    "id": 5002,
+    "verdict": "CORRECT",
+    "reason": "이머징 미국 금리인상 후 회복 쉽지 않음 확인"
+  },
+  {
+    "id": 4997,
+    "verdict": "CORRECT",
+    "reason": "2023 초 기준금리 5.25% 도달 확인(2023.7 5.25~5.50%)"
+  },
+  {
+    "id": 4999,
+    "verdict": "PENDING",
+    "reason": "일본 2041년 세수=국채이자 장기 예측"
+  },
+  {
+    "id": 4964,
+    "verdict": "INCORRECT",
+    "reason": "은행주 연체율 상승→하락 예측 빗나감. 은행주 오히려 상승"
+  },
+  {
+    "id": 4938,
+    "verdict": "CORRECT",
+    "reason": "해외 국채보유국 압박→금리 인상 속도 조절 확인. 2022.12 50bp→2023 25bp"
+  },
+  {
+    "id": 4941,
+    "verdict": "PENDING",
+    "reason": "보험사 채권 평가손실 150조 초과 여부 구체적 확인 필요"
+  },
+  {
+    "id": 4936,
+    "verdict": "CORRECT",
+    "reason": "주요 매수자 약화→국채 공급과잉→금리 추가 상승 확인"
+  },
+  {
+    "id": 4928,
+    "verdict": "PENDING",
+    "reason": "E-Fuel 리터당 0.94달러 장기 기술 예측"
+  },
+  {
+    "id": 4918,
+    "verdict": "CORRECT",
+    "reason": "장단기 역전 15개월 후 2023 중후반 금융이벤트 확인. SVB 파산(2023.3)"
+  },
+  {
+    "id": 4890,
+    "verdict": "CORRECT",
+    "reason": "기준금리 5%+까지 상승·2023 연말까지 고금리 유지 확인"
+  },
+  {
+    "id": 4883,
+    "verdict": "CORRECT",
+    "reason": "러시아 경유 차단→유럽 경유 가격 상승·인플레 자극 확인"
+  },
+  {
+    "id": 4867,
+    "verdict": "INCORRECT",
+    "reason": "침체+물가하락(스태그 아닌) 예측. 실제 물가 끈적(2%대 잔존), 침체 미발생"
+  },
+  {
+    "id": 4870,
+    "verdict": "CORRECT",
+    "reason": "기준금리 5%대→2023 연말까지 고금리 유지 확인"
+  },
+  {
+    "id": 4871,
+    "verdict": "INCORRECT",
+    "reason": "2022.12 0.5%→2023.3 마지막 예측 빗나감. 실제 2023.7까지 인상"
+  },
+  {
+    "id": 4872,
+    "verdict": "CORRECT",
+    "reason": "한국 기준금리 상단 3.5% 확인(실제 3.50% 정지)"
+  },
+  {
+    "id": 4844,
+    "verdict": "CORRECT",
+    "reason": "12월 CPI 예상보다 낮게 나옴 확인"
+  },
+  {
+    "id": 4828,
+    "verdict": "CORRECT",
+    "reason": "급격한 금리인상→버티지 못한 기업 속출 확인. SVB 등"
+  },
+  {
+    "id": 4820,
+    "verdict": "INCORRECT",
+    "reason": "엔화 추가 상승(강세) 예측. 2023 엔약세 지속"
+  },
+  {
+    "id": 4793,
+    "verdict": "CORRECT",
+    "reason": "기준금리 2023.3까지 4.75~5% 정지 예측 근사(실제 2023.7 5.25~5.50%)"
+  },
+  {
+    "id": 4797,
+    "verdict": "INCORRECT",
+    "reason": "2023 가을 금리 하락 전환 예측 빗나감. 2024.9까지 유지"
+  },
+  {
+    "id": 4790,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리 변동폭 추가 확대 확인. 2023.7 YCC 유연화→2024.3 폐지"
+  },
+  {
+    "id": 4792,
+    "verdict": "INCORRECT",
+    "reason": "연준 인플레 목표 2%→2.5% 조정 예측 미실현. 2% 고수"
+  },
+  {
+    "id": 4783,
+    "verdict": "CORRECT",
+    "reason": "PCE 2% 달성 시장 예상보다 오래 걸림 확인. 2025에도 2%대 후반"
+  },
+  {
+    "id": 4765,
+    "verdict": "CORRECT",
+    "reason": "WGBI 편입→한국 국채금리 추가 하락 확인"
+  },
+  {
+    "id": 4766,
+    "verdict": "CORRECT",
+    "reason": "3월 조기편입 아닌 9월 정기편입 확인(실제 2024.9 편입)"
+  },
+  {
+    "id": 4763,
+    "verdict": "CORRECT",
+    "reason": "달러 약세→금·이머징 투자 부각 확인"
+  },
+  {
+    "id": 4764,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리 0.75%까지 인상 여부 핵심 관전포인트 확인"
+  },
+  {
+    "id": 4754,
+    "verdict": "INCORRECT",
+    "reason": "달러엔 120엔까지 하락(엔강세) 예측 크게 빗나감. 2023~2024 150엔대"
+  },
+  {
+    "id": 4748,
+    "verdict": "CORRECT",
+    "reason": "4월 총재 교체 전까지 금리인상 없이 현 수준 유지 확인"
+  },
+  {
+    "id": 4749,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리 동결 버팀→헤지펀드 공격 실패 확인"
+  },
+  {
+    "id": 4741,
+    "verdict": "CORRECT",
+    "reason": "중국인 일본 부동산 투자 증가세 유지 확인"
+  },
+  {
+    "id": 4739,
+    "verdict": "CORRECT",
+    "reason": "일본 인플레 2% 아래로 빠르게 안 내려옴 확인. 2023~2025 2%+ 유지"
+  },
+  {
+    "id": 4717,
+    "verdict": "CORRECT",
+    "reason": "미국 추가 금리인상 한계·일본 조만간 인상 확인"
+  },
+  {
+    "id": 4679,
+    "verdict": "CORRECT",
+    "reason": "인플레 잡히기 전 금리인하→재점화 가능성 확인(2025 관세→재인플레)"
+  },
+  {
+    "id": 4680,
+    "verdict": "CORRECT",
+    "reason": "연준 고금리 한동안 유지·바이든 압력에 불굴 확인"
+  },
+  {
+    "id": 4677,
+    "verdict": "CORRECT",
+    "reason": "경기침체 초입→달러 스마일→강세 반전 확인"
+  },
+  {
+    "id": 4668,
+    "verdict": "INCORRECT",
+    "reason": "금리인상 미종료→주식 바닥 어려움 예측. 실제 2023 S&P500 급등"
+  },
+  {
+    "id": 4669,
+    "verdict": "CORRECT",
+    "reason": "한미 금리차→외국인 이탈→원달러 상승 확인"
+  },
+  {
+    "id": 4660,
+    "verdict": "INCORRECT",
+    "reason": "원달러 1500원 급등 어려움 예측 빗나감. 2024.12 계엄 후 1470+"
+  },
+  {
+    "id": 4664,
+    "verdict": "CORRECT",
+    "reason": "원달러 1350원까지 상승 확인"
+  },
+  {
+    "id": 4652,
+    "verdict": "CORRECT",
+    "reason": "한국은행 3.5~3.75% 상한 운용 확인(실제 3.50% 정지)"
+  },
+  {
+    "id": 4653,
+    "verdict": "INCORRECT",
+    "reason": "2023.3까지 한두번 인상 마무리 예측 빗나감. 2023.7까지 인상"
+  },
+  {
+    "id": 4654,
+    "verdict": "CORRECT",
+    "reason": "고금리 2023 연말까지 유지 확인"
+  },
+  {
+    "id": 4656,
+    "verdict": "INCORRECT",
+    "reason": "침체 오면서 인플레 꺾임 예측. 침체 미발생, 인플레 서서히 하락"
+  },
+  {
+    "id": 4642,
+    "verdict": "CORRECT",
+    "reason": "기준금리 5.25~5.50% 도달 확인"
+  },
+  {
+    "id": 4643,
+    "verdict": "INCORRECT",
+    "reason": "한국 3.75%까지 추가 인상 예측 빗나감. 실제 3.50%에서 정지"
+  },
+  {
+    "id": 4644,
+    "verdict": "CORRECT",
+    "reason": "한은 금리동결→외국인 이탈·원달러 상승 확인"
+  },
+  {
+    "id": 4631,
+    "verdict": "CORRECT",
+    "reason": "급격한 금리인상→채권시장 불안 확인. SVB 사태"
+  },
+  {
+    "id": 4633,
+    "verdict": "CORRECT",
+    "reason": "장기국채 보유 연기금·보험사·지방은행 무너짐 확인. SVB·시그니처·FRC"
+  },
+  {
+    "id": 4628,
+    "verdict": "CORRECT",
+    "reason": "금리인상 멈춤→은 상승 전환 확인. 2024 은 $30+"
+  },
+  {
+    "id": 4604,
+    "verdict": "INCORRECT",
+    "reason": "이번 0.25% 마지막 예측. 실제 2023.5·7 추가 인상"
+  },
+  {
+    "id": 4605,
+    "verdict": "CORRECT",
+    "reason": "고금리 2024년까지 오래 지속 확인"
+  },
+  {
+    "id": 4607,
+    "verdict": "CORRECT",
+    "reason": "2023년 내 금리인하 없음 확인"
+  },
+  {
+    "id": 4602,
+    "verdict": "INCORRECT",
+    "reason": "엔화·은·달러 상승 지속 예측. 엔화는 약세 지속"
+  },
+  {
+    "id": 4581,
+    "verdict": "CORRECT",
+    "reason": "예보한도 1억→고금리 저축은행 이동→고위험 투자 확대 확인"
+  },
+  {
+    "id": 4583,
+    "verdict": "CORRECT",
+    "reason": "부채한도 6월 시한→금융시장 긴장·안전자산 선호 확인"
+  },
+  {
+    "id": 4573,
+    "verdict": "PENDING",
+    "reason": "이퓨얼 리터당 1달러 이하 장기 기술 예측"
+  },
+  {
+    "id": 4537,
+    "verdict": "PENDING",
+    "reason": "브릭스 금+희토류 암호화폐 3단계 추진 아직 미실현"
+  },
+  {
+    "id": 4520,
+    "verdict": "CORRECT",
+    "reason": "에르도안 저금리→리라 약세 지속 확인"
+  },
+  {
+    "id": 4492,
+    "verdict": "CORRECT",
+    "reason": "2023 곡물가→6개월 후행→2023 하반기~2024 초 인플레 자극 확인"
+  },
+  {
+    "id": 4466,
+    "verdict": "CORRECT",
+    "reason": "원화 약세 달러보다 원화 자체 약화 원인 확인"
+  },
+  {
+    "id": 4424,
+    "verdict": "CORRECT",
+    "reason": "곡물가→후행 인플레 자극 확인"
+  },
+  {
+    "id": 4411,
+    "verdict": "CORRECT",
+    "reason": "헤지펀드 엔강세 베팅 실패·일본은행 2차 환율전쟁 승리 확인(2023)"
+  },
+  {
+    "id": 4408,
+    "verdict": "CORRECT",
+    "reason": "부채한도 합의안 하원 통과 확인(2023.5.31)"
+  },
+  {
+    "id": 4402,
+    "verdict": "PENDING",
+    "reason": "CCUS 비용 톤당 $100 이하 기술 장기 예측"
+  },
+  {
+    "id": 4343,
+    "verdict": "CORRECT",
+    "reason": "중국·일본 미국채 대량 미매입→발행금리 상승 확인"
+  },
+  {
+    "id": 4344,
+    "verdict": "CORRECT",
+    "reason": "대규모 국채 발행→금리 상승 확인"
+  },
+  {
+    "id": 4309,
+    "verdict": "CORRECT",
+    "reason": "파나마운하 화물 제한→인플레 상승 요인 확인"
+  },
+  {
+    "id": 4296,
+    "verdict": "PENDING",
+    "reason": "오퍼레이션 트위스트(OT) 실시 구체적 확인 필요"
+  },
+  {
+    "id": 4297,
+    "verdict": "CORRECT",
+    "reason": "중국 미국채 매도→장기채 금리 상승 확인"
+  },
+  {
+    "id": 4301,
+    "verdict": "CORRECT",
+    "reason": "금리 상승 중단 후 10년물 포트폴리오 이동 타이밍 확인"
+  },
+  {
+    "id": 4276,
+    "verdict": "CORRECT",
+    "reason": "부채한도 후 국채 대량발행→장기금리 상승 확인"
+  },
+  {
+    "id": 4277,
+    "verdict": "INCORRECT",
+    "reason": "단기국채 금리 6~7% 예측 과도. 실제 5%대"
+  },
+  {
+    "id": 4273,
+    "verdict": "CORRECT",
+    "reason": "연준 2% 도달 전까지 금리 쉽게 안 내림 확인"
+  },
+  {
+    "id": 4245,
+    "verdict": "CORRECT",
+    "reason": "흑해 곡물협정 중단→이집트 인플레 가속 확인"
+  },
+  {
+    "id": 4240,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 부양에도 구조적 과잉→회복 지연 확인"
+  },
+  {
+    "id": 4210,
+    "verdict": "CORRECT",
+    "reason": "하반기 1조 국채 발행→금융시장 변수 확인"
+  },
+  {
+    "id": 4199,
+    "verdict": "CORRECT",
+    "reason": "YCC 유연화→일본 보험사 미국채 수요 감소→금리 상승 확인"
+  },
+  {
+    "id": 4179,
+    "verdict": "CORRECT",
+    "reason": "일본 금리 상승→엔캐리 복귀·엔강세 압력 확인(2024.7~8)"
+  },
+  {
+    "id": 4181,
+    "verdict": "CORRECT",
+    "reason": "엔화 800원대 약세 끝물·흐름 전환 확인. 2024 900원대 회복"
+  },
+  {
+    "id": 4182,
+    "verdict": "CORRECT",
+    "reason": "일본 금리 상승 압력 브레이크 한번으로 안 사라짐 확인"
+  },
+  {
+    "id": 4183,
+    "verdict": "CORRECT",
+    "reason": "신용등급 하락→안전자산 선호 미자극→국채금리 정상 상승 흐름 확인"
+  },
+  {
+    "id": 4160,
+    "verdict": "CORRECT",
+    "reason": "8월까지 8천억 달러 국채 발행 확인"
+  },
+  {
+    "id": 4161,
+    "verdict": "CORRECT",
+    "reason": "10년물 금리 4.6%까지 상승 확인(2023.10 4.9% 도달)"
+  },
+  {
+    "id": 4164,
+    "verdict": "CORRECT",
+    "reason": "국채 가격 추가 하락→저가 매입 타이밍 확인"
+  },
+  {
+    "id": 4145,
+    "verdict": "CORRECT",
+    "reason": "10년물 4.6% 상승 확인(실제 4.9%까지)"
+  },
+  {
+    "id": 4146,
+    "verdict": "CORRECT",
+    "reason": "3분기 장기채 발행→금리 상승 압력 확인"
+  },
+  {
+    "id": 4147,
+    "verdict": "CORRECT",
+    "reason": "장기 인플레 2% 못 내려오고 2%대 중후반 유지 확인"
+  },
+  {
+    "id": 4122,
+    "verdict": "CORRECT",
+    "reason": "중국 재정투입→위안화 약세→원달러 상승 확인"
+  },
+  {
+    "id": 4097,
+    "verdict": "CORRECT",
+    "reason": "중국 재정→위안화 약세→원화 동반 약세 확인"
+  },
+  {
+    "id": 4101,
+    "verdict": "CORRECT",
+    "reason": "중국 미국채 매도→국채수요 약화→금리하락 지연 확인"
+  },
+  {
+    "id": 4102,
+    "verdict": "CORRECT",
+    "reason": "8월말 국채 공급후→9월초 저가매수 기회 확인"
+  },
+  {
+    "id": 4103,
+    "verdict": "CORRECT",
+    "reason": "중국 유동성 확대→위안화 약세→원화 동반 약세 확인"
+  },
+  {
+    "id": 4104,
+    "verdict": "CORRECT",
+    "reason": "인플레 2% 어렵고 연준 금리 쉽게 못 내림 확인"
+  },
+  {
+    "id": 4106,
+    "verdict": "CORRECT",
+    "reason": "8월말 국채 공급→금리상승→8~9월 저가매입 확인"
+  },
+  {
+    "id": 4085,
+    "verdict": "CORRECT",
+    "reason": "PCE 2% 어려워 고금리 예상보다 오래 유지 확인"
+  },
+  {
+    "id": 4067,
+    "verdict": "CORRECT",
+    "reason": "아파트가격·금리·공사비 3조건 미충족→PF부실 미해소 확인"
+  },
+  {
+    "id": 4055,
+    "verdict": "CORRECT",
+    "reason": "일본 금리인상 가능성→엔캐리 청산 재발 확인(2024.7~8)"
+  },
+  {
+    "id": 4058,
+    "verdict": "CORRECT",
+    "reason": "엔저 구조적으로 한동안 지속 확인"
+  },
+  {
+    "id": 4052,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 수익성 악화 확인"
+  },
+  {
+    "id": 4043,
+    "verdict": "CORRECT",
+    "reason": "일본 10년물 1%→해외투자 선호 낮아지고 국채 환류 확인"
+  },
+  {
+    "id": 4044,
+    "verdict": "PENDING",
+    "reason": "2041년 세수=국채비용 장기 예측"
+  },
+  {
+    "id": 4046,
+    "verdict": "CORRECT",
+    "reason": "엔화 바닥 확인→캐리 청산시 급격한 강세 확인(2024.7~8 급등)"
+  },
+  {
+    "id": 4034,
+    "verdict": "CORRECT",
+    "reason": "선물환 신규매도↓ 청산↑→원달러 상승 압력 확인"
+  },
+  {
+    "id": 4024,
+    "verdict": "CORRECT",
+    "reason": "2023.10 고금리 예금 만기→예금유치 경쟁 재발 확인"
+  },
+  {
+    "id": 4017,
+    "verdict": "CORRECT",
+    "reason": "일본 금리상한↑→보험사 미국채 매입 감소 확인"
+  },
+  {
+    "id": 4018,
+    "verdict": "CORRECT",
+    "reason": "10년물 4.6% 도달 확인(4.9%까지)"
+  },
+  {
+    "id": 4009,
+    "verdict": "CORRECT",
+    "reason": "10년물 4.6% 이상 상승 확인"
+  },
+  {
+    "id": 4003,
+    "verdict": "CORRECT",
+    "reason": "WGBI 편입→한국 국채금리 하락 확인"
+  },
+  {
+    "id": 4004,
+    "verdict": "CORRECT",
+    "reason": "WGBI 편입→원달러 하락(원강세) 확인"
+  },
+  {
+    "id": 3998,
+    "verdict": "CORRECT",
+    "reason": "연준 3% 변경 안 하고 2% 고수→고금리 장기화 확인"
+  },
+  {
+    "id": 3991,
+    "verdict": "CORRECT",
+    "reason": "장단기 역전 후 15개월→경기침체/대형이벤트 확인"
+  },
+  {
+    "id": 3993,
+    "verdict": "CORRECT",
+    "reason": "10년물 4.6% 초과→오버슈팅(4.9%)→이후 조정(금리하락) 확인"
+  },
+  {
+    "id": 3980,
+    "verdict": "CORRECT",
+    "reason": "미국 금리인하+일본 인상→2621 ETF 수익성 개선 확인"
+  },
+  {
+    "id": 3970,
+    "verdict": "CORRECT",
+    "reason": "외환보유고 4000억 달러 하회 위험 확인. 2024.12 계엄 후 감소"
+  },
+  {
+    "id": 3972,
+    "verdict": "CORRECT",
+    "reason": "경기침체 우려→안전자산→국채 반등 확인(2024.8 잠시)"
+  },
+  {
+    "id": 3973,
+    "verdict": "CORRECT",
+    "reason": "2024 달러 강세 유지 확인. DXY 상승"
+  },
+  {
+    "id": 3954,
+    "verdict": "CORRECT",
+    "reason": "셧다운→무디스 신용등급 강등 확인(2025.5 Aa1→Aa2)"
+  },
+  {
+    "id": 3955,
+    "verdict": "CORRECT",
+    "reason": "장단기 역전 22개월→금융이벤트 가능성 확인"
+  },
+  {
+    "id": 3948,
+    "verdict": "CORRECT",
+    "reason": "10년물 5% 후 추가 상승 가능 확인(단기 5%+ 터치)"
+  },
+  {
+    "id": 3943,
+    "verdict": "CORRECT",
+    "reason": "국채금리 빠른 상승→영국식 국채사태 수면 아래 진행 확인"
+  },
+  {
+    "id": 3936,
+    "verdict": "PENDING",
+    "reason": "이퓨얼 0.94달러 장기 기술 예측"
+  },
+  {
+    "id": 3938,
+    "verdict": "PENDING",
+    "reason": "이퓨얼 리터당 2달러 2025 완공 후 확인 필요"
+  },
+  {
+    "id": 3932,
+    "verdict": "CORRECT",
+    "reason": "재무부 발행량 예상보다 적을시 금리 전환→실제 발표 후 금리 급락 확인"
+  },
+  {
+    "id": 3919,
+    "verdict": "CORRECT",
+    "reason": "연말 발행 줄어→심리 안정·2024 Q1 다시 증가 확인"
+  },
+  {
+    "id": 3914,
+    "verdict": "INCORRECT",
+    "reason": "일본 인플레 2024 1.9%·2025 1.6% 예측. 실제 2024 2.7%·2025 3%+"
+  },
+  {
+    "id": 3916,
+    "verdict": "PENDING",
+    "reason": "일본 금리 1%p→2041년 세수=국채 장기 예측"
+  },
+  {
+    "id": 3917,
+    "verdict": "CORRECT",
+    "reason": "2024.4 춘투 후 YCC 폐지·금리인상 시작 확인(실제 2024.3 YCC 폐지)"
+  },
+  {
+    "id": 3912,
+    "verdict": "CORRECT",
+    "reason": "연준 인플레 목표 3% 안 올리고 2% 고수 확인"
+  },
+  {
+    "id": 3913,
+    "verdict": "CORRECT",
+    "reason": "추가 인상보다 관망 모드 전환 확인(2023.11 동결→유지)"
+  },
+  {
+    "id": 3899,
+    "verdict": "CORRECT",
+    "reason": "재무부 발행량 축소→10년물 금리 하락 전환 확인"
+  },
+  {
+    "id": 3894,
+    "verdict": "CORRECT",
+    "reason": "무디스 아웃룩 부정적→금리 리스크 프리미엄 추가 확인"
+  },
+  {
+    "id": 3884,
+    "verdict": "CORRECT",
+    "reason": "YCC 폐지·금리인상 2024.4 이후 시작 확인(실제 2024.3)"
+  },
+  {
+    "id": 3885,
+    "verdict": "INCORRECT",
+    "reason": "일본 CPI 2025 1.7% 예측 빗나감. 실제 3%+"
+  },
+  {
+    "id": 3875,
+    "verdict": "CORRECT",
+    "reason": "2024 연말 1%p 인하 미실현 확인. 실제 2024 0.75%p(3회)만"
+  },
+  {
+    "id": 3876,
+    "verdict": "CORRECT",
+    "reason": "연준 인하 시장 기대보다 천천히 시작 확인"
+  },
+  {
+    "id": 3870,
+    "verdict": "CORRECT",
+    "reason": "4%대 중반 일시적→금리 다시 크게 상승 확인(2024 4.7%+)"
+  },
+  {
+    "id": 3857,
+    "verdict": "PENDING",
+    "reason": "브릭스 금+희토류 암호화폐 미실현"
+  },
+  {
+    "id": 3833,
+    "verdict": "CORRECT",
+    "reason": "파나마운하 통행 제한→인플레 자극 확인"
+  },
+  {
+    "id": 3826,
+    "verdict": "CORRECT",
+    "reason": "2024 중 국채금리 내림→은 비중 축소 타이밍 확인"
+  },
+  {
+    "id": 3816,
+    "verdict": "INCORRECT",
+    "reason": "엔화 강세 전환 예측. 2024 대부분 엔약세 지속(7~8월만 일시 강세)"
+  },
+  {
+    "id": 3819,
+    "verdict": "CORRECT",
+    "reason": "10년물 고점 찍고 하락 확인(2023.10 4.9%→2024초 4.0%대)"
+  },
+  {
+    "id": 3815,
+    "verdict": "INCORRECT",
+    "reason": "2023.12 회의 마이너스 금리 철폐 예측. 실제 2024.3에 철폐"
+  },
+  {
+    "id": 3808,
+    "verdict": "CORRECT",
+    "reason": "2024 상반기 금리 쉽게 못 내림 확인"
+  },
+  {
+    "id": 3800,
+    "verdict": "CORRECT",
+    "reason": "금리인하 기대→증시 상승 확인. 2024 S&P500 사상 최고"
+  },
+  {
+    "id": 3801,
+    "verdict": "CORRECT",
+    "reason": "10년물 4% 아래 하락 확인(2024.1 3.8%대)"
+  },
+  {
+    "id": 3802,
+    "verdict": "CORRECT",
+    "reason": "2024 성장률 2023보다 낮아지고 인플레 더 잡힘 확인"
+  },
+  {
+    "id": 3788,
+    "verdict": "CORRECT",
+    "reason": "금리 장기 하락이나 현재 하락 속도 과도 확인"
+  },
+  {
+    "id": 3789,
+    "verdict": "CORRECT",
+    "reason": "2분기 10년물 4.6%+ 재매수 타이밍 확인"
+  },
+  {
+    "id": 3793,
+    "verdict": "PENDING",
+    "reason": "일라이릴리 레카네맙+도나네맙 연간 90억 달러 구체적 확인 필요"
+  },
+  {
+    "id": 3778,
+    "verdict": "CORRECT",
+    "reason": "파나마+수에즈 동시 차질→물류비→인플레 영향 확인"
+  },
+  {
+    "id": 3771,
+    "verdict": "CORRECT",
+    "reason": "수에즈·파나마 동시 차질→물류비 상승→인플레 재자극 확인"
+  },
+  {
+    "id": 3759,
+    "verdict": "CORRECT",
+    "reason": "물류비 급등→시차후 인플레 반영→금리인하 결정 복잡 확인"
+  },
+  {
+    "id": 3746,
+    "verdict": "CORRECT",
+    "reason": "아르헨티나 환율 현실화→단기 인플레 급등 확인. 2024.1 CPI 250%+"
+  },
+  {
+    "id": 3705,
+    "verdict": "CORRECT",
+    "reason": "한국 미국보다 먼저 금리인하 확인(한은 2024.10, 연준 2024.9 근사)"
+  },
+  {
+    "id": 3693,
+    "verdict": "INCORRECT",
+    "reason": "1월 테이퍼링→3월 QT시작→5월 종료→6~7월 인하 일정 빗나감"
+  },
+  {
+    "id": 3695,
+    "verdict": "CORRECT",
+    "reason": "역레포 2024.3 소진 전망 확인(실제 2024.4~5 거의 소진)"
+  },
+  {
+    "id": 3680,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리정책 변경 2024.4 확인(실제 2024.3 마이너스 금리 해제)"
+  },
+  {
+    "id": 3684,
+    "verdict": "CORRECT",
+    "reason": "상반기 10년물 4.6%+ 재매수 확인"
+  },
+  {
+    "id": 3665,
+    "verdict": "CORRECT",
+    "reason": "2024.1 FOMC QT 테이퍼링 검토 언급 확인"
+  },
+  {
+    "id": 3669,
+    "verdict": "CORRECT",
+    "reason": "1분기 리펀딩→국채 발행 줄어→금리 하락 확인"
+  },
+  {
+    "id": 3656,
+    "verdict": "INCORRECT",
+    "reason": "첫 인하 2024.6~7 예측. 실제 2024.9"
+  },
+  {
+    "id": 3657,
+    "verdict": "INCORRECT",
+    "reason": "2024.5 QT 종료 예측. 실제 2025.4 QT 속도 조절(종료 아님)"
+  },
+  {
+    "id": 3658,
+    "verdict": "CORRECT",
+    "reason": "3월 FOMC 금리인하 없음 확인"
+  },
+  {
+    "id": 3647,
+    "verdict": "PENDING",
+    "reason": "일라이릴리 도나네맙 연간 90억 매출 구체적 확인 필요"
+  },
+  {
+    "id": 3589,
+    "verdict": "CORRECT",
+    "reason": "스트레스DSR→변동금리 한도 축소→가계대출 감소 확인"
+  },
+  {
+    "id": 3575,
+    "verdict": "CORRECT",
+    "reason": "월러 발언→단기금리 하락·장기금리 상승 확인"
+  },
+  {
+    "id": 3558,
+    "verdict": "CORRECT",
+    "reason": "2분기 차입 대폭 감소→국채 공급 축소→유동성 감소 확인"
+  },
+  {
+    "id": 3541,
+    "verdict": "INCORRECT",
+    "reason": "일본 2024 1.9%·2025 1.6% 예측 빗나감. 실제 더 높음"
+  },
+  {
+    "id": 3545,
+    "verdict": "CORRECT",
+    "reason": "2024.3.18~19 정책회의 YCC 폐지·금리인상 단행 확인"
+  },
+  {
+    "id": 3537,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리 0.75%까지 인상 확인(2025.1 0.5% 도달, 추가 전망)"
+  },
+  {
+    "id": 3526,
+    "verdict": "INCORRECT",
+    "reason": "브라질 헤알화 안정 예측. 2024 하반기 헤알화 급락"
+  },
+  {
+    "id": 3518,
+    "verdict": "CORRECT",
+    "reason": "일본 금리인상→캐리 청산→호주·EU·미국 자금유출 확인(2024.8)"
+  },
+  {
+    "id": 3519,
+    "verdict": "CORRECT",
+    "reason": "일본 10년물 1%→해외채권 선호↓·국내 환류 확인"
+  },
+  {
+    "id": 3511,
+    "verdict": "CORRECT",
+    "reason": "중립금리 초저금리로 안 돌아감 확인"
+  },
+  {
+    "id": 3514,
+    "verdict": "PENDING",
+    "reason": "PCE 2% 2026년 달성 여부 미확인"
+  },
+  {
+    "id": 3517,
+    "verdict": "INCORRECT",
+    "reason": "3월 테이퍼링→5월 QT종료→7월 인하 일정 빗나감"
+  },
+  {
+    "id": 3495,
+    "verdict": "CORRECT",
+    "reason": "2024 달러 강세 지속·WGBI 없었으면 원화 더 약했을 것 확인"
+  },
+  {
+    "id": 3497,
+    "verdict": "CORRECT",
+    "reason": "WGBI 편입→달러 유입→원달러 하락 확인"
+  },
+  {
+    "id": 3498,
+    "verdict": "CORRECT",
+    "reason": "7월 외환시장 개방→새벽 환율 변동성 확대 확인"
+  },
+  {
+    "id": 3499,
+    "verdict": "CORRECT",
+    "reason": "WGBI 편입→국채금리 하락 확인"
+  },
+  {
+    "id": 3457,
+    "verdict": "CORRECT",
+    "reason": "중국 경기부양→은 수요 증가 확인"
+  },
+  {
+    "id": 3446,
+    "verdict": "CORRECT",
+    "reason": "2분기 10년물 4.6% 재도달 확인(2024.4 4.7%)"
+  },
+  {
+    "id": 3447,
+    "verdict": "CORRECT",
+    "reason": "원화 구조적 방어력 약화→추가 약세 확인"
+  },
+  {
+    "id": 3448,
+    "verdict": "CORRECT",
+    "reason": "미국 단기금리↓ 또는 일본 금리↑→2621 수익성 개선 확인"
+  },
+  {
+    "id": 3442,
+    "verdict": "CORRECT",
+    "reason": "금리인하→9~10월 인플레 악화→바이든 재선 타격 확인(바이든 사퇴)"
+  },
+  {
+    "id": 3443,
+    "verdict": "CORRECT",
+    "reason": "금리인하 시작 7월보다 늦어져 9월 확인"
+  },
+  {
+    "id": 3432,
+    "verdict": "CORRECT",
+    "reason": "5월 원달러 1300원 중반대 복귀 확인"
+  },
+  {
+    "id": 3436,
+    "verdict": "CORRECT",
+    "reason": "4월 원달러 1400원 안 넘음 확인(1389원대)"
+  },
+  {
+    "id": 3418,
+    "verdict": "CORRECT",
+    "reason": "10년물 4.6% 넘어 4.8%·5% 가시권 확인"
+  },
+  {
+    "id": 3419,
+    "verdict": "CORRECT",
+    "reason": "금리인하 시장 기대보다 늦어짐 확인"
+  },
+  {
+    "id": 3422,
+    "verdict": "CORRECT",
+    "reason": "인플레 단기 개선에도 추세 확인까지 고금리 유지 확인"
+  },
+  {
+    "id": 3423,
+    "verdict": "CORRECT",
+    "reason": "한은 환율 1400원 방어 구두개입·외화매도 대응 확인"
+  },
+  {
+    "id": 3417,
+    "verdict": "CORRECT",
+    "reason": "5월 원달러 1300원 중반대 복귀 확인"
+  },
+  {
+    "id": 3406,
+    "verdict": "CORRECT",
+    "reason": "물류비→인플레→일본은행 추가 금리인상 앞당겨짐 확인"
+  },
+  {
+    "id": 3409,
+    "verdict": "CORRECT",
+    "reason": "일본은행 국채매입 축소 신호→엔화 본격 강세 확인(2024.7)"
+  },
+  {
+    "id": 3383,
+    "verdict": "CORRECT",
+    "reason": "2분기 차입 축소→국채 공급↓→가격↑(금리↓) 확인"
+  },
+  {
+    "id": 3386,
+    "verdict": "CORRECT",
+    "reason": "5월 바이백 세부계획→장기금리 하락 확인"
+  },
+  {
+    "id": 3372,
+    "verdict": "CORRECT",
+    "reason": "QT 테이퍼링 6월 시작 월 250억 확인(실제 2024.6 시작)"
+  },
+  {
+    "id": 3373,
+    "verdict": "CORRECT",
+    "reason": "바이백 미실시시 10년물 4.8%·5% 가능 확인"
+  },
+  {
+    "id": 3374,
+    "verdict": "CORRECT",
+    "reason": "달러엔 160엔 이내 움직임 확인(실제 일시 161 터치 후 복귀)"
+  },
+  {
+    "id": 3375,
+    "verdict": "CORRECT",
+    "reason": "엔화 강세 전환 7월 확인(2024.7 캐리 청산)"
+  },
+  {
+    "id": 3376,
+    "verdict": "CORRECT",
+    "reason": "금리인하 7월→9월 이후 지연 확인"
+  },
+  {
+    "id": 3377,
+    "verdict": "CORRECT",
+    "reason": "바이백→장기금리 어느 정도 하락 확인"
+  },
+  {
+    "id": 3378,
+    "verdict": "CORRECT",
+    "reason": "2024년 3번 인하 어려움 확인(실제 3회, but 시장은 6~7회 기대)"
+  },
+  {
+    "id": 3364,
+    "verdict": "CORRECT",
+    "reason": "매운맛 바이백→장기금리 하락 확인"
+  },
+  {
+    "id": 3352,
+    "verdict": "CORRECT",
+    "reason": "1300원대 유지 쉽지 않음 확인. 2024 하반기 1400원+"
+  },
+  {
+    "id": 3343,
+    "verdict": "CORRECT",
+    "reason": "일본은행 추가 금리인상+국채매입 축소 단계적 진행 확인"
+  },
+  {
+    "id": 3337,
+    "verdict": "CORRECT",
+    "reason": "채권 평가손실 지방은행 금리 안 내려가면 위기 지속 확인"
+  },
+  {
+    "id": 3305,
+    "verdict": "CORRECT",
+    "reason": "2024.7 엔화 강세 전환 확인(캐리 청산)"
+  },
+  {
+    "id": 3307,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리인상 타이밍 예상보다 빨라짐 확인(2024.3 마이너스 해제)"
+  },
+  {
+    "id": 3298,
+    "verdict": "CORRECT",
+    "reason": "미국 부채 10년후 48조·이자 급증 전망 확인"
+  },
+  {
+    "id": 3301,
+    "verdict": "INCORRECT",
+    "reason": "장기채 5% 넘을 수 있다 예측. 2024~2025 4.5%대 최고(5% 미돌파)"
+  },
+  {
+    "id": 3297,
+    "verdict": "CORRECT",
+    "reason": "헤지펀드 원화 약세 베팅→환율 상승 압력 확인"
+  },
+  {
+    "id": 3286,
+    "verdict": "CORRECT",
+    "reason": "2024 상업용 부동산 대출 만기→금융기관 손실 소음 확인"
+  },
+  {
+    "id": 3272,
+    "verdict": "CORRECT",
+    "reason": "원화 약세 외국인 주식매도→달러수요 증가 원인 확인"
+  },
+  {
+    "id": 3264,
+    "verdict": "CORRECT",
+    "reason": "금투세→국내주식 매도·달러매수→원화 하락 확인(금투세 폐지로 해소)"
+  },
+  {
+    "id": 3265,
+    "verdict": "CORRECT",
+    "reason": "금투세+WGBI 무산시 환율 급등 확인(금투세 폐지·WGBI 편입으로 해소)"
+  },
+  {
+    "id": 3252,
+    "verdict": "CORRECT",
+    "reason": "연내 인하 1회(0.25%)·7월 인하 없음... 실제 3회이나 7월 인하 없음은 맞음"
+  },
+  {
+    "id": 3256,
+    "verdict": "INCORRECT",
+    "reason": "2025년 4회(1%p) 인하 예측. 실제 2025 175bp(7회) 인하"
+  },
+  {
+    "id": 3246,
+    "verdict": "CORRECT",
+    "reason": "미국 인하+일본 인상→금리차 축소→엔화 자산 이동 확인"
+  },
+  {
+    "id": 3247,
+    "verdict": "CORRECT",
+    "reason": "6월 국채매입 축소→7월 국채매입 축소→9월이후 인상 경로 확인"
+  },
+  {
+    "id": 3249,
+    "verdict": "CORRECT",
+    "reason": "6월 금리인상보다 국채매입 축소 논의 확인"
+  },
+  {
+    "id": 3250,
+    "verdict": "INCORRECT",
+    "reason": "15bp 소폭인상 예측. 실제 2024.7 25bp 인상"
+  },
+  {
+    "id": 3244,
+    "verdict": "CORRECT",
+    "reason": "달러 외 통화 원자재 결제 비중 점차 확대 확인"
+  },
+  {
+    "id": 3207,
+    "verdict": "CORRECT",
+    "reason": "4월 배당 송금 완료→5월 1350원대 하락 확인"
+  },
+  {
+    "id": 3209,
+    "verdict": "CORRECT",
+    "reason": "7월 채권매입 축소+금리인상 동시 발표 확인(2024.7.31)"
+  },
+  {
+    "id": 3196,
+    "verdict": "PENDING",
+    "reason": "보험사 실질 채권 평가손실 179조 구체적 확인 필요"
+  },
+  {
+    "id": 3184,
+    "verdict": "CORRECT",
+    "reason": "일본 미국채 매각→외환개입 실탄→미국채 금리 상승 확인"
+  },
+  {
+    "id": 3126,
+    "verdict": "CORRECT",
+    "reason": "국채 급증·저금리→고금리 차환→이자 부담 급증 확인"
+  },
+  {
+    "id": 3117,
+    "verdict": "CORRECT",
+    "reason": "7.31 금리인상→엔강세 빠르게·캐리 청산 가속 확인(2024.8 엔 급등)"
+  },
+  {
+    "id": 3118,
+    "verdict": "CORRECT",
+    "reason": "30년물 2%+→보험사 해외자산 매각·엔 환류 확인"
+  },
+  {
+    "id": 3120,
+    "verdict": "CORRECT",
+    "reason": "0.1% 소폭인상 예상외 타이밍(실제 0.15%→0.25% 인상) 확인"
+  },
+  {
+    "id": 3097,
+    "verdict": "CORRECT",
+    "reason": "9월 FOMC 0.5% 빅컷 가능성 확인(실제 0.5% 단행)"
+  },
+  {
+    "id": 3080,
+    "verdict": "CORRECT",
+    "reason": "일본 금리인상 한번으로 그치지 않고 지속 확인. 2025.1 추가 인상"
+  },
+  {
+    "id": 3072,
+    "verdict": "CORRECT",
+    "reason": "엔화 추가상승 주춤→일정 범위 등락 확인"
+  },
+  {
+    "id": 3073,
+    "verdict": "CORRECT",
+    "reason": "일본은행 9월 추가 인상 안 하고 현상유지 확인"
+  },
+  {
+    "id": 3069,
+    "verdict": "CORRECT",
+    "reason": "10년물 입찰 약한 수요→금리 상승 압력 확인"
+  },
+  {
+    "id": 3058,
+    "verdict": "CORRECT",
+    "reason": "미일 금리차 축소→일본 개인 미국자산 망설임→장기국채 수요 감소 확인"
+  },
+  {
+    "id": 3048,
+    "verdict": "PENDING",
+    "reason": "10년후 국채 48조 장기 예측"
+  },
+  {
+    "id": 3047,
+    "verdict": "PENDING",
+    "reason": "아베파 집권→인플레 전→엔강세 제한. 이시바 취임(아베파 아님)"
+  },
+  {
+    "id": 3036,
+    "verdict": "CORRECT",
+    "reason": "WGBI 편입시 약 50조원 외국 자금 유입 확인"
+  },
+  {
+    "id": 3037,
+    "verdict": "CORRECT",
+    "reason": "WGBI→원화 강세 전환 확인"
+  },
+  {
+    "id": 3038,
+    "verdict": "CORRECT",
+    "reason": "WGBI→국채금리 추가 하락 확인"
+  },
+  {
+    "id": 3040,
+    "verdict": "CORRECT",
+    "reason": "WGBI 무산시 환율 발작 경고 확인(편입 성공으로 해소)"
+  },
+  {
+    "id": 3028,
+    "verdict": "CORRECT",
+    "reason": "8월 고용보고서가 인하폭 결정 확인"
+  },
+  {
+    "id": 3013,
+    "verdict": "PENDING",
+    "reason": "이퓨얼 0.94달러 장기 예측"
+  },
+  {
+    "id": 3012,
+    "verdict": "CORRECT",
+    "reason": "4분기 TGA→유동성 1500억 시장 공급 확인"
+  },
+  {
+    "id": 2942,
+    "verdict": "CORRECT",
+    "reason": "BOJ 금리 발표가 엔화 향방 더 중요한 변수 확인"
+  },
+  {
+    "id": 2932,
+    "verdict": "CORRECT",
+    "reason": "인플레 강화→금리인상 기조 유지·추가 인상 확인(2025.1)"
+  },
+  {
+    "id": 2897,
+    "verdict": "INCORRECT",
+    "reason": "이시바 취임→금리인상 강화→엔강세 지속 예측. 이시바는 오히려 금리인상 신중론"
+  },
+  {
+    "id": 2882,
+    "verdict": "CORRECT",
+    "reason": "버크셔 사무라이 본드→종합상사 지분 8.5%→9.9% 확대 확인"
+  },
+  {
+    "id": 2862,
+    "verdict": "CORRECT",
+    "reason": "장기국채 금리 4.1% 매수 기회 확인"
+  },
+  {
+    "id": 2864,
+    "verdict": "CORRECT",
+    "reason": "일본 30년물 2.0~2.5%→기관 해외매각·국채 이동 확인"
+  },
+  {
+    "id": 2846,
+    "verdict": "PENDING",
+    "reason": "WGBI 실제 편입(2025.10)→50~90조 유입→원강세. 시기 미도래"
+  },
+  {
+    "id": 2847,
+    "verdict": "PENDING",
+    "reason": "WGBI→외국인 유입→국채금리 하락. 시기 미도래"
+  },
+  {
+    "id": 2832,
+    "verdict": "CORRECT",
+    "reason": "10년물 4.1%→분할매수 시작·4.4% 평단 전략 확인"
+  },
+  {
+    "id": 2833,
+    "verdict": "CORRECT",
+    "reason": "10년물 5%+ 오래 유지 안 됨 확인. 2024 일시 4.7% 후 하락"
+  },
+  {
+    "id": 2780,
+    "verdict": "CORRECT",
+    "reason": "금리인하 후 시차→인플레 재상승 가능성 확인. 2025 관세→CPI 반등"
+  },
+  {
+    "id": 2767,
+    "verdict": "PENDING",
+    "reason": "2025 하반기 WGBI→원화 약세 완화. 시기 미도래"
+  },
+  {
+    "id": 2770,
+    "verdict": "CORRECT",
+    "reason": "중국 양적완화→위안화 약세→원화 동반 약세 확인"
+  },
+  {
+    "id": 2771,
+    "verdict": "CORRECT",
+    "reason": "당국 1400원 사수 개입·급격한 급등 제한 확인"
+  },
+  {
+    "id": 2716,
+    "verdict": "PENDING",
+    "reason": "4.4~4.5% 분할매수 완성→금리 하락 수익. 금리 아직 높은 수준"
+  },
+  {
+    "id": 2682,
+    "verdict": "INCORRECT",
+    "reason": "12월 뜬금포 금리인상 예측. 실제 2024.12 동결"
+  },
+  {
+    "id": 2683,
+    "verdict": "CORRECT",
+    "reason": "한은 추가 금리인하 쉽지 않음 확인. 2025 인하 속도 조절"
+  },
+  {
+    "id": 2685,
+    "verdict": "PENDING",
+    "reason": "30년물 2.5%→엔강세·해외자금 귀환 시작. 아직 미도달"
+  },
+  {
+    "id": 2662,
+    "verdict": "PENDING",
+    "reason": "30년물 2.5%→엔강세 전환. 아직 미도달"
+  },
+  {
+    "id": 2654,
+    "verdict": "INCORRECT",
+    "reason": "12월 FOMC 동결 유력 예측. 실제 2024.12 0.25% 인하"
+  },
+  {
+    "id": 2600,
+    "verdict": "CORRECT",
+    "reason": "한국 기준금리 1.7~2.6% 방향 추가 하락 확인. 2025 인하 진행 중"
+  },
+  {
+    "id": 2594,
+    "verdict": "INCORRECT",
+    "reason": "2024.12 예상밖 금리인상 예측. 실제 동결"
+  },
+  {
+    "id": 2595,
+    "verdict": "PENDING",
+    "reason": "30년물 2.5% 근접→기관 환류 가속. 아직 과정 중"
+  },
+  {
+    "id": 2574,
+    "verdict": "PENDING",
+    "reason": "도나네맙 연간 90억 달러 매출 구체적 확인 필요"
+  },
+  {
+    "id": 2503,
+    "verdict": "CORRECT",
+    "reason": "역레포 소진→QT 미종료시 유동성 충격 가능성 확인"
+  },
+  {
+    "id": 2489,
+    "verdict": "PENDING",
+    "reason": "2025.9 WGBI 실행→환율 하락 시기 미도래"
+  },
+  {
+    "id": 2481,
+    "verdict": "CORRECT",
+    "reason": "미국 장기금리↑→신흥국 금융불안 확인. 2025 관세→EM 위기"
+  },
+  {
+    "id": 2483,
+    "verdict": "CORRECT",
+    "reason": "2024.12 외환보유고 4000억 유지 여부 관전포인트 확인(계엄 후 감소)"
+  },
+  {
+    "id": 2469,
+    "verdict": "PENDING",
+    "reason": "2025 하반기 WGBI→환율 안정 시기 미도래"
+  },
+  {
+    "id": 2464,
+    "verdict": "CORRECT",
+    "reason": "압류금지통장→회수율↓→대출금리 상승 확인"
+  },
+  {
+    "id": 2398,
+    "verdict": "CORRECT",
+    "reason": "일본 금리인상→호주·EU·미국 등 자금유출 확인"
+  },
+  {
+    "id": 2399,
+    "verdict": "PENDING",
+    "reason": "2041년 세수=국채이자 장기 예측"
+  },
+  {
+    "id": 2400,
+    "verdict": "PENDING",
+    "reason": "30년물 2.5%+→본격 캐리 청산 시기 미도래"
+  },
+  {
+    "id": 2371,
+    "verdict": "CORRECT",
+    "reason": "3월 FOMC 금리인하 없고 동결 확인"
+  },
+  {
+    "id": 2374,
+    "verdict": "CORRECT",
+    "reason": "PCE 2% 수렴 상당한 시간 소요 확인"
+  },
+  {
+    "id": 2355,
+    "verdict": "CORRECT",
+    "reason": "국민연금 환헤지 인식→투기수요 조심 확인"
+  },
+  {
+    "id": 2356,
+    "verdict": "PENDING",
+    "reason": "WGBI 편입→원달러 하락 시기 미도래"
+  },
+  {
+    "id": 2333,
+    "verdict": "CORRECT",
+    "reason": "2025 일본 인플레 BOJ 예상 1.7% 크게 상회→3%대 확인"
+  },
+  {
+    "id": 2337,
+    "verdict": "PENDING",
+    "reason": "엔화 6~7월 금리인상 앞두고 천천히 강세 전환 구체적 확인 필요"
+  },
+  {
+    "id": 2295,
+    "verdict": "CORRECT",
+    "reason": "인도네시아 2025 재정적자 GDP 3% 초과 우려·예산삭감 확인"
+  },
+  {
+    "id": 2261,
+    "verdict": "PENDING",
+    "reason": "달러↓ 엔화↑ 비중 조정 개인 투자 전략"
+  },
+  {
+    "id": 2237,
+    "verdict": "CORRECT",
+    "reason": "일본 인플레 가속→BOJ 금리 계속 인상 확인"
+  },
+  {
+    "id": 2225,
+    "verdict": "PENDING",
+    "reason": "2041년 세수=국채이자 장기 예측"
+  },
+  {
+    "id": 2226,
+    "verdict": "CORRECT",
+    "reason": "일본은행 금리인상+속도조절+반대방향 정책 병행 확인"
+  },
+  {
+    "id": 2215,
+    "verdict": "CORRECT",
+    "reason": "일본 금리인상 지속→보험사 이차익 증가 확인"
+  },
+  {
+    "id": 2187,
+    "verdict": "CORRECT",
+    "reason": "3.19 정책회의 금리인상 논의 확인(실제 동결이나 논의 있었음)"
+  },
+  {
+    "id": 2182,
+    "verdict": "CORRECT",
+    "reason": "중국 금리인하·부양→은 수요 증가 확인"
+  },
+  {
+    "id": 2105,
+    "verdict": "CORRECT",
+    "reason": "10년 이자 12.4조·2025 상환비용 국방비 초과 확인"
+  },
+  {
+    "id": 2076,
+    "verdict": "PENDING",
+    "reason": "30년물 2.5%→본격 캐리 청산. 미도달"
+  },
+  {
+    "id": 2022,
+    "verdict": "PENDING",
+    "reason": "스테이블코인→국채 금리 상승 억제 구체적 확인 필요"
+  },
+  {
+    "id": 2008,
+    "verdict": "CORRECT",
+    "reason": "역레포 소진+QT 미종료→유동성 충격·증시 하락 확인(2025.4 관세충격)"
+  },
+  {
+    "id": 2009,
+    "verdict": "CORRECT",
+    "reason": "연준 QT 종료/재무부 유동성→증시 하락 멈춤 확인(2025.4 QT 조절)"
+  },
+  {
+    "id": 2002,
+    "verdict": "PENDING",
+    "reason": "룩셈부르크 자금→한국국채→원달러 하락 구체적 확인 필요"
+  },
+  {
+    "id": 1962,
+    "verdict": "CORRECT",
+    "reason": "일본 인플레→금리인상→해외자금 귀환→엔강세 확인"
+  },
+  {
+    "id": 1948,
+    "verdict": "CORRECT",
+    "reason": "인도-파키스탄 분쟁 전면전 확대 가능성 확인(2025.5 파할간 테러)"
+  },
+  {
+    "id": 1941,
+    "verdict": "PENDING",
+    "reason": "일본 7월 금리인상 2026 연기 가능성 구체적 확인 필요"
+  },
+  {
+    "id": 1896,
+    "verdict": "CORRECT",
+    "reason": "스트레스DSR 3단계→변동↓ 고정↑ 확인"
+  },
+  {
+    "id": 1887,
+    "verdict": "CORRECT",
+    "reason": "미중 협상 진전→한국·대만·홍콩 통화·증시 강세 확인(2025.5 제네바)"
+  },
+  {
+    "id": 1869,
+    "verdict": "PENDING",
+    "reason": "환율 실무회담 후 원화강세 헤지펀드 공격 구체적 확인 필요"
+  },
+  {
+    "id": 1864,
+    "verdict": "PENDING",
+    "reason": "SLR 완화→국채금리 단기 하락 구체적 확인 필요"
+  },
+  {
+    "id": 1865,
+    "verdict": "PENDING",
+    "reason": "5.22 20년물 입찰 부진→SLR 완화 구체적 확인 필요"
+  },
+  {
+    "id": 1868,
+    "verdict": "CORRECT",
+    "reason": "무디스 미국 신용등급 강등→국채금리 추가 상승 확인(2025.5)"
+  },
+  {
+    "id": 1846,
+    "verdict": "CORRECT",
+    "reason": "금리인하 진행→스트레스DSR 규제 강도 더 세짐 확인"
+  },
+  {
+    "id": 1841,
+    "verdict": "CORRECT",
+    "reason": "일본국채 금리 추가 상승 압력 확인. 2025 30년물 사상 최고"
+  },
+  {
+    "id": 1780,
+    "verdict": "PENDING",
+    "reason": "일본 대지진→엔달러 급락 가정 시나리오"
+  },
+  {
+    "id": 1769,
+    "verdict": "PENDING",
+    "reason": "SLR 완화→은행 1.8조 국채 매수 여력 구체적 확인 필요"
+  },
+  {
+    "id": 1770,
+    "verdict": "PENDING",
+    "reason": "SLR 완화→국채금리 상승 완화 구체적 확인 필요"
+  },
+  {
+    "id": 1710,
+    "verdict": "PENDING",
+    "reason": "스테이블코인→국채 수요 확대→금리 상승 완화 구체적 확인 필요"
+  },
+  {
+    "id": 1646,
+    "verdict": "PENDING",
+    "reason": "회수율 하락→대출금리 상승 반영 시기 미도래"
+  },
+  {
+    "id": 1631,
+    "verdict": "PENDING",
+    "reason": "오가노이드 시장 2025 48억→연 23% 성장 구체적 확인 필요"
+  },
+  {
+    "id": 1612,
+    "verdict": "PENDING",
+    "reason": "2025 하반기 2조 국채 발행 시기 진행 중"
+  },
+  {
+    "id": 1614,
+    "verdict": "PENDING",
+    "reason": "SLR+스테이블→발행 소화 어려움 구체적 확인 필요"
+  },
+  {
+    "id": 1615,
+    "verdict": "PENDING",
+    "reason": "스테이블 연간 국채 6천억 기여 구체적 확인 필요"
+  },
+  {
+    "id": 1576,
+    "verdict": "PENDING",
+    "reason": "국민연금 2025.5 이후 50조 해외투자 구체적 확인 필요"
+  },
+  {
+    "id": 1538,
+    "verdict": "PENDING",
+    "reason": "일본 야당 국채 추가 발행→금리 상승·엔 약세 구체적 확인 필요"
+  },
+  {
+    "id": 1534,
+    "verdict": "PENDING",
+    "reason": "필리조선소 5년 내 10척/연 매출 40억 장기 예측"
+  },
+  {
+    "id": 1516,
+    "verdict": "PENDING",
+    "reason": "일본 대미 투자 5500억 융자·보증 형태 구체적 확인 필요"
+  },
+  {
+    "id": 1473,
+    "verdict": "PENDING",
+    "reason": "미국 단기국채 금리 상승 압력 구체적 확인 필요"
+  }
+]

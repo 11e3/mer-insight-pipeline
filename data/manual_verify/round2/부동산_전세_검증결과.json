@@ -1,0 +1,602 @@
+[
+  {
+    "id": 5162,
+    "verdict": "CORRECT",
+    "reason": "한국 경제 악화·위기 가능성 확인(2022~2023 경기둔화)"
+  },
+  {
+    "id": 5143,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 기업 해외도피·유동성 위기 지속 확인(비구이위안 등)"
+  },
+  {
+    "id": 5106,
+    "verdict": "CORRECT",
+    "reason": "성수 공장 폐쇄→서울 레미콘 부족→건설 차질 확인"
+  },
+  {
+    "id": 4923,
+    "verdict": "CORRECT",
+    "reason": "금투세→펀드 환매·청산 절세전략 확인(금투세 폐지로 해소)"
+  },
+  {
+    "id": 4916,
+    "verdict": "CORRECT",
+    "reason": "브리지론 부실→저축은행 등 2금융 손실 본격화 확인"
+  },
+  {
+    "id": 4917,
+    "verdict": "CORRECT",
+    "reason": "부동산PF→저축은행 뱅크런 가능성 확인"
+  },
+  {
+    "id": 4911,
+    "verdict": "CORRECT",
+    "reason": "저축은행·증권사 PF 손실 입주시점 본격화 확인"
+  },
+  {
+    "id": 4912,
+    "verdict": "CORRECT",
+    "reason": "부동산PF 위기 중소형 건설사 먼저 확인"
+  },
+  {
+    "id": 4893,
+    "verdict": "PENDING",
+    "reason": "2050 북자카르타 3m 침수 장기"
+  },
+  {
+    "id": 4894,
+    "verdict": "PENDING",
+    "reason": "2030 대통령궁 해수면 이하 장기"
+  },
+  {
+    "id": 4868,
+    "verdict": "CORRECT",
+    "reason": "2023 기존 대출자 이자 부담 최고조 확인"
+  },
+  {
+    "id": 4846,
+    "verdict": "CORRECT",
+    "reason": "미분양→중소형 건설사 부도·공사 중단 확인"
+  },
+  {
+    "id": 4847,
+    "verdict": "CORRECT",
+    "reason": "PF 본격화→롯데건설 등 대형도 유동성 위기 확인"
+  },
+  {
+    "id": 4848,
+    "verdict": "CORRECT",
+    "reason": "전국 미분양 빠른 속도 증가 확인"
+  },
+  {
+    "id": 4819,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 부양에도 단기 회복 미가시 확인"
+  },
+  {
+    "id": 4773,
+    "verdict": "CORRECT",
+    "reason": "바젤III→가계대출 줄여 BIS 비율 확인"
+  },
+  {
+    "id": 4696,
+    "verdict": "PENDING",
+    "reason": "2050 북자카르타 3m 침수 장기"
+  },
+  {
+    "id": 4697,
+    "verdict": "PENDING",
+    "reason": "2030 대통령궁 해수면 이하 장기"
+  },
+  {
+    "id": 4683,
+    "verdict": "CORRECT",
+    "reason": "지방 울산 등 미분양 빠른 증가 확인"
+  },
+  {
+    "id": 4658,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 실질 회복 쉽지 않음 확인"
+  },
+  {
+    "id": 4608,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 PF 연체율 빠르게 상승 확인"
+  },
+  {
+    "id": 4609,
+    "verdict": "CORRECT",
+    "reason": "신탁사 책임준공 확약→재무적 고생 확인"
+  },
+  {
+    "id": 4594,
+    "verdict": "CORRECT",
+    "reason": "예보한도 상향→저축은행 고위험 PF 투자 확대 확인"
+  },
+  {
+    "id": 4591,
+    "verdict": "CORRECT",
+    "reason": "미국 상업용 부동산 가격 지속 하락 확인"
+  },
+  {
+    "id": 4587,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 관리형 토지신탁 연체율 빠르게 상승 확인"
+  },
+  {
+    "id": 4538,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 부동산 대출 연체율 빠르게 상승 확인"
+  },
+  {
+    "id": 4543,
+    "verdict": "CORRECT",
+    "reason": "신탁사 책임준공 부실→자본 한계 확인"
+  },
+  {
+    "id": 4509,
+    "verdict": "CORRECT",
+    "reason": "갭투자자 연쇄부도 본격화 확인"
+  },
+  {
+    "id": 4502,
+    "verdict": "CORRECT",
+    "reason": "전세자금대출+임대차3법→전세사기·역전세 지속 확인"
+  },
+  {
+    "id": 4487,
+    "verdict": "CORRECT",
+    "reason": "브리지론 비중 높은 저축은행 부실화 확인"
+  },
+  {
+    "id": 4480,
+    "verdict": "INCORRECT",
+    "reason": "미국 상업용 부동산 40% 하락·부실대출 21% 예측 과도. 실제 ~25% 하락"
+  },
+  {
+    "id": 4473,
+    "verdict": "INCORRECT",
+    "reason": "미국 상업용 부동산 40% 하락·부실대출 21% 예측 과도"
+  },
+  {
+    "id": 4446,
+    "verdict": "PENDING",
+    "reason": "2050 자카르타 침수 장기"
+  },
+  {
+    "id": 4329,
+    "verdict": "CORRECT",
+    "reason": "PF 부실 사업장 2024까지 계속 증가 확인"
+  },
+  {
+    "id": 4325,
+    "verdict": "CORRECT",
+    "reason": "상업용 부동산→미국 은행 추가 파산/합병 확인"
+  },
+  {
+    "id": 4327,
+    "verdict": "CORRECT",
+    "reason": "한국 금융사 해외 상업용 부동산 펀드 손실 확인"
+  },
+  {
+    "id": 4328,
+    "verdict": "PENDING",
+    "reason": "미국 상업용 부동산 2025말 35% 하락·2040까지 미회복 장기"
+  },
+  {
+    "id": 4319,
+    "verdict": "CORRECT",
+    "reason": "저축은행 PF 실질 부실 공시보다 크고 부실 전이 확인"
+  },
+  {
+    "id": 4315,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 연체율 빠르게 상승 확인"
+  },
+  {
+    "id": 4300,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 PF 연체율 0.71%보다 훨씬 높음 확인"
+  },
+  {
+    "id": 4295,
+    "verdict": "CORRECT",
+    "reason": "90년대 벽식구조 리모델링 사업성 저하 확인"
+  },
+  {
+    "id": 4261,
+    "verdict": "CORRECT",
+    "reason": "증권사 해외 부동산 7조 손실 위험 확인"
+  },
+  {
+    "id": 4251,
+    "verdict": "CORRECT",
+    "reason": "PF 부실 증권사→저축은행 전이 확인"
+  },
+  {
+    "id": 4213,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 부양→단기 시장 긍정 확인"
+  },
+  {
+    "id": 4193,
+    "verdict": "CORRECT",
+    "reason": "중국인·한국계 중국인 국내 아파트 매수 증가 확인"
+  },
+  {
+    "id": 4195,
+    "verdict": "CORRECT",
+    "reason": "중국인 일본 부동산 투자 증가세 유지 확인"
+  },
+  {
+    "id": 4185,
+    "verdict": "CORRECT",
+    "reason": "무량판 전수조사 철근 누락 추가 발견 확인"
+  },
+  {
+    "id": 4149,
+    "verdict": "CORRECT",
+    "reason": "보험사 해외 부동산 손실 증권사 대비 제한적 확인"
+  },
+  {
+    "id": 4150,
+    "verdict": "CORRECT",
+    "reason": "증권사·공제회·새마을금고 해외 부동산 손실 본격화 확인"
+  },
+  {
+    "id": 4133,
+    "verdict": "CORRECT",
+    "reason": "위워크 파산→오피스 매물→공실률 상승 확인"
+  },
+  {
+    "id": 4121,
+    "verdict": "CORRECT",
+    "reason": "중국 정부 민간 부동산 기업 국유화·자금 투입 확인"
+  },
+  {
+    "id": 4113,
+    "verdict": "CORRECT",
+    "reason": "MSC 2025 633만TEU·20%+ 시장점유율 확인"
+  },
+  {
+    "id": 4064,
+    "verdict": "CORRECT",
+    "reason": "증권사·신탁사·캐피탈·카드사도 PF 부실 확인"
+  },
+  {
+    "id": 4051,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 연체율 빠르게 상승 확인"
+  },
+  {
+    "id": 4053,
+    "verdict": "CORRECT",
+    "reason": "신탁사 책임준공 부실→대규모 손실 확인"
+  },
+  {
+    "id": 4019,
+    "verdict": "CORRECT",
+    "reason": "브리지론 입주 전 이미 부실화 진행 확인"
+  },
+  {
+    "id": 3926,
+    "verdict": "CORRECT",
+    "reason": "증권사·공제회·2금융 해외 상업용 부동산 손실 본격화 확인"
+  },
+  {
+    "id": 3927,
+    "verdict": "CORRECT",
+    "reason": "보험사 해외 부동산 손실 제한적 확인"
+  },
+  {
+    "id": 3928,
+    "verdict": "CORRECT",
+    "reason": "미국 상업용→지방은행 추가 합병·정리 확인"
+  },
+  {
+    "id": 3921,
+    "verdict": "CORRECT",
+    "reason": "서울 외 수도권·광역시 미분양 상당 확인"
+  },
+  {
+    "id": 3924,
+    "verdict": "CORRECT",
+    "reason": "2024.4~5 벚꽃 질 무렵 PF 부실 본격화 확인"
+  },
+  {
+    "id": 3893,
+    "verdict": "CORRECT",
+    "reason": "무디스 아웃룩→미국 부동산 부정적 확인"
+  },
+  {
+    "id": 3856,
+    "verdict": "CORRECT",
+    "reason": "국민주택채권 만기 보유→실질 수익률 높음 확인"
+  },
+  {
+    "id": 3797,
+    "verdict": "CORRECT",
+    "reason": "물류·지산·생숙 비아파트 PF 먼저 부실 확인"
+  },
+  {
+    "id": 3716,
+    "verdict": "CORRECT",
+    "reason": "준공후 미분양→중소형 건설사 부실 본격화 확인"
+  },
+  {
+    "id": 3677,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 회복 지방부채 미해결→단기 어려움 확인"
+  },
+  {
+    "id": 3670,
+    "verdict": "CORRECT",
+    "reason": "PF 정리→캐피탈·저축은행 구조조정 확인"
+  },
+  {
+    "id": 3649,
+    "verdict": "CORRECT",
+    "reason": "오피스·쇼핑몰 구조적 수요 회복 어려움 확인"
+  },
+  {
+    "id": 3650,
+    "verdict": "CORRECT",
+    "reason": "증권사·공제회·새마을금고 해외 부동산 손실 본격 확인"
+  },
+  {
+    "id": 3651,
+    "verdict": "CORRECT",
+    "reason": "미국 지방은행 상업용→추가 합병·위기 확인"
+  },
+  {
+    "id": 3654,
+    "verdict": "CORRECT",
+    "reason": "보험사·5대 시중은행 해외 부동산 손실 제한적 확인"
+  },
+  {
+    "id": 3630,
+    "verdict": "CORRECT",
+    "reason": "독립 건설사 PF 리스크 집중 확인"
+  },
+  {
+    "id": 3633,
+    "verdict": "CORRECT",
+    "reason": "롯데건설 PF 우발채무 펀드 대체→유동성 넘김 확인"
+  },
+  {
+    "id": 3623,
+    "verdict": "CORRECT",
+    "reason": "미국 상업용 2024 본격화→관련 은행 고전 확인"
+  },
+  {
+    "id": 3620,
+    "verdict": "CORRECT",
+    "reason": "지산 PF 아파트보다 심각 확인"
+  },
+  {
+    "id": 3617,
+    "verdict": "CORRECT",
+    "reason": "생숙 준주택 법안 총선 전후 통과 어려움 확인"
+  },
+  {
+    "id": 3609,
+    "verdict": "CORRECT",
+    "reason": "저온 물류 공실→PF 부실→건설사 전이 확인"
+  },
+  {
+    "id": 3590,
+    "verdict": "CORRECT",
+    "reason": "스트레스DSR 대환에도 적용→대환 이동 억제 확인"
+  },
+  {
+    "id": 3488,
+    "verdict": "CORRECT",
+    "reason": "일본 부동산 중국·홍콩 자금 유입 증가 확인"
+  },
+  {
+    "id": 3480,
+    "verdict": "CORRECT",
+    "reason": "준공후 미분양 1.1만호→빠르게 추가 급증 확인"
+  },
+  {
+    "id": 3482,
+    "verdict": "CORRECT",
+    "reason": "2024 하반기 NPL 시장 본격 개막 확인"
+  },
+  {
+    "id": 3425,
+    "verdict": "CORRECT",
+    "reason": "건설원가→서울 신규 분양가 추가 상승 확인"
+  },
+  {
+    "id": 3427,
+    "verdict": "CORRECT",
+    "reason": "공급 감소+분양가↑→기존 아파트 가격 지지 확인"
+  },
+  {
+    "id": 3404,
+    "verdict": "CORRECT",
+    "reason": "브리지론 30조→최대 15조 손실 확인"
+  },
+  {
+    "id": 3405,
+    "verdict": "CORRECT",
+    "reason": "저온물류·지산·생숙 비아파트 PF 더 위험 확인"
+  },
+  {
+    "id": 3381,
+    "verdict": "PENDING",
+    "reason": "2025 스트레스DSR 100%→부동산 하방 압력. 시행 진행중"
+  },
+  {
+    "id": 3289,
+    "verdict": "CORRECT",
+    "reason": "증권사·공제회·2금융 해외 부동산 손실 본격 확인"
+  },
+  {
+    "id": 3261,
+    "verdict": "CORRECT",
+    "reason": "금투세→채권 투자 위축·평가이익 전략 소멸 확인(폐지로 해소)"
+  },
+  {
+    "id": 3187,
+    "verdict": "CORRECT",
+    "reason": "책준형 토지신탁 부실→신탁사 자본잠식 위험 확인"
+  },
+  {
+    "id": 3130,
+    "verdict": "CORRECT",
+    "reason": "주택연금 빠르게 확산 확인"
+  },
+  {
+    "id": 2991,
+    "verdict": "CORRECT",
+    "reason": "전세자금대출 보증 강화→심사 강화→대출 어려움 확인"
+  },
+  {
+    "id": 2993,
+    "verdict": "INCORRECT",
+    "reason": "갭투자 줄어들 것 예측. 2024 하반기 갭투자 오히려 급증"
+  },
+  {
+    "id": 2970,
+    "verdict": "CORRECT",
+    "reason": "해외 상업용 부동산 부실 연이어 확인"
+  },
+  {
+    "id": 2972,
+    "verdict": "CORRECT",
+    "reason": "2025 만기 미국 상업용 대출 차환 실패→부실 확인"
+  },
+  {
+    "id": 2974,
+    "verdict": "CORRECT",
+    "reason": "한국 금융사 해외 상업용 손실 계속 확대 확인"
+  },
+  {
+    "id": 2975,
+    "verdict": "CORRECT",
+    "reason": "글로벌 상업용 부동산 회복 기미 없음 확인"
+  },
+  {
+    "id": 2963,
+    "verdict": "CORRECT",
+    "reason": "서울 신축 분양가 지속 상승 확인"
+  },
+  {
+    "id": 2869,
+    "verdict": "CORRECT",
+    "reason": "비선도지구 재건축 오랜 시간 필요 확인"
+  },
+  {
+    "id": 2870,
+    "verdict": "CORRECT",
+    "reason": "벌떼 완화→중견건설 물량 독점 심화 확인"
+  },
+  {
+    "id": 2738,
+    "verdict": "CORRECT",
+    "reason": "전세자금대출 조건 점점 엄격 확인"
+  },
+  {
+    "id": 2704,
+    "verdict": "PENDING",
+    "reason": "미국 상업용 부동산 21% 부실대출 구체적 확인 필요"
+  },
+  {
+    "id": 2622,
+    "verdict": "CORRECT",
+    "reason": "비은행계 부동산 신탁사 본격 부실화 확인"
+  },
+  {
+    "id": 2624,
+    "verdict": "CORRECT",
+    "reason": "새마을금고 관리형 토지신탁 연체율 타 금융보다 빠르게 상승 확인"
+  },
+  {
+    "id": 2584,
+    "verdict": "CORRECT",
+    "reason": "빌라 전세보증금 하락 압력 확인"
+  },
+  {
+    "id": 2589,
+    "verdict": "CORRECT",
+    "reason": "전세자금대출 기준 빠르게 강화 확인"
+  },
+  {
+    "id": 2590,
+    "verdict": "CORRECT",
+    "reason": "빌라 전세 위축→반전세·월세 전환 가속 확인"
+  },
+  {
+    "id": 2532,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 단기 회복 어려움 확인"
+  },
+  {
+    "id": 2442,
+    "verdict": "CORRECT",
+    "reason": "지방·비핵심 수도권 착공 증가→공급 확대 확인"
+  },
+  {
+    "id": 2443,
+    "verdict": "PENDING",
+    "reason": "지방 미분양 실수요 매수 2025 하반기 시기 미도래"
+  },
+  {
+    "id": 2429,
+    "verdict": "CORRECT",
+    "reason": "미래등기시스템→카카오뱅크 매매잔금대출 중단 확인"
+  },
+  {
+    "id": 2243,
+    "verdict": "CORRECT",
+    "reason": "미분양 증가→새마을금고 PF 손실 2025에도 지속 확인"
+  },
+  {
+    "id": 2169,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 세금 감면→거래량 일시 회복 확인"
+  },
+  {
+    "id": 2160,
+    "verdict": "CORRECT",
+    "reason": "한국 고액자산가 일본 부동산 투자 증가 확인"
+  },
+  {
+    "id": 2137,
+    "verdict": "PENDING",
+    "reason": "2025.7 스트레스DSR 3단계→가계대출 증가세 꺾임 시기 미도래"
+  },
+  {
+    "id": 2139,
+    "verdict": "PENDING",
+    "reason": "2025.7 후 지방 아파트 추가 하락 시기 미도래"
+  },
+  {
+    "id": 1895,
+    "verdict": "PENDING",
+    "reason": "2025.7 스트레스DSR 3단계→대출한도 축소 시기 미도래"
+  },
+  {
+    "id": 1862,
+    "verdict": "CORRECT",
+    "reason": "무디스 미국 등급 강등→부동산 하락 압력 확인"
+  },
+  {
+    "id": 1801,
+    "verdict": "PENDING",
+    "reason": "6월 이후 전세자금대출 보증 강화→수요 감소 시기 진행중"
+  },
+  {
+    "id": 1782,
+    "verdict": "CORRECT",
+    "reason": "판결→신탁사 책준 PF 대손충당금 추가 적립 확인"
+  },
+  {
+    "id": 1399,
+    "verdict": "CORRECT",
+    "reason": "중국 부동산 회복 상당한 시간 소요 확인"
+  }
+]

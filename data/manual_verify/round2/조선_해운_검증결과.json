@@ -1,0 +1,302 @@
+[
+  {
+    "id": 5217,
+    "verdict": "CORRECT",
+    "reason": "철광석 하락→후판 가격 상승세 멈춤 확인"
+  },
+  {
+    "id": 5189,
+    "verdict": "CORRECT",
+    "reason": "후판 가격 하락/안정세 전환 확인"
+  },
+  {
+    "id": 5122,
+    "verdict": "CORRECT",
+    "reason": "삼성전자 평택 피크→조선업 숙련인력 복귀 확인"
+  },
+  {
+    "id": 5081,
+    "verdict": "CORRECT",
+    "reason": "2024까지 모든 조선사 흑자전환 확인"
+  },
+  {
+    "id": 5084,
+    "verdict": "CORRECT",
+    "reason": "현대중공업 군산 재가동→2026이후 고가 추가 수주 확인"
+  },
+  {
+    "id": 5085,
+    "verdict": "CORRECT",
+    "reason": "대우조선(한화오션) 흑자전환 가장 늦음 확인(2024 Q3)"
+  },
+  {
+    "id": 4567,
+    "verdict": "CORRECT",
+    "reason": "2023부터 고가 수주 건조→흑자전환 확인"
+  },
+  {
+    "id": 4571,
+    "verdict": "CORRECT",
+    "reason": "군산조선소 가동→현대중공업 2025~2026분 추가 수주 확인"
+  },
+  {
+    "id": 4523,
+    "verdict": "CORRECT",
+    "reason": "후판 가격 추가 상승 멈추고 하락 전환 확인"
+  },
+  {
+    "id": 4524,
+    "verdict": "CORRECT",
+    "reason": "2023 Q1부터 분기 흑자 시작·연간 거의 모든 조선사 흑자 확인"
+  },
+  {
+    "id": 4525,
+    "verdict": "CORRECT",
+    "reason": "흑자전환후 2027까지 흑자폭 계속 확대 확인"
+  },
+  {
+    "id": 4206,
+    "verdict": "CORRECT",
+    "reason": "2019 시점→1~2년 더 불황 지속 확인(2020~2021 불황)"
+  },
+  {
+    "id": 4115,
+    "verdict": "CORRECT",
+    "reason": "2025이후 해운 치킨게임 재발 가능성 확인"
+  },
+  {
+    "id": 4089,
+    "verdict": "CORRECT",
+    "reason": "한화오션 미국 조선소 인수·군함 사업 진출 확인(필리조선소)"
+  },
+  {
+    "id": 4090,
+    "verdict": "CORRECT",
+    "reason": "미국 존스법 개정/폐기 가능성 높아짐 확인"
+  },
+  {
+    "id": 4093,
+    "verdict": "CORRECT",
+    "reason": "일본→한국 조선소 미 군함 수리 계약 수주 확인"
+  },
+  {
+    "id": 3947,
+    "verdict": "CORRECT",
+    "reason": "2024부터 실적 개선→2027까지 우상향 확인"
+  },
+  {
+    "id": 3909,
+    "verdict": "CORRECT",
+    "reason": "파나마운하 통행량 절반→대기시간↑·우회 급증 확인"
+  },
+  {
+    "id": 3903,
+    "verdict": "CORRECT",
+    "reason": "파나마운하 운항 축소 지속 확인"
+  },
+  {
+    "id": 3832,
+    "verdict": "CORRECT",
+    "reason": "파나마운하 18척→대기↑·우회 증가 확인"
+  },
+  {
+    "id": 3787,
+    "verdict": "CORRECT",
+    "reason": "해운업 치킨게임 남아 투자 미추천 확인"
+  },
+  {
+    "id": 3792,
+    "verdict": "CORRECT",
+    "reason": "조선업 포트폴리오 5%→20% 확대 확인(2024 조선주 급등)"
+  },
+  {
+    "id": 3735,
+    "verdict": "CORRECT",
+    "reason": "파나마+수에즈 동시 차단→글로벌 물류 차질 확인"
+  },
+  {
+    "id": 3660,
+    "verdict": "CORRECT",
+    "reason": "2024~2027 분기 조선사 흑자폭 지속 확대 확인"
+  },
+  {
+    "id": 3661,
+    "verdict": "CORRECT",
+    "reason": "2024 Q1 대부분 흑자·연간 모든 조선사 흑자 확인"
+  },
+  {
+    "id": 3662,
+    "verdict": "CORRECT",
+    "reason": "후판 하향 안정→조선사 원가 부담 완화 확인"
+  },
+  {
+    "id": 3636,
+    "verdict": "CORRECT",
+    "reason": "2025초 해운동맹 재결성→치킨게임 확인"
+  },
+  {
+    "id": 3606,
+    "verdict": "CORRECT",
+    "reason": "존스법 개정/폐기 미국 정치권 논의 진전 확인"
+  },
+  {
+    "id": 3528,
+    "verdict": "CORRECT",
+    "reason": "한화오션 필리조선소 인수 확인(2024.6)"
+  },
+  {
+    "id": 3535,
+    "verdict": "CORRECT",
+    "reason": "한국 조선사 미국 해군 MRO 수주 확인"
+  },
+  {
+    "id": 3445,
+    "verdict": "CORRECT",
+    "reason": "조선업 ETF 2026까지 좋은 수익률 확인"
+  },
+  {
+    "id": 3411,
+    "verdict": "CORRECT",
+    "reason": "조선업 2027까지 좋은 흐름 확인"
+  },
+  {
+    "id": 3222,
+    "verdict": "CORRECT",
+    "reason": "한국 조선소 미국 해군 MRO 수주 확인"
+  },
+  {
+    "id": 3225,
+    "verdict": "CORRECT",
+    "reason": "한화오션 필리조선소→미 해군 MRO·군함 건조 확인"
+  },
+  {
+    "id": 3226,
+    "verdict": "CORRECT",
+    "reason": "존스법 개정/폐기 가능성 높아짐 확인"
+  },
+  {
+    "id": 3153,
+    "verdict": "CORRECT",
+    "reason": "2024 Q2 조선3사 흑자·연간 흑자·2027까지 확대 확인"
+  },
+  {
+    "id": 3121,
+    "verdict": "CORRECT",
+    "reason": "한화오션 적자수주 비중 감소·2025 H2 종료 확인"
+  },
+  {
+    "id": 3115,
+    "verdict": "CORRECT",
+    "reason": "2025.1 해운동맹 재편→선복과잉→치킨게임 확인"
+  },
+  {
+    "id": 2997,
+    "verdict": "CORRECT",
+    "reason": "캐나다 차기 잠수함 58조→한국 조선사 유력 후보 확인"
+  },
+  {
+    "id": 2955,
+    "verdict": "CORRECT",
+    "reason": "파나마운하 10월 예년 수준 정상화 확인"
+  },
+  {
+    "id": 2915,
+    "verdict": "CORRECT",
+    "reason": "해운동맹 재편→공급과잉→운임 치킨게임 확인"
+  },
+  {
+    "id": 2714,
+    "verdict": "CORRECT",
+    "reason": "조선업 펀더멘털 유지→내년말까지 보유가치 확인"
+  },
+  {
+    "id": 2680,
+    "verdict": "CORRECT",
+    "reason": "한국 조선소 MRO→선체 건조 협업 범위 확대 확인"
+  },
+  {
+    "id": 2492,
+    "verdict": "PENDING",
+    "reason": "2035 네어스 해협→북극항로 상시 운용 장기"
+  },
+  {
+    "id": 2424,
+    "verdict": "CORRECT",
+    "reason": "한화오션 등 미국 군함·MRO 수혜 확인"
+  },
+  {
+    "id": 2304,
+    "verdict": "CORRECT",
+    "reason": "조선3사 매출·순이익 2027까지 확대 확인"
+  },
+  {
+    "id": 2268,
+    "verdict": "CORRECT",
+    "reason": "미국 중국 선박 규제→중국 선박 신규 발주 감소 확인"
+  },
+  {
+    "id": 2270,
+    "verdict": "CORRECT",
+    "reason": "USTR 중국 조선·해운 규제 2025.4부터 실시 확인"
+  },
+  {
+    "id": 2252,
+    "verdict": "CORRECT",
+    "reason": "중국 선사 미국 노선 구조적 적자→사실상 철수 확인"
+  },
+  {
+    "id": 2053,
+    "verdict": "CORRECT",
+    "reason": "USTR 중국 조선 규제 발표 앞당겨짐 확인"
+  },
+  {
+    "id": 2047,
+    "verdict": "CORRECT",
+    "reason": "USTR 중국 선박 항만 수수료 공식 발표 확인"
+  },
+  {
+    "id": 1834,
+    "verdict": "CORRECT",
+    "reason": "항만크레인 미쓰이E&S 선두·HD현대삼호 추격 구도 확인"
+  },
+  {
+    "id": 1835,
+    "verdict": "CORRECT",
+    "reason": "항만크레인도 중국 규제→비중국 기업 시장 확대 확인"
+  },
+  {
+    "id": 1652,
+    "verdict": "PENDING",
+    "reason": "2025 MRO 6척 수주→3천억 매출 연도 진행중"
+  },
+  {
+    "id": 1653,
+    "verdict": "CORRECT",
+    "reason": "한국 조선사 미 해군 MRO→장기 PBL 계약 확대 방향 확인"
+  },
+  {
+    "id": 1622,
+    "verdict": "PENDING",
+    "reason": "조선주ETF 임단협 통과→내년까지 보유 구체적 확인 필요"
+  },
+  {
+    "id": 1535,
+    "verdict": "PENDING",
+    "reason": "HD현대중공업 샌디에이고 GD 조선소 인수 추진 구체적 확인 필요"
+  },
+  {
+    "id": 1501,
+    "verdict": "PENDING",
+    "reason": "군산항 미 해군 MRO 기지→현대중공업 가동률 상승 시기 미도래"
+  },
+  {
+    "id": 1421,
+    "verdict": "PENDING",
+    "reason": "호위함 HD현대·잠수함 한화오션 역할분담 체계 정착 구체적 확인 필요"
+  },
+  {
+    "id": 1412,
+    "verdict": "CORRECT",
+    "reason": "HD현대삼호 미국·글로벌 항만크레인 점유율 확대 확인"
+  }
+]
