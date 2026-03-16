@@ -20,6 +20,7 @@ async def main():
         sorted(glob.glob("data/manual_verify/grouped/*결과*.json"))
         + sorted(glob.glob("data/manual_verify/result_*.json"))
         + sorted(glob.glob("data/manual_verify/round2/*결과*.json"))
+        + sorted(glob.glob("data/manual_verify/round3/*결과*.json"))
     )
     for f in files:
         items = json.load(open(f, encoding="utf-8"))
