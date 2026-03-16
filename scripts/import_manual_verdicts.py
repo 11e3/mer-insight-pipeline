@@ -25,7 +25,7 @@ async def main():
                 seen_ids.add(pid)
                 all_results.append(item)
 
-    today = date.today().isoformat()
+    today = date.today()
     correct_count = 0
     incorrect_count = 0
     pending_count = 0
