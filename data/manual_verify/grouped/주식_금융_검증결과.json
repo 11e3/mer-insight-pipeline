@@ -1,0 +1,1372 @@
+[
+  {
+    "id": 137,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 139,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 159,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 182,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 248,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 310,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 361,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 430,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 438,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 460,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 628,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 629,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 651,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 673,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 706,
+    "verdict": "CORRECT",
+    "reason": "우크라이나 전쟁→EU 무기 재고 보충→한국 방산 수주 지속 증가 확인"
+  },
+  {
+    "id": 724,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 730,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 727,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 740,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 762,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 763,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 775,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 793,
+    "verdict": "CORRECT",
+    "reason": "저축은행 M&A 2025년 급증 확인. PF 부실→구조조정 활성화"
+  },
+  {
+    "id": 828,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 833,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 848,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 854,
+    "verdict": "PENDING",
+    "reason": "RRP 소진→TGA·지급준비금만으로 버티기 어려움 구체적 확인 필요"
+  },
+  {
+    "id": 855,
+    "verdict": "CORRECT",
+    "reason": "지급준비금·TGA 방출→연말 단기 유동성 보릿고개 넘김 확인"
+  },
+  {
+    "id": 859,
+    "verdict": "PENDING",
+    "reason": "12월 유동성 보릿고개 해소→증시·암호화폐 약세 완화 구체적 확인 필요"
+  },
+  {
+    "id": 870,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 884,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 953,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 965,
+    "verdict": "CORRECT",
+    "reason": "셧다운 최장기록→증시 여파 예상 어려움 확인. 불확실성 지속"
+  },
+  {
+    "id": 968,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 967,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 975,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 979,
+    "verdict": "CORRECT",
+    "reason": "한국 대형마트 쿠팡 공세→수익성 악화 확인. 이마트·롯데마트 실적 부진"
+  },
+  {
+    "id": 984,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 985,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1008,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1029,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1028,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1027,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1037,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1039,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1046,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1058,
+    "verdict": "INCORRECT",
+    "reason": "다카이치 총리 미실현. 이시바 총리 취임(2024.10)"
+  },
+  {
+    "id": 1076,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1087,
+    "verdict": "CORRECT",
+    "reason": "미중 치킨게임→글로벌 위험자산 하락 확인. 2025 관세전쟁→증시 급락"
+  },
+  {
+    "id": 1093,
+    "verdict": "CORRECT",
+    "reason": "양자컴퓨터 관심·투자→관련 테마주 상승 확인. 2024~2025 양자 테마 급등"
+  },
+  {
+    "id": 1097,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1111,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1116,
+    "verdict": "PENDING",
+    "reason": "역전 강도 역대 최대→침체 여파 과거보다 클 수 있다. 2025 아직 불명확"
+  },
+  {
+    "id": 1168,
+    "verdict": "CORRECT",
+    "reason": "2023.10 정부 셧다운→시장 큰 충격 없음 확인. S&P500 이후 급등"
+  },
+  {
+    "id": 1189,
+    "verdict": "CORRECT",
+    "reason": "일본은행 ETF 매각 물량 소규모→주가 하락 영향 제한 확인"
+  },
+  {
+    "id": 1197,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1210,
+    "verdict": "CORRECT",
+    "reason": "유동성 파티 끝→주식시장 급락 가능성 확인. 2025.4 관세 충격 급락"
+  },
+  {
+    "id": 1213,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1232,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1230,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1272,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1306,
+    "verdict": "PENDING",
+    "reason": "베트남 경제·주가 우상향 구체적 확인 필요"
+  },
+  {
+    "id": 1351,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1348,
+    "verdict": "CORRECT",
+    "reason": "노보노디스크 마운자로 경쟁→주가 추가 하락 확인. NVO 2024~2025 급락"
+  },
+  {
+    "id": 1359,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1369,
+    "verdict": "PENDING",
+    "reason": "로쉬 하샤나 전후 테크주 조정 여부 구체적 확인 필요"
+  },
+  {
+    "id": 1367,
+    "verdict": "PENDING",
+    "reason": "욤 키푸르 후 미국 증시 반등 여부 구체적 확인 필요"
+  },
+  {
+    "id": 1406,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1413,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1428,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1430,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1441,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1459,
+    "verdict": "CORRECT",
+    "reason": "팔란티어 주가 상승 추세 지속 확인. PLTR 2024~2025 급등"
+  },
+  {
+    "id": 1480,
+    "verdict": "PENDING",
+    "reason": "대주주 양도세 10억→연말 매도 압력 반복 구체적 확인 필요"
+  },
+  {
+    "id": 1482,
+    "verdict": "PENDING",
+    "reason": "법인세 전 구간 인상 여부 법안 진행 상황 확인 필요"
+  },
+  {
+    "id": 1531,
+    "verdict": "CORRECT",
+    "reason": "재무 취약 기업 그룹 소속이어도 자금조달 막히면 부실화 확인. 롯데케미칼 등"
+  },
+  {
+    "id": 1532,
+    "verdict": "CORRECT",
+    "reason": "대기업 연환계 약화→개별 기업 리스크 증가 확인"
+  },
+  {
+    "id": 1556,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1571,
+    "verdict": "CORRECT",
+    "reason": "폴란드 K10·천무 등 후속 수주 지속 확인"
+  },
+  {
+    "id": 1580,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1616,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1618,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1643,
+    "verdict": "CORRECT",
+    "reason": "전기차 수요 위축 확인. 2024~2025 전기차 전환 둔화"
+  },
+  {
+    "id": 1647,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1648,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1701,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1706,
+    "verdict": "CORRECT",
+    "reason": "조선사 흑자 후 임단협 터프→조선주 일시 눌림 확인"
+  },
+  {
+    "id": 1709,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1718,
+    "verdict": "CORRECT",
+    "reason": "구리 가격 상승→풍산 주가 동반 상승 확인"
+  },
+  {
+    "id": 1717,
+    "verdict": "CORRECT",
+    "reason": "풍산 155mm 포탄 5년+ 풀가동 수주 확인"
+  },
+  {
+    "id": 1725,
+    "verdict": "CORRECT",
+    "reason": "보잉 품질 문제→시장 신뢰 미회복→에어버스 수요 전환 확인"
+  },
+  {
+    "id": 1726,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1740,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1777,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1827,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1822,
+    "verdict": "CORRECT",
+    "reason": "조선·방산과 함께 원전이 한국 증시 각광 테마 확인"
+  },
+  {
+    "id": 1844,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1847,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1848,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1878,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1912,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1939,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1955,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1966,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1967,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 1997,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2003,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2018,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2023,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2036,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2041,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2065,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2066,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2083,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2124,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2134,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2157,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2158,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2168,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2173,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2171,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2201,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2214,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2213,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2211,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2276,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2283,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2292,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2296,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2327,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2338,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2346,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2421,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2437,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2456,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2485,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2501,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2516,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2527,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2538,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2550,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2566,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2567,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2571,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2573,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2576,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2582,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2586,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2605,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2628,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2644,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2652,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2663,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2664,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2667,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2670,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2695,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2718,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2755,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2796,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2822,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2840,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2843,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2855,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2854,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2895,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2901,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2911,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2916,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2919,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2929,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2933,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2944,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2960,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2966,
+    "verdict": "CORRECT",
+    "reason": "인텔 다우지수 퇴출 확인(2024.11)"
+  },
+  {
+    "id": 2971,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 2982,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3011,
+    "verdict": "CORRECT",
+    "reason": "2024.10 미국 증시 바이백·QT테이퍼링·TGA 축소→강세 확인"
+  },
+  {
+    "id": 3022,
+    "verdict": "CORRECT",
+    "reason": "전기차 화재→전기차 시장 확대 지연 확인. 2024 인천 청라 화재 등"
+  },
+  {
+    "id": 3035,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3051,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3052,
+    "verdict": "CORRECT",
+    "reason": "금감원 반박→카카오페이 주가 추가 악재 확인"
+  },
+  {
+    "id": 3060,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3083,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3086,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3087,
+    "verdict": "CORRECT",
+    "reason": "버핏 현금비중 역대최고→글로벌 조정 임박 시사 확인. 2024.8 아시아 폭락"
+  },
+  {
+    "id": 3089,
+    "verdict": "CORRECT",
+    "reason": "일본 종합상사 주가 반등 확인. 2024 추가 상승"
+  },
+  {
+    "id": 3094,
+    "verdict": "CORRECT",
+    "reason": "2순위 1700억 증권사 높은 손실 가능성 확인"
+  },
+  {
+    "id": 3104,
+    "verdict": "CORRECT",
+    "reason": "미국 실업률 4.3%→샴의 법칙→경기침체 기사·Cash is King 확인(2024.8)"
+  },
+  {
+    "id": 3135,
+    "verdict": "PENDING",
+    "reason": "김범수 유죄→카카오뱅크 지분 매각 여부 재판 진행 중"
+  },
+  {
+    "id": 3168,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3175,
+    "verdict": "CORRECT",
+    "reason": "삼성전자 HBM 퀄테스트 통과→주가 호재 확인"
+  },
+  {
+    "id": 3181,
+    "verdict": "CORRECT",
+    "reason": "삼성전자 2024.7.5 실적 발표 시장 예상 상회 확인"
+  },
+  {
+    "id": 3210,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3255,
+    "verdict": "CORRECT",
+    "reason": "블록딜 사전공시의무제(7.24) 이전 대규모 블록딜 집중 확인"
+  },
+  {
+    "id": 3299,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3317,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3318,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3362,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3365,
+    "verdict": "CORRECT",
+    "reason": "옐런 대선 전 단기채 발행→유동성 유지 확인"
+  },
+  {
+    "id": 3388,
+    "verdict": "CORRECT",
+    "reason": "네이버 제이허브 지분→소프트뱅크 이전 확인(2024)"
+  },
+  {
+    "id": 3408,
+    "verdict": "CORRECT",
+    "reason": "엔 캐리 청산→해외 채권시장 자금 유출 확인(2024.8 일본 금리 인상 후)"
+  },
+  {
+    "id": 3474,
+    "verdict": "CORRECT",
+    "reason": "금양 SDI 출신 영입 기대 과장 확인. 이후 실적 부진"
+  },
+  {
+    "id": 3481,
+    "verdict": "CORRECT",
+    "reason": "증권사·캐피탈·저축은행 추가 유상증자 지속 확인"
+  },
+  {
+    "id": 3487,
+    "verdict": "CORRECT",
+    "reason": "금양 2024년 추가 유동성 위기/외부 투자 유치 확인"
+  },
+  {
+    "id": 3494,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3512,
+    "verdict": "CORRECT",
+    "reason": "핀둬둬·테무 미국 정치권 제재 강화 확인. 트럼프 관세·규제"
+  },
+  {
+    "id": 3513,
+    "verdict": "CORRECT",
+    "reason": "테무 현재 사업모델 수익 못 냄 확인. 2024~2025 적자 지속"
+  },
+  {
+    "id": 3527,
+    "verdict": "PENDING",
+    "reason": "룰라 중도→브라질 경제 우상향 여부. 2024 브라질 경제 성장했으나 헤알화 약세"
+  },
+  {
+    "id": 3532,
+    "verdict": "CORRECT",
+    "reason": "태영건설 출자전환→대규모 희석→주가 회복 어려움 확인"
+  },
+  {
+    "id": 3530,
+    "verdict": "PENDING",
+    "reason": "SBS 주식 매각 여부 구체적 확인 필요"
+  },
+  {
+    "id": 3594,
+    "verdict": "CORRECT",
+    "reason": "태국 전진당 헌법재판소 해산(2024.8) 확인"
+  },
+  {
+    "id": 3622,
+    "verdict": "CORRECT",
+    "reason": "도이치뱅크 미국 상업용 부동산 비중→어려움 확인. 2024 CRE 손실"
+  },
+  {
+    "id": 3625,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3653,
+    "verdict": "CORRECT",
+    "reason": "PBR 1 미만 정책 압박→삼성물산·삼성생명 주가 상승 확인. 밸류업 프로그램"
+  },
+  {
+    "id": 3667,
+    "verdict": "CORRECT",
+    "reason": "연체율 상승→신용정보사·부실채권 관리업체 매출 증가 확인"
+  },
+  {
+    "id": 3673,
+    "verdict": "CORRECT",
+    "reason": "부실채권 대부업체 매각 재허용→추심 압박 강화 확인"
+  },
+  {
+    "id": 3687,
+    "verdict": "CORRECT",
+    "reason": "하림 HMM 인수 시 치킨게임 취약 전망. 실제 하림 인수 무산"
+  },
+  {
+    "id": 3718,
+    "verdict": "CORRECT",
+    "reason": "보잉 737 맥스 운항 중단·납품 지연·재무 타격 확인"
+  },
+  {
+    "id": 3784,
+    "verdict": "CORRECT",
+    "reason": "독일 전기차 보조금 재지급 미실현·판매량 감소 확인"
+  },
+  {
+    "id": 3810,
+    "verdict": "CORRECT",
+    "reason": "불확실성 해소→MMF 자금 이동→투자 기회 확인. 2024 증시 급등"
+  },
+  {
+    "id": 3862,
+    "verdict": "PENDING",
+    "reason": "보험사 저축성 해약→채권 매각→평가손 현실화 구체적 확인 필요"
+  },
+  {
+    "id": 3902,
+    "verdict": "CORRECT",
+    "reason": "위워크 파산→주주에게 아무것도 미돌아옴 확인"
+  },
+  {
+    "id": 3929,
+    "verdict": "CORRECT",
+    "reason": "미래에셋 시티라인 펀드 40%+ 원금 손실 확정 확인"
+  },
+  {
+    "id": 3942,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 3967,
+    "verdict": "CORRECT",
+    "reason": "오젬픽 신장 보호 적응증 획득→노보노디스크 경쟁력 강화 확인"
+  },
+  {
+    "id": 3968,
+    "verdict": "PENDING",
+    "reason": "비만치료제→코카콜라 매출 의미 있는 압박 여부. 아직 제한적 영향"
+  },
+  {
+    "id": 4031,
+    "verdict": "CORRECT",
+    "reason": "조선사 수주방식 톱헤비→유상증자 빈도 감소 확인"
+  },
+  {
+    "id": 4048,
+    "verdict": "CORRECT",
+    "reason": "한국 방산기업(풍산) 포탄 수주 증가 확인. 우크라이나 전쟁→155mm 수주 급증"
+  },
+  {
+    "id": 4139,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 4138,
+    "verdict": "CORRECT",
+    "reason": "일라이릴리 마운자로·치매·심혈관 복합 호재→주가 상승 가속 확인. LLY 시총 조+"
+  },
+  {
+    "id": 4156,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 4212,
+    "verdict": "CORRECT",
+    "reason": "한은 유동성 공급→은행권 연쇄 충격 억제, 새마을금고 등 비은행 취약 지속 확인"
+  },
+  {
+    "id": 4214,
+    "verdict": "CORRECT",
+    "reason": "완다그룹 추가 유동성 위기 확인. 만기 도래→채무 부이행"
+  },
+  {
+    "id": 4259,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 4265,
+    "verdict": "CORRECT",
+    "reason": "차이나 런 자금 일본·인도 집중, 한국 제한적 확인. 2023~2024 닛케이 사상 최고"
+  },
+  {
+    "id": 4271,
+    "verdict": "CORRECT",
+    "reason": "국고채·은행채·한전채 축소→여전채·비우량채 시장 안정 기여 확인"
+  },
+  {
+    "id": 4312,
+    "verdict": "PENDING",
+    "reason": "대웅제약 검찰 수사→장기 영향 구체적 확인 필요"
+  },
+  {
+    "id": 4311,
+    "verdict": "PENDING",
+    "reason": "구체적 근거 확인 필요"
+  },
+  {
+    "id": 4326,
+    "verdict": "PENDING",
+    "reason": "셀트리온 옵텀RX 등재 실패→주가 복귀 구체적 확인 필요"
+  },
+  {
+    "id": 4362,
+    "verdict": "CORRECT",
+    "reason": "벌떼입찰 중견 건설사 급성장 어려움 확인. PF 부실→중견 건설사 다수 위기"
+  },
+  {
+    "id": 4405,
+    "verdict": "PENDING",
+    "reason": "미국 디폴트 시 20% 하락 가정. 디폴트 미발생→PENDING"
+  },
+  {
+    "id": 4428,
+    "verdict": "CORRECT",
+    "reason": "탄소포집 기업 성장 확인. 2023~2025 CCUS 기업 투자 급증"
+  },
+  {
+    "id": 4433,
+    "verdict": "PENDING",
+    "reason": "비아그라 치매 적응증 획득 여부 구체적 확인 필요"
+  },
+  {
+    "id": 4435,
+    "verdict": "CORRECT",
+    "reason": "금양 배터리 4000mAh 미달성→매출 목표 불가 확인"
+  },
+  {
+    "id": 4437,
+    "verdict": "CORRECT",
+    "reason": "에르도안 집권→리라화 약세·증시 변동성 지속 확인"
+  },
+  {
+    "id": 4439,
+    "verdict": "CORRECT",
+    "reason": "금양 본업 수익성 미개선→주가 하락 압력 지속 확인"
+  },
+  {
+    "id": 4493,
+    "verdict": "CORRECT",
+    "reason": "주가조작 패턴 금감원 FDS 반영→동일 패턴 방어 확인"
+  },
+  {
+    "id": 4514,
+    "verdict": "CORRECT",
+    "reason": "현대차·기아 조지아 공장→미국 전기차 보조금 수혜 편입 확인"
+  },
+  {
+    "id": 4554,
+    "verdict": "CORRECT",
+    "reason": "2023 분위기 수상→주식+채권 분산 유리 확인. 2023 채권 반등"
+  },
+  {
+    "id": 4580,
+    "verdict": "PENDING",
+    "reason": "토스뱅크 만기보유증권 미실현손실 구체적 확인 필요"
+  },
+  {
+    "id": 4621,
+    "verdict": "PENDING",
+    "reason": "CS 위기→글로벌 불안→한국 자금 이탈 여부. CS는 UBS에 인수되어 확산 제한"
+  },
+  {
+    "id": 4624,
+    "verdict": "CORRECT",
+    "reason": "CS+SVB→글로벌 금융권 살얼음판 확인. 2023 은행 위기"
+  },
+  {
+    "id": 4625,
+    "verdict": "CORRECT",
+    "reason": "SVB 주주·채권자 큰 손실 확인. SVB 파산(2023.3)"
+  },
+  {
+    "id": 4670,
+    "verdict": "CORRECT",
+    "reason": "자이나교 계열 인도 기업 투자금 이탈 확인. 아다니 후폭풍"
+  },
+  {
+    "id": 4671,
+    "verdict": "CORRECT",
+    "reason": "아다니 투자 이탈·주가 하락 확인. 힌덴버그 보고서 후 시총 대폭 감소"
+  },
+  {
+    "id": 4718,
+    "verdict": "CORRECT",
+    "reason": "6월 부채한도→신용등급 강등·안전자산 선호 확인. 피치 미국 신용등급 강등(2023.8)"
+  },
+  {
+    "id": 4794,
+    "verdict": "INCORRECT",
+    "reason": "2022 설날 미국채 추천 빗나감. 2023년 금리 추가 인상→국채 가격 추가 하락"
+  },
+  {
+    "id": 4812,
+    "verdict": "CORRECT",
+    "reason": "중국 빅테크 데이터 공산당 통제 확인. 2023~2025 규제 강화 지속"
+  },
+  {
+    "id": 4858,
+    "verdict": "PENDING",
+    "reason": "파키스탄 부도→글로벌 트리거 여부. 부도 위기는 있었으나 IMF 구제"
+  },
+  {
+    "id": 4914,
+    "verdict": "PENDING",
+    "reason": "글로벌 연기금 한국 비중 추가 확대 구체적 확인 필요"
+  },
+  {
+    "id": 4919,
+    "verdict": "INCORRECT",
+    "reason": "2022.11 반등 Dead Cat Bounce 예측 빗나감. 이후 지속 상승→2024~2025 사상 최고"
+  },
+  {
+    "id": 4955,
+    "verdict": "CORRECT",
+    "reason": "룰라 3기 실용좌파→브라질 펀드 강세 확인"
+  },
+  {
+    "id": 4966,
+    "verdict": "CORRECT",
+    "reason": "고레버리지·저신용 기업 유동성 축소 시 타격 확인. 2023 SVB 등 취약 기업 도산"
+  },
+  {
+    "id": 4975,
+    "verdict": "PENDING",
+    "reason": "한국 신용등급 워치리스트 여부 구체적 확인 필요"
+  },
+  {
+    "id": 4977,
+    "verdict": "CORRECT",
+    "reason": "50조+ 유동성으로 완전 수습 안 됨 확인. 이후 추가 대책 필요했음"
+  },
+  {
+    "id": 4979,
+    "verdict": "CORRECT",
+    "reason": "중국 통계 불신·1인 독재→홍콩·중국 증시 하락 압력 확인"
+  },
+  {
+    "id": 5030,
+    "verdict": "CORRECT",
+    "reason": "중국 국진민퇴 전환 확인. 민간기업 규제→국영기업 확대"
+  },
+  {
+    "id": 5032,
+    "verdict": "CORRECT",
+    "reason": "영국발보다 신흥국 먼저 위기 징후 확인. 파키스탄·스리랑카 등"
+  },
+  {
+    "id": 5035,
+    "verdict": "PENDING",
+    "reason": "러시아 핵 블랙스완→미증시 추가 하락 시나리오. 핵 사용 미발생"
+  },
+  {
+    "id": 5190,
+    "verdict": "CORRECT",
+    "reason": "조선업 슈퍼사이클 도래·조선주 대폭 상승 확인. 2024~2025 한국 조선주 역대 최고"
+  },
+  {
+    "id": 5218,
+    "verdict": "CORRECT",
+    "reason": "한국 조선사 수익성 개선→투자 매력도 상승 확인. 2024~2025 조선3사 흑자전환·역대 최고 실적"
+  },
+  {
+    "id": 5292,
+    "verdict": "PENDING",
+    "reason": "동성화인텍 전환사채 악재 해소→주가 상승 구체적 확인 필요"
+  },
+  {
+    "id": 5324,
+    "verdict": "CORRECT",
+    "reason": "삼성중공업 수익성 높은 수주→이익 증가 빠름 확인. 2024~2025 삼성중공업 실적 급개선"
+  }
+]
