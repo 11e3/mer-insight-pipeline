@@ -4,8 +4,6 @@
 
 The pipeline extracts predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,010 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
-[![Dashboard](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B?logo=streamlit)](http://34.50.52.50:8501)
-
 [한국어 README](README_KR.md)
 
 ---
@@ -177,6 +175,35 @@ streamlit run src/dashboard/app.py   # http://localhost:8501
 python -m src.eval.eval_runner --mode retrieval_only
 python -m src.eval.experiment --mode ablation --k 5
 ```
+
+---
+
+## Tests
+
+```bash
+# Unit tests (no DB required)
+pytest tests/ -v
+
+# Integration tests (requires PostgreSQL)
+TEST_DATABASE_URL=postgresql://mer:pass@localhost:5432/mer_test \
+  pytest tests/test_integration_dispatcher.py -v
+```
+
+Unit tests run without a database. Integration tests require `TEST_DATABASE_URL` — they are automatically skipped when the variable is not set.
+
+---
+
+## Cost
+
+Daily verification runs Claude Haiku on all pending predictions with the following optimizations:
+
+| Optimization | Detail |
+|-------------|--------|
+| Prompt caching | `cache_control` on system + context — ~90% input cost reduction from 2nd batch onward |
+| Batch size | `BATCH_SIZE=60` predictions per API call |
+| Context cap | 30 days stock prices, 20 DART/news items per batch |
+| `max_tokens` | 8,192 (lower risks JSON truncation) |
+| Korean token multiplier | Korean text consumes 2–3x more tokens than English — budget accordingly |
 
 ---
 

@@ -4,8 +4,6 @@
 
 Claude Batch API로 예측을 추출하고, 실시간 시장 데이터를 수집하며, Claude Haiku가 자동 심판으로 매일 각 예측을 검증합니다 — 현재 5,010건 추적 중. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
 
-[![Dashboard](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B?logo=streamlit)](http://34.50.52.50:8501)
-
 [English README](README.md)
 
 ---
@@ -177,6 +175,35 @@ streamlit run src/dashboard/app.py   # http://localhost:8501
 python -m src.eval.eval_runner --mode retrieval_only
 python -m src.eval.experiment --mode ablation --k 5
 ```
+
+---
+
+## 테스트
+
+```bash
+# 단위 테스트 (DB 불필요)
+pytest tests/ -v
+
+# 통합 테스트 (PostgreSQL 필요)
+TEST_DATABASE_URL=postgresql://mer:pass@localhost:5432/mer_test \
+  pytest tests/test_integration_dispatcher.py -v
+```
+
+단위 테스트는 데이터베이스 없이 실행 가능. 통합 테스트는 `TEST_DATABASE_URL` 환경변수 필요 — 미설정 시 자동 스킵.
+
+---
+
+## 비용
+
+일일 검증은 모든 미검증 예측에 대해 Claude Haiku를 실행하며, 다음과 같이 비용을 최적화합니다:
+
+| 최적화 | 상세 |
+|--------|------|
+| 프롬프트 캐싱 | system + context에 `cache_control` 적용 — 2번째 배치부터 input 비용 ~90% 절감 |
+| 배치 크기 | `BATCH_SIZE=60` 예측을 1회 API 호출로 처리 |
+| 컨텍스트 제한 | 일간 주가 30일, DART/뉴스 각 20건으로 제한 |
+| `max_tokens` | 8,192 (너무 작으면 JSON 응답 잘림 → 파싱 실패) |
+| 한국어 토큰 배수 | 한국어 텍스트는 영어 대비 토큰 소비 2–3배 → 비용 견적 시 2배로 계산 |
 
 ---
 
