@@ -17,16 +17,16 @@ flowchart TD
     subgraph Batch Extraction
         A[Naver Blog<br>2,193 posts] -->|scrape| B[parse_results.py]
         B -->|rules / predictions<br>evaluations / macro_views| C[(PostgreSQL<br>+ pgvector)]
-        C --> EMB[local_embedder.py<br>1024-dim vectors]
+        C --> EMB[embed/local.py<br>1024-dim vectors]
         EMB --> C
     end
 
     subgraph "Daily Pipeline (01:00)"
-        ED[event_dispatcher.py] -->|1| MER[mer_monitor<br>신규 글 수집]
-        ED -->|2| DC[dart_collector<br>DART 공시]
-        ED -->|2| LM[load_macro<br>FRED · BOK ECOS]
-        ED -->|2| NC[news_collector<br>Fed · BOK · Google News]
-        ED -->|3| PV[prediction_verifier<br>Claude Haiku judge]
+        ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>new posts]
+        ED -->|2| DC[collect/dart<br>DART filings]
+        ED -->|2| LM[collect/macro<br>FRED · BOK ECOS]
+        ED -->|2| NC[collect/news<br>Fed · BOK · Google News]
+        ED -->|3| PV[verify/verifier<br>Claude Haiku judge]
         MER --> C
         DC & LM & NC --> C
         PV -->|CORRECT / INCORRECT / PENDING| C
@@ -41,7 +41,7 @@ flowchart TD
 
     C --> Q[Streamlit Dashboard<br>port 8501]
 
-    EV[eval_runner.py<br>offline ablation] -.-> HS3
+    EV[eval/experiment.py<br>offline ablation] -.-> HS3
 ```
 
 ---
@@ -60,7 +60,7 @@ All data sources listed below are collected daily and fed to Claude as verificat
 | `INCORRECT` | Predicted outcome contradicted by evidence |
 | `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
 
-Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=40` predictions per Haiku call with **prompt caching** enabled (~90% input cost reduction on cached context).
+Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=60` predictions per Haiku call with **prompt caching** enabled (~90% input cost reduction on cached context).
 
 ---
 
@@ -168,14 +168,14 @@ Runs once daily at 01:00 (KST) via Cloud Scheduler or APScheduler:
 ### Dashboard
 
 ```bash
-streamlit run src/dashboard/prediction_dashboard.py   # http://localhost:8501
+streamlit run src/dashboard/app.py   # http://localhost:8501
 ```
 
 ### Eval
 
 ```bash
 python -m src.eval.eval_runner --mode retrieval_only
-python -m src.search.experiment --mode ablation --k 5
+python -m src.eval.experiment --mode ablation --k 5
 ```
 
 ---
@@ -197,45 +197,69 @@ python -m src.search.experiment --mode ablation --k 5
 
 ```
 mer-insight-pipeline/
-├── config/
-│   ├── settings.py               # All configuration, loaded from .env
-│   └── prompts.example.py        # Prompt structure template
 ├── src/
-│   ├── search/                   # Search Infrastructure
-│   │   ├── bm25_index.py         # BM25 with kiwipiepy tokenizer + pickle cache
-│   │   ├── vector_index.py       # pgvector HNSW wrapper (1024-dim)
-│   │   ├── hybrid.py             # RRF fusion (α=0.6)
-│   │   └── experiment.py         # Ablation: vector vs BM25 vs hybrid
-│   ├── eval/                     # Eval Pipeline
-│   │   ├── eval_runner.py        # Main runner (--mode retrieval_only | full)
-│   │   ├── metrics.py            # Precision@K, Recall@K, MRR
-│   │   ├── llm_judge.py          # Context Relevance / Faithfulness / Answer Relevance
-│   │   └── report.py             # Markdown + JSON report generator
-│   ├── extract/
-│   │   ├── batch_api.py          # Claude Batch API orchestration
-│   │   ├── embedder.py           # Embedder protocol + factory (LocalEmbedder default)
-│   │   ├── local_embedder.py     # multilingual-e5-large 1024-dim
-│   │   ├── parse_results.py      # Batch result parsing → DB
-│   │   └── realtime_extractor.py # Real-time insight extraction (Haiku)
-│   ├── ingest/
-│   │   ├── load_macro.py         # FRED / BOK ECOS macro data collection
-│   │   └── date_parser.py        # Korean date string parser
-│   ├── pipeline/
-│   │   ├── event_dispatcher.py   # Main runtime (APScheduler, 6 schedules)
-│   │   ├── mer_monitor.py        # Blog RSS watcher
-│   │   ├── dart_collector.py     # DART filings (Korean corporate disclosure)
-│   │   ├── news_collector.py     # RSS feeds: Fed · BOK · geopolitics
-│   │   └── prediction_verifier.py # Daily Claude Haiku batch verification
-│   └── dashboard/
-│       └── prediction_dashboard.py # Prediction accuracy dashboard
-├── app.py                        # Streamlit Cloud entry point
-├── eval_data/
-│   └── gold_extended.json        # Gold dataset: 200 queries with relevant insight IDs
+│   ├── config/                     # Settings & Prompts
+│   │   ├── settings.py             # All configuration, loaded from .env
+│   │   └── prompts.py              # Claude extraction prompts
+│   ├── db/                         # Shared DB Utilities
+│   │   └── connection.py           # connect(), get_pool() context managers
+│   ├── embed/                      # Embedding
+│   │   ├── protocol.py             # Embedder Protocol interface
+│   │   ├── local.py                # multilingual-e5-large 1024-dim (default)
+│   │   ├── vertex.py               # Vertex AI 768-dim (GCP only)
+│   │   ├── factory.py              # get_embedder() factory + vec_str()
+│   │   └── backfill.py             # Batch fill NULL embeddings
+│   ├── extract/                    # Insight Extraction
+│   │   ├── batch_api.py            # Claude Batch API orchestration
+│   │   ├── parse_results.py        # Batch result JSONL → DB
+│   │   └── realtime.py             # Real-time insight extraction (Haiku)
+│   ├── collect/                    # Data Collection
+│   │   ├── mer_monitor.py          # Blog RSS watcher
+│   │   ├── dart.py                 # DART corporate filings
+│   │   ├── news.py                 # RSS feeds: Fed · BOK · geopolitics
+│   │   ├── macro.py                # FRED / BOK ECOS macro data
+│   │   ├── posts.py                # JSON → mer_posts bulk loader
+│   │   └── date_parser.py          # Korean date string parser
+│   ├── verify/                     # Prediction Verification
+│   │   ├── verifier.py             # PredictionVerifier (Claude Haiku batch)
+│   │   ├── context.py              # Macro/stock/DART/news context assembly
+│   │   └── prompt.py               # System prompt, stock codes, constants
+│   ├── search/                     # Hybrid Search
+│   │   ├── bm25_index.py           # BM25 with kiwipiepy + pickle cache
+│   │   ├── vector_index.py         # pgvector HNSW wrapper (1024-dim)
+│   │   └── hybrid.py               # RRF fusion (α=0.6)
+│   ├── eval/                       # Eval Pipeline
+│   │   ├── experiment.py           # Ablation: vector vs BM25 vs hybrid
+│   │   ├── eval_runner.py          # Main runner (--mode retrieval_only | full)
+│   │   ├── metrics.py              # Precision@K, Recall@K, MRR
+│   │   ├── llm_judge.py            # LLM-as-judge (Claude Sonnet)
+│   │   └── report.py               # Markdown + JSON report generator
+│   ├── pipeline/                   # Orchestration
+│   │   └── event_dispatcher.py     # APScheduler / Cloud Run Job entry
+│   └── dashboard/                  # Streamlit Dashboard
+│       ├── app.py                  # Layout & rendering
+│       ├── queries.py              # DB query functions
+│       └── topics.py               # Topic classification (TOPIC_KEYWORDS)
+├── config/                         # Backward-compat shims → src/config/
 ├── scripts/
-│   ├── init_db.sql               # PostgreSQL schema
-│   ├── run_batch.py              # Batch extraction orchestrator
-│   ├── run_job.py                # Pipeline entry point (single daily run)
-│   └── migrate_predictions.py    # One-time: mer_insights → mer_predictions backfill
+│   ├── run_job.py                  # Cloud Run Job / local pipeline entry
+│   ├── run_batch.py                # Batch extraction orchestrator
+│   ├── reembed_all.py              # Full re-embedding (model swap)
+│   ├── naver_blog_scraper.py       # Blog scraper
+│   ├── ops/                        # Data operation scripts
+│   │   ├── export_*.py             # Prediction export (manual_verify, grouped, rounds)
+│   │   ├── import_*.py             # Manual verdict import
+│   │   ├── fill_*.py               # Field backfill (expected_date, etc.)
+│   │   ├── migrate_predictions.py  # One-time backfill: insights → predictions
+│   │   ├── populate_topics.py      # Batch topic classification
+│   │   ├── cluster_insights.py     # DBSCAN deduplication
+│   │   └── regroup_by_topic.py     # Topic re-classification
+│   └── eval/                       # Eval scripts
+│       ├── expand_eval_dataset.py  # Auto-expand gold dataset
+│       └── compare_judges.py       # Judge comparison
+├── app.py                          # Streamlit Cloud entry point
+├── eval_data/
+│   └── gold_extended.json          # Gold dataset: 200 queries with relevant IDs
 ├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt

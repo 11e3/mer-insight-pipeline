@@ -6,8 +6,8 @@
   - BOK ECOS   : 원/달러 환율, KOSPI, KOSDAQ, 기준금리
 
 Usage:
-    python -m src.ingest.load_macro
-    python -m src.ingest.load_macro --start 2015-01-01 --end 2026-03-14
+    python -m src.collect.macro
+    python -m src.collect.macro --start 2015-01-01 --end 2026-03-14
 """
 
 import asyncio
@@ -18,7 +18,7 @@ import asyncpg
 import pandas as pd
 import requests
 
-from config.settings import DATABASE_URL, FRED_API_KEY, BOK_API_KEY
+from src.config.settings import DATABASE_URL, FRED_API_KEY, BOK_API_KEY
 
 # ─── FRED ─────────────────────────────────────────────────────────────────────
 
@@ -170,15 +170,16 @@ def _f(row, col) -> float | None:
 
 
 async def load_macro(start: str = "2015-01-01", end: str | None = None):
+    from src.db import connect
+
     end = end or date.today().isoformat()
     print(f"매크로 데이터 수집: {start} ~ {end}\n")
 
     df = fetch_all(start, end)
     print(f"\n  수집 완료: {len(df)}일치 데이터")
 
-    conn = await asyncpg.connect(DATABASE_URL)
-    count = await upsert_macro(conn, df)
-    await conn.close()
+    async with connect() as conn:
+        count = await upsert_macro(conn, df)
     print(f"  DB 적재 완료: {count}행")
 
 

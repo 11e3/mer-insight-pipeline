@@ -12,7 +12,7 @@ import logging
 
 import anthropic
 
-from config.settings import ANTHROPIC_API_KEY, MODEL_SONNET
+from src.config.settings import ANTHROPIC_API_KEY, MODEL_SONNET
 
 log = logging.getLogger(__name__)
 _client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)

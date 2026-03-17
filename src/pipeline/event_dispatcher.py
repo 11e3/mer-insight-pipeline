@@ -1,7 +1,7 @@
 """
 Event Dispatcher: 메르 글 수집 → 예측 추출 → 데이터 수집 → 자동 검증
 
-매일 20:00 단일 잡으로 전체 파이프라인 실행.
+매일 01:00 단일 잡으로 전체 파이프라인 실행.
 
 Usage:
     python -m src.pipeline.event_dispatcher
@@ -14,16 +14,14 @@ from datetime import date
 import asyncpg
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from config.settings import (
-    DATABASE_URL, MACRO_ALERT_THRESHOLDS,
-)
-from src.extract.embedder import get_embedder
-from src.pipeline.mer_monitor import MerMonitor
-from src.pipeline.dart_collector import DartCollector
-from src.pipeline.news_collector import NewsCollector
-from src.extract.realtime_extractor import extract_and_save
+from src.config.settings import DATABASE_URL, MACRO_ALERT_THRESHOLDS
+from src.embed import get_embedder
+from src.collect.mer_monitor import MerMonitor
+from src.collect.dart import DartCollector
+from src.collect.news import NewsCollector
+from src.extract.realtime import extract_and_save
 from src.search.bm25_index import BM25Index
-from src.pipeline.prediction_verifier import PredictionVerifier
+from src.verify import PredictionVerifier
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -69,7 +67,7 @@ class EventDispatcher:
             await self.pool.close()
 
     async def start(self):
-        """상시 모드 — APScheduler로 매일 20:00 실행."""
+        """상시 모드 — APScheduler로 매일 01:00 실행."""
         log.info("EventDispatcher 시작 중...")
         await self._init()
 
@@ -79,7 +77,7 @@ class EventDispatcher:
         )
 
         self.scheduler.start()
-        log.info("스케줄러 시작 완료 (매일 20:00 실행)")
+        log.info("스케줄러 시작 완료 (매일 01:00 실행)")
 
         try:
             await asyncio.Event().wait()
@@ -134,7 +132,7 @@ class EventDispatcher:
 
     async def _collect_macro(self):
         try:
-            from src.ingest.load_macro import load_macro
+            from src.collect.macro import load_macro
             today = date.today().isoformat()
             await load_macro(start=today, end=today)
 

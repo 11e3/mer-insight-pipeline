@@ -2,18 +2,15 @@
 Prediction Accuracy Dashboard: 예측 적중률 Streamlit 대시보드
 
 Usage:
-    streamlit run src/dashboard/prediction_dashboard.py
+    streamlit run src/dashboard/app.py
 """
 
-import asyncio
-import os
 import sys
 from pathlib import Path
 
 # 프로젝트 루트를 sys.path에 추가 (streamlit run 시 cwd가 달라질 수 있음)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import asyncpg
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -22,140 +19,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from src.dashboard.queries import (
+    load_prediction_summary,
+    load_predictions_for_topics,
+    load_monthly_trends,
+    load_all_predictions,
+)
+from src.dashboard.topics import classify_topic
+
 st.set_page_config(page_title="Mer Pipeline — Prediction Accuracy", layout="wide")
 
-
-# ─── 주제 분류 ────────────────────────────────────────────────────────────────
-
-TOPIC_KEYWORDS = {
-    "에너지/원유": ["원유", "WTI", "LNG", "천연가스", "에너지", "셰일", "원자력", "우라늄", "유가", "OPEC"],
-    "금리/매크로": ["금리", "기준금리", "금통위", "FOMC", "금리인하", "금리인상", "인플레", "CPI", "연준", "기금금리"],
-    "환율": ["환율", "원/달러", "USD/KRW", "원달러", "달러/원", "엔화", "위안", "달러 약세", "달러 강세"],
-    "부동산": ["부동산", "아파트", "주택", "전세", "매매", "분양", "집값", "월세", "임대"],
-    "주식/금융": ["주식", "KOSPI", "코스피", "코스닥", "주가", "사모", "펀드", "IPO", "증시", "배당"],
-    "AI/반도체": ["AI", "반도체", "엔비디아", "딥시크", "데이터센터", "하이닉스", "삼성전자", "클라우드"],
-    "관세/무역": ["관세", "무역", "수입", "수출", "상호관세", "덤핑", "WTO", "232조", "301조"],
-    "트럼프/미국": ["트럼프", "파월", "백악관", "공화당", "민주당", "중간선거", "바이든"],
-    "중동/지정학": ["호르무즈", "이란", "중동", "카타르", "사우디", "이스라엘", "하마스", "네타냐후", "우크라이나", "러시아"],
-    "조선/해운": ["조선", "해운", "HD현대", "선박", "한화오션", "삼성중공업"],
-    "방산/안보": ["방산", "천궁", "무인", "안두릴", "방위", "미사일", "NATO", "잠수함"],
-    "원자재/금속": ["금값", "은값", "구리", "원자재", "다이아몬드", "헬륨", "금속", "리튬", "희토류"],
-    "식품/농업": ["농산물", "곡물", "식품", "수산물", "비료", "요소"],
-    "의료/바이오": ["오가노이드", "의학", "의료", "바이오", "제약"],
-    "북한": ["북한", "김정은", "핵"],
-    "중국": ["중국", "시진핑", "대만", "위구르", "홍콩"],
-}
-
-
-def classify_topic(text: str) -> str:
-    if not text:
-        return "기타"
-    text_lower = text.lower()
-    for topic, keywords in TOPIC_KEYWORDS.items():
-        if any(kw.lower() in text_lower for kw in keywords):
-            return topic
-    return "기타"
-
-
-# ─── DB 연결 (캐시) ──────────────────────────────────────────────────────────
-
-@st.cache_resource
-def get_event_loop():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    return loop
-
-
-def run_async(coro):
-    loop = get_event_loop()
-    return loop.run_until_complete(coro)
-
-
-async def _get_conn():
-    return await asyncpg.connect(os.environ["DATABASE_URL"])
-
-
-# ─── 데이터 로더 ─────────────────────────────────────────────────────────────
-
-@st.cache_data(ttl=60)
-def load_prediction_summary():
-    async def _():
-        conn = await _get_conn()
-        row = await conn.fetchrow("""
-            SELECT
-                COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE is_correct = TRUE) AS correct,
-                COUNT(*) FILTER (WHERE is_correct = FALSE) AS incorrect,
-                COUNT(*) FILTER (WHERE is_correct IS NULL AND skipped_at IS NULL) AS pending,
-                COUNT(*) FILTER (WHERE skipped_at IS NOT NULL) AS skipped
-            FROM mer_predictions
-        """)
-        await conn.close()
-        return dict(row)
-    return run_async(_())
-
-
-@st.cache_data(ttl=60)
-def load_predictions_for_topics():
-    async def _():
-        conn = await _get_conn()
-        rows = await conn.fetch("""
-            SELECT prediction_text, is_correct, COALESCE(topic, '기타') AS topic
-            FROM mer_predictions
-            WHERE skipped_at IS NULL
-        """)
-        await conn.close()
-        return [dict(r) for r in rows]
-    return run_async(_())
-
-
-@st.cache_data(ttl=60)
-def load_monthly_trends():
-    async def _():
-        conn = await _get_conn()
-        rows = await conn.fetch("""
-            SELECT
-                to_char(prediction_date, 'YYYY-MM') AS month,
-                COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE is_correct IS NOT NULL) AS verified,
-                COUNT(*) FILTER (WHERE is_correct = TRUE) AS correct
-            FROM mer_predictions
-            WHERE skipped_at IS NULL AND prediction_date IS NOT NULL
-            GROUP BY to_char(prediction_date, 'YYYY-MM')
-            ORDER BY month
-        """)
-        await conn.close()
-        return [dict(r) for r in rows]
-    return run_async(_())
-
-
-@st.cache_data(ttl=60)
-def load_all_predictions():
-    async def _():
-        conn = await _get_conn()
-        rows = await conn.fetch("""
-            SELECT
-                mp.prediction_date, mp.prediction_text, mp.predicted_direction,
-                mp.target_asset, mp.is_correct, mp.actual_outcome, mp.verification_date,
-                COALESCE(mp.topic, '기타') AS topic,
-                p.url AS post_url
-            FROM mer_predictions mp
-            LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
-            LEFT JOIN mer_posts p ON p.id = mi.post_id
-            WHERE mp.skipped_at IS NULL
-            ORDER BY mp.prediction_date DESC
-        """)
-        await conn.close()
-        return [dict(r) for r in rows]
-    return run_async(_())
-
-
-# ─── 레이아웃 ────────────────────────────────────────────────────────────────
+# ─── 1. 전체 요약 ────────────────────────────────────────────────────────────
 
 st.title("예측 검증 대시보드")
 st.caption("메르 블로그 예측 → Claude 자동 검증 결과")
-
-# ─── 1. 전체 요약 ────────────────────────────────────────────────────────────
 
 st.subheader("전체 요약")
 

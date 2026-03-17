@@ -1,3 +1,3 @@
-"""Streamlit Cloud 진입점 — src/dashboard/prediction_dashboard.py 실행."""
+"""Streamlit Cloud 진입점 — src/dashboard/app.py 실행."""
 import runpy
-runpy.run_path("src/dashboard/prediction_dashboard.py", run_name="__main__")
+runpy.run_path("src/dashboard/app.py", run_name="__main__")

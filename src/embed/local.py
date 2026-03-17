@@ -2,13 +2,12 @@
 Local Embedder — intfloat/multilingual-e5-large (1024-dim).
 
 DB에 저장된 기존 임베딩과 동일 모델/차원. GCP 없이 동작.
-VertexEmbedder와 동일 인터페이스 (embed_passages / embed_query).
 """
 
 import asyncio
 import logging
 
-from config.settings import EMBEDDING_BATCH_SIZE, LOCAL_EMBEDDING_MODEL
+from src.config.settings import EMBEDDING_BATCH_SIZE, LOCAL_EMBEDDING_MODEL
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +35,6 @@ class LocalEmbedder:
     # ─── Sync ─────────────────────────────────────────────────────────────────
 
     def embed_passages_sync(self, texts: list[str]) -> list[list[float]]:
-        """문서 임베딩 배치 (동기). passage: prefix 자동 추가."""
         prefixed = [f"passage: {t}" for t in texts]
         all_vecs: list[list[float]] = []
         for i in range(0, len(prefixed), EMBEDDING_BATCH_SIZE):
@@ -46,7 +44,6 @@ class LocalEmbedder:
         return all_vecs
 
     def embed_query_sync(self, text: str) -> list[float]:
-        """쿼리 임베딩 단건 (동기). query: prefix 자동 추가."""
         prefixed = f"query: {text}"
         embedding = self.model.encode([prefixed], normalize_embeddings=True)
         return embedding[0].tolist()
@@ -54,9 +51,7 @@ class LocalEmbedder:
     # ─── Async ────────────────────────────────────────────────────────────────
 
     async def embed_passages(self, texts: list[str]) -> list[list[float]]:
-        """문서 임베딩 배치 (비동기)."""
         return await asyncio.to_thread(self.embed_passages_sync, texts)
 
     async def embed_query(self, text: str) -> list[float]:
-        """쿼리 임베딩 단건 (비동기)."""
         return await asyncio.to_thread(self.embed_query_sync, text)

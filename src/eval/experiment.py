@@ -5,10 +5,10 @@ Retrieval A/B 실험: Vector-only vs BM25-only vs Hybrid
 paired t-test로 통계적 유의성을 검증한다.
 
 Usage:
-    python -m src.search.experiment
-    python -m src.search.experiment --dataset eval_data/gold.json --k 10
-    python -m src.search.experiment --mode ablation --k 5
-    python -m src.search.experiment --mode ablation --alphas 0.0 0.2 0.4 0.6 0.8 1.0
+    python -m src.eval.experiment
+    python -m src.eval.experiment --dataset eval_data/gold.json --k 10
+    python -m src.eval.experiment --mode ablation --k 5
+    python -m src.eval.experiment --mode ablation --alphas 0.0 0.2 0.4 0.6 0.8 1.0
 """
 
 import asyncio
@@ -21,9 +21,9 @@ import asyncpg
 import numpy as np
 from scipy import stats
 
-from config.settings import DATABASE_URL
+from src.config.settings import DATABASE_URL
 from src.eval.metrics import precision_at_k, recall_at_k, mean_reciprocal_rank as reciprocal_rank
-from src.extract.embedder import vec_str
+from src.embed import vec_str
 from src.search.bm25_index import BM25Index
 
 log = logging.getLogger(__name__)

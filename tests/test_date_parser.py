@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from src.ingest.date_parser import parse_mer_date
+from src.collect.date_parser import parse_mer_date
 
 BASE = datetime(2025, 3, 15, 12, 0, 0)
 

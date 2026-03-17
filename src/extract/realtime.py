@@ -9,10 +9,10 @@ import logging
 import anthropic
 import asyncpg
 
-from config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
-from src.extract.embedder import Embedder, vec_str
+from src.config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
+from src.embed import Embedder, vec_str
 from src.extract.parse_results import INSIGHT_TYPE_MAP, extract_content
-from config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
+from src.config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
 
 log = logging.getLogger(__name__)
 

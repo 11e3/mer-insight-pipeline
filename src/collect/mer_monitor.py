@@ -9,7 +9,7 @@ import asyncpg
 import requests
 from xml.etree import ElementTree as ET
 
-from config.settings import BLOG_ID, BLOG_RSS
+from src.config.settings import BLOG_ID, BLOG_RSS
 
 
 HEADERS = {
@@ -84,7 +84,7 @@ class MerMonitor:
     def _scrape_post(self, log_no: str) -> dict | None:
         """모바일 URL에서 포스트 본문 스크래핑."""
         from bs4 import BeautifulSoup
-        from src.ingest.date_parser import parse_mer_date
+        from src.collect.date_parser import parse_mer_date
 
         url = f"https://m.blog.naver.com/{BLOG_ID}/{log_no}"
         try:

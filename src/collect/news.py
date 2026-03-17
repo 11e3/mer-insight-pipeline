@@ -13,7 +13,7 @@ from xml.etree import ElementTree as ET
 import asyncpg
 import requests
 
-from config.settings import FED_RSS_URL, BOK_RSS_URL, NEWS_RSS_URLS
+from src.config.settings import FED_RSS_URL, BOK_RSS_URL, NEWS_RSS_URLS
 
 log = logging.getLogger(__name__)
 

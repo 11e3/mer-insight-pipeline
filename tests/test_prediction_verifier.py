@@ -17,7 +17,8 @@ for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY", "GCP_PROJECT_ID",
              "DART_API_KEY", "BOK_API_KEY", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET"):
     os.environ.setdefault(_var, "test")
 
-from src.pipeline.prediction_verifier import PredictionVerifier, _SYSTEM
+from src.verify import PredictionVerifier
+from src.verify.prompt import SYSTEM as _SYSTEM
 
 
 # ── _fetch_stock_context 내부 파싱 로직 ───────────────────────────────────────
@@ -25,7 +26,7 @@ from src.pipeline.prediction_verifier import PredictionVerifier, _SYSTEM
 def _make_verifier():
     """DB 연결 없는 PredictionVerifier 인스턴스."""
     conn = MagicMock()
-    with patch("src.pipeline.prediction_verifier.anthropic.AsyncAnthropic"):
+    with patch("src.verify.verifier.anthropic.AsyncAnthropic"):
         return PredictionVerifier(conn)
 
 

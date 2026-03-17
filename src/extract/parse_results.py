@@ -11,7 +11,7 @@ import asyncio
 import asyncpg
 from tqdm import tqdm
 
-from config.settings import DATABASE_URL
+from src.config.settings import DATABASE_URL
 
 
 INSIGHT_TYPE_MAP = {

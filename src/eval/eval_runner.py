@@ -14,7 +14,7 @@ from pathlib import Path
 import asyncpg
 from sentence_transformers import SentenceTransformer
 
-from config.settings import DATABASE_URL, LOCAL_EMBEDDING_MODEL
+from src.config.settings import DATABASE_URL, LOCAL_EMBEDDING_MODEL
 from src.eval.eval_dataset import load_dataset, save_template, TestCase
 from src.eval.metrics import CaseResult, compute_retrieval, aggregate
 from src.eval.llm_judge import (

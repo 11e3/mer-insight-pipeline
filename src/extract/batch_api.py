@@ -14,8 +14,8 @@ import asyncio
 import asyncpg
 import anthropic
 
-from config.settings import DATABASE_URL, ANTHROPIC_API_KEY, MODEL_SONNET, MODEL_HAIKU
-from config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
+from src.config.settings import DATABASE_URL, ANTHROPIC_API_KEY, MODEL_SONNET, MODEL_HAIKU
+from src.config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
 
 BATCH_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "batches")
 os.makedirs(BATCH_DIR, exist_ok=True)

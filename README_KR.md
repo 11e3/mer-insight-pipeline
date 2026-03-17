@@ -17,16 +17,16 @@ flowchart TD
     subgraph 배치 추출
         A[네이버 블로그<br>2,193개 포스트] -->|스크래핑| B[parse_results.py]
         B -->|규칙 / 예측<br>평가 / 매크로뷰| C[(PostgreSQL<br>+ pgvector)]
-        C --> EMB[local_embedder.py<br>1024차원 벡터]
+        C --> EMB[embed/local.py<br>1024차원 벡터]
         EMB --> C
     end
 
     subgraph "일일 파이프라인 (01:00)"
-        ED[event_dispatcher.py] -->|1| MER[mer_monitor<br>신규 글 수집]
-        ED -->|2| DC[dart_collector<br>DART 공시]
-        ED -->|2| LM[load_macro<br>FRED · 한국은행 ECOS]
-        ED -->|2| NC[news_collector<br>연준 · 한국은행 · Google News]
-        ED -->|3| PV[prediction_verifier<br>Claude Haiku 심판]
+        ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>신규 글 수집]
+        ED -->|2| DC[collect/dart<br>DART 공시]
+        ED -->|2| LM[collect/macro<br>FRED · 한국은행 ECOS]
+        ED -->|2| NC[collect/news<br>연준 · 한국은행 · Google News]
+        ED -->|3| PV[verify/verifier<br>Claude Haiku 심판]
         MER --> C
         DC & LM & NC --> C
         PV -->|CORRECT / INCORRECT / PENDING| C
@@ -41,7 +41,7 @@ flowchart TD
 
     C --> Q[Streamlit 대시보드<br>port 8501]
 
-    EV[eval_runner.py<br>오프라인 ablation] -.-> HS3
+    EV[eval/experiment.py<br>오프라인 ablation] -.-> HS3
 ```
 
 ---
@@ -60,7 +60,7 @@ flowchart TD
 | `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
 | `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
 
-만기 없이 확정될 때까지 큐에 유지. `BATCH_SIZE=40` 예측을 Haiku에 전달하며, **프롬프트 캐싱** 적용 (캐시된 컨텍스트 input 비용 ~90% 절감).
+만기 없이 확정될 때까지 큐에 유지. `BATCH_SIZE=60` 예측을 Haiku에 전달하며, **프롬프트 캐싱** 적용 (캐시된 컨텍스트 input 비용 ~90% 절감).
 
 ---
 
@@ -168,14 +168,14 @@ python -m src.pipeline.event_dispatcher   # 매일 01:00 스케줄러
 ### 대시보드
 
 ```bash
-streamlit run src/dashboard/prediction_dashboard.py   # http://localhost:8501
+streamlit run src/dashboard/app.py   # http://localhost:8501
 ```
 
 ### 평가
 
 ```bash
 python -m src.eval.eval_runner --mode retrieval_only
-python -m src.search.experiment --mode ablation --k 5
+python -m src.eval.experiment --mode ablation --k 5
 ```
 
 ---
@@ -197,45 +197,69 @@ python -m src.search.experiment --mode ablation --k 5
 
 ```
 mer-insight-pipeline/
-├── config/
-│   ├── settings.py               # 전체 설정, .env에서 로드
-│   └── prompts.example.py        # 프롬프트 구조 템플릿
 ├── src/
-│   ├── search/                   # 검색 인프라
-│   │   ├── bm25_index.py         # kiwipiepy 토크나이저 + pickle 캐시
-│   │   ├── vector_index.py       # pgvector HNSW 래퍼 (1024차원)
-│   │   ├── hybrid.py             # RRF 융합 (α=0.6)
-│   │   └── experiment.py         # Ablation: 벡터 vs BM25 vs 하이브리드
-│   ├── eval/                     # 평가 파이프라인
-│   │   ├── eval_runner.py        # 메인 러너 (--mode retrieval_only | full)
-│   │   ├── metrics.py            # Precision@K, Recall@K, MRR
-│   │   ├── llm_judge.py          # Context Relevance / Faithfulness / Answer Relevance
-│   │   └── report.py             # 마크다운 + JSON 리포트 생성기
-│   ├── extract/
-│   │   ├── batch_api.py          # Claude Batch API 오케스트레이션
-│   │   ├── embedder.py           # Embedder 프로토콜 + 팩토리 (LocalEmbedder 기본)
-│   │   ├── local_embedder.py     # multilingual-e5-large 1024차원
-│   │   ├── parse_results.py      # 배치 결과 파싱 → DB
-│   │   └── realtime_extractor.py # 실시간 인사이트 추출 (Haiku)
-│   ├── ingest/
-│   │   ├── load_macro.py         # FRED / 한국은행 ECOS 매크로 데이터 수집
-│   │   └── date_parser.py        # 한국어 날짜 문자열 파서
-│   ├── pipeline/
-│   │   ├── event_dispatcher.py   # 메인 런타임 (APScheduler, 6개 스케줄)
-│   │   ├── mer_monitor.py        # 블로그 RSS 감시
-│   │   ├── dart_collector.py     # DART 공시 (한국 기업 공시)
-│   │   ├── news_collector.py     # RSS 피드: 연준 · 한국은행 · 지정학
-│   │   └── prediction_verifier.py # 일일 Claude Haiku 배치 검증
-│   └── dashboard/
-│       └── prediction_dashboard.py # 예측 적중률 대시보드
-├── app.py                        # Streamlit Cloud 진입점
-├── eval_data/
-│   └── gold_extended.json        # 골드 데이터셋: 200개 쿼리 + 관련 인사이트 ID
+│   ├── config/                     # 설정
+│   │   ├── settings.py             # 전체 설정, .env에서 로드
+│   │   └── prompts.py              # Claude 추출 프롬프트
+│   ├── db/                         # 공유 DB 유틸리티
+│   │   └── connection.py           # connect(), get_pool() context managers
+│   ├── embed/                      # 임베딩
+│   │   ├── protocol.py             # Embedder Protocol 인터페이스
+│   │   ├── local.py                # multilingual-e5-large 1024차원 (기본)
+│   │   ├── vertex.py               # Vertex AI 768차원 (GCP 전용)
+│   │   ├── factory.py              # get_embedder() 팩토리 + vec_str()
+│   │   └── backfill.py             # NULL 임베딩 일괄 생성
+│   ├── extract/                    # 인사이트 추출
+│   │   ├── batch_api.py            # Claude Batch API 오케스트레이션
+│   │   ├── parse_results.py        # 배치 결과 JSONL → DB
+│   │   └── realtime.py             # 실시간 인사이트 추출 (Haiku)
+│   ├── collect/                    # 데이터 수집
+│   │   ├── mer_monitor.py          # 블로그 RSS 감시
+│   │   ├── dart.py                 # DART 기업 공시
+│   │   ├── news.py                 # RSS 피드: 연준 · 한국은행 · 지정학
+│   │   ├── macro.py                # FRED / 한국은행 ECOS 매크로
+│   │   ├── posts.py                # JSON → mer_posts 일괄 적재
+│   │   └── date_parser.py          # 한국어 날짜 문자열 파서
+│   ├── verify/                     # 예측 검증
+│   │   ├── verifier.py             # PredictionVerifier (Claude Haiku 배치)
+│   │   ├── context.py              # 매크로/주가/DART/뉴스 컨텍스트 조립
+│   │   └── prompt.py               # 시스템 프롬프트, 종목코드, 상수
+│   ├── search/                     # 하이브리드 검색
+│   │   ├── bm25_index.py           # BM25 + kiwipiepy + pickle 캐시
+│   │   ├── vector_index.py         # pgvector HNSW 래퍼 (1024차원)
+│   │   └── hybrid.py               # RRF 융합 (α=0.6)
+│   ├── eval/                       # 평가 파이프라인
+│   │   ├── experiment.py           # Ablation: 벡터 vs BM25 vs 하이브리드
+│   │   ├── eval_runner.py          # 메인 러너 (--mode retrieval_only | full)
+│   │   ├── metrics.py              # Precision@K, Recall@K, MRR
+│   │   ├── llm_judge.py            # LLM-as-judge (Claude Sonnet)
+│   │   └── report.py               # 마크다운 + JSON 리포트 생성기
+│   ├── pipeline/                   # 오케스트레이션
+│   │   └── event_dispatcher.py     # APScheduler / Cloud Run Job 진입점
+│   └── dashboard/                  # Streamlit 대시보드
+│       ├── app.py                  # 레이아웃 + 렌더링
+│       ├── queries.py              # DB 쿼리 함수
+│       └── topics.py               # 주제 분류 (TOPIC_KEYWORDS)
+├── config/                         # 하위호환 shim → src/config/
 ├── scripts/
-│   ├── init_db.sql               # PostgreSQL 스키마
-│   ├── run_batch.py              # 배치 추출 오케스트레이터
-│   ├── run_job.py                # 파이프라인 진입점 (일일 1회 실행)
-│   └── migrate_predictions.py    # 일회성: mer_insights → mer_predictions 소급 적재
+│   ├── run_job.py                  # Cloud Run Job / 로컬 파이프라인 진입점
+│   ├── run_batch.py                # 배치 추출 오케스트레이터
+│   ├── reembed_all.py              # 전체 재임베딩 (모델 교체 시)
+│   ├── naver_blog_scraper.py       # 블로그 스크래퍼
+│   ├── ops/                        # 데이터 운영 스크립트
+│   │   ├── export_*.py             # 예측 내보내기 (manual_verify, grouped, rounds)
+│   │   ├── import_*.py             # 수동 검증 결과 가져오기
+│   │   ├── fill_*.py               # 필드 채우기 (expected_date 등)
+│   │   ├── migrate_predictions.py  # 일회성: insights → predictions 소급 적재
+│   │   ├── populate_topics.py      # 주제 일괄 분류
+│   │   ├── cluster_insights.py     # DBSCAN 중복 제거
+│   │   └── regroup_by_topic.py     # 주제별 재분류
+│   └── eval/                       # 평가 관련 스크립트
+│       ├── expand_eval_dataset.py  # 골드 데이터셋 자동 확장
+│       └── compare_judges.py       # 심판 비교
+├── app.py                          # Streamlit Cloud 진입점
+├── eval_data/
+│   └── gold_extended.json          # 골드 데이터셋: 200개 쿼리 + 관련 인사이트 ID
 ├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt
