@@ -16,11 +16,12 @@ async def main():
 
     all_results = []
     seen_ids = set()
-    files = (
-        sorted(glob.glob("data/manual_verify/grouped/*결과*.json"))
-        + sorted(glob.glob("data/manual_verify/result_*.json"))
-        + sorted(glob.glob("data/manual_verify/round2/*결과*.json"))
-        + sorted(glob.glob("data/manual_verify/round3/*결과*.json"))
+    files = sorted(
+        glob.glob("data/manual_verify/grouped/*결과*.json")
+        + glob.glob("data/manual_verify/result_*.json")
+        + glob.glob("data/manual_verify/round*/*결과*.json")
+        + glob.glob("data/manual_verify/round*/*재판정*.json")
+        + glob.glob("data/manual_verify/round*/*_results.json")
     )
     for f in files:
         items = json.load(open(f, encoding="utf-8"))
@@ -57,6 +58,12 @@ async def main():
             incorrect_count += 1
         else:
             pending_count += 1
+            exp = r.get("expected_date")
+            if exp:
+                await conn.execute(
+                    "UPDATE mer_predictions SET expected_date = $1 WHERE id = $2 AND expected_date IS NULL",
+                    date.fromisoformat(exp), r["id"],
+                )
 
     # Summary
     stats = await conn.fetch(
