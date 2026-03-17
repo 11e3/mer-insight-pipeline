@@ -14,8 +14,8 @@ load_dotenv()
 async def main():
     conn = await asyncpg.connect(os.environ["DATABASE_URL"])
 
-    all_results = []
-    seen_ids = set()
+    # Later rounds override earlier verdicts (last wins per ID)
+    by_id = {}
     files = sorted(
         glob.glob("data/manual_verify/grouped/*결과*.json")
         + glob.glob("data/manual_verify/result_*.json")
@@ -27,9 +27,11 @@ async def main():
         items = json.load(open(f, encoding="utf-8"))
         for item in items:
             pid = item["id"]
-            if pid not in seen_ids:
-                seen_ids.add(pid)
-                all_results.append(item)
+            # Non-PENDING verdict always overrides PENDING
+            prev = by_id.get(pid)
+            if prev is None or prev["verdict"] == "PENDING":
+                by_id[pid] = item
+    all_results = list(by_id.values())
 
     today = date.today()
     correct_count = 0
@@ -44,7 +46,7 @@ async def main():
             await conn.execute(
                 """UPDATE mer_predictions
                    SET is_correct = true, actual_outcome = $1, verification_date = $2
-                   WHERE id = $3 AND is_correct IS NULL""",
+                   WHERE id = $3""",
                 reason, today, r["id"],
             )
             correct_count += 1
@@ -52,7 +54,7 @@ async def main():
             await conn.execute(
                 """UPDATE mer_predictions
                    SET is_correct = false, actual_outcome = $1, verification_date = $2
-                   WHERE id = $3 AND is_correct IS NULL""",
+                   WHERE id = $3""",
                 reason, today, r["id"],
             )
             incorrect_count += 1
