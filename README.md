@@ -205,6 +205,8 @@ Daily verification runs Claude Haiku on all pending predictions with the followi
 | `max_tokens` | 8,192 (lower risks JSON truncation) |
 | Korean token multiplier | Korean text consumes 2–3x more tokens than English — budget accordingly |
 
+**Estimated monthly cost ≈ $2–5** (daily pipeline only, Haiku 4.5 pricing as of 2025-10). Verification ~60 predictions × ~5K cached-input tokens + extraction ~1 post/day. Prompt caching keeps the bulk of input at the 90%-discounted read rate. Ad-hoc Sonnet batch extraction is separate and usage-dependent.
+
 ---
 
 ## Environment Variables
