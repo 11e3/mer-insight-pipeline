@@ -102,6 +102,7 @@ class PredictionVerifier:
                    target_asset, prediction_date
             FROM mer_predictions
             WHERE is_correct IS NULL
+              AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
             ORDER BY prediction_date DESC
         """)
         return [dict(r) for r in rows]
