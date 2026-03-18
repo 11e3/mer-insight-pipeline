@@ -2,8 +2,8 @@
 
 ## 프로젝트 개요
 
-메르(ranto28) 네이버 블로그 모니터링 → Claude로 인사이트 추출 → 예측 자동 검증 파이프라인.
-PostgreSQL + pgvector 기반 하이브리드 검색 (BM25 + 벡터), 예측 자동 검증.
+메르(ranto28) 네이버 블로그 모니터링 → Claude로 인사이트 추출 → 예측 수동 검증 파이프라인.
+PostgreSQL + pgvector 기반 하이브리드 검색 (BM25 + 벡터), 예측 수동 검증 (자동화 불가 — README 실험 결과 참조).
 
 ## 주요 명령어
 
@@ -60,19 +60,18 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - **로컬**: `event_dispatcher.py`가 APScheduler로 매일 01:00 단일 잡 실행
 - **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 수집 + 검증)
 
-### Prediction Verifier 비용 최적화
-- Prompt caching 적용 (`cache_control` on system prompt) → 2번째 배치부터 input 90% 할인
-- `BATCH_SIZE=60`: API 호출 수 최소화
-- 외부 컨텍스트 수집 없음 — Claude 자체 지식으로 판단
-- `max_tokens=8192` (너무 작으면 JSON 응답 truncation → 파싱 실패)
-- 한국어 텍스트는 토큰 소비 2-3배 → 비용 견적 시 영어 기준의 2배로 계산
+### 예측 검증은 수동만 가능
+- API 자동 검증 실험 결과: 판정 상반(CORRECT↔INCORRECT) 발생 → DB 오염 위험
+- `verifier.py`는 검증 대기 예측을 **내보내기 + 텔레그램 알림**만 수행
+- 실제 판정은 claude.ai에서 수동으로 진행 후 `import_manual_verdicts.py`로 반영
+- 상세 실험 결과: README.md "Why Not Fully Automated?" 참조
 
 ### DB 연결 패턴
 - `src/db/connection.py`의 `connect()`, `get_pool()` async context manager 사용
 - 수동 `conn.close()` 대신 `async with connect() as conn:` 패턴
 
 ### 삭제된 모듈
-과거 존재했으나 제거된 모듈: `src/agent/`, `src/guard/`, `src/observability/`, `src/ingest/`, `src/collect/dart.py`, `src/collect/news.py`, `src/collect/macro.py`, `src/verify/context.py`. import 참조 발견 시 삭제된 것으로 간주.
+과거 존재했으나 제거된 모듈: `src/agent/`, `src/guard/`, `src/observability/`, `src/ingest/`, `src/collect/dart.py`, `src/collect/news.py`, `src/collect/macro.py`, `src/verify/context.py`, `src/verify/search.py`. import 참조 발견 시 삭제된 것으로 간주.
 
 ## 아키텍처 요약
 
@@ -94,9 +93,9 @@ src/
 │   ├── mer_monitor.py   # 블로그 RSS 감시
 │   ├── posts.py         # JSON → mer_posts 적재
 │   └── date_parser.py   # 메르 블로그 날짜 파싱
-├── verify/         # 예측 자동 검증
-│   ├── verifier.py      # PredictionVerifier (Claude Opus 배치)
-│   └── prompt.py        # 시스템 프롬프트, 상수
+├── verify/         # 예측 검증 (수동 검증용 내보내기 + 알림)
+│   ├── verifier.py      # PredictionVerifier (내보내기 + 텔레그램)
+│   └── prompt.py        # 상수 (배치 크기)
 ├── search/         # 하이브리드 검색
 │   ├── bm25_index.py    # kiwipiepy 형태소 분석 + rank-bm25 + pickle 캐시
 │   ├── vector_index.py  # pgvector HNSW 래퍼 (1024-dim)
@@ -137,7 +136,7 @@ scripts/
 
 | 잡 이름 | 동작 | 스케줄 |
 |---------|------|--------|
-| `daily_pipeline` | 메르 글 수집 + 예측 검증 | 매일 01:00 |
+| `daily_pipeline` | 메르 글 수집 + 검증 대기 내보내기 + 알림 | 매일 01:00 |
 
 ## 환경변수
 

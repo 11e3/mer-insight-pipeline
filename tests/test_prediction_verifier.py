@@ -1,10 +1,11 @@
 """
 prediction_verifier.py 단위 테스트 — DB/네트워크 의존성 없음.
-주식 파싱 로직과 컨텍스트 포맷을 검증.
+내보내기 + 알림 로직 검증.
 """
 
 import os
 import sys
+import json
 from pathlib import Path
 from datetime import date
 from unittest.mock import MagicMock, AsyncMock, patch
@@ -18,118 +19,82 @@ for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY", "GCP_PROJECT_ID",
     os.environ.setdefault(_var, "test")
 
 from src.verify import PredictionVerifier
-from src.verify.prompt import SYSTEM as _SYSTEM
-
-
-# ── _fetch_stock_context 내부 파싱 로직 ───────────────────────────────────────
-
-def _make_verifier():
-    """DB 연결 없는 PredictionVerifier 인스턴스."""
-    conn = MagicMock()
-    with patch("src.verify.verifier.anthropic.AsyncAnthropic"):
-        return PredictionVerifier(conn)
-
-
-def test_system_prompt_has_verdicts():
-    """시스템 프롬프트에 CORRECT/INCORRECT/PENDING 기준 포함 여부."""
-    assert "CORRECT" in _SYSTEM
-    assert "INCORRECT" in _SYSTEM
-    assert "PENDING" in _SYSTEM
-
-
-def test_system_prompt_json_output():
-    """출력 포맷이 JSON 배열임을 명시."""
-    assert "JSON" in _SYSTEM
-
-
-# ── _save_results 로직 ────────────────────────────────────────────────────────
+from src.verify.prompt import BATCH_SIZE
 
 import asyncio
+
 
 def run(coro):
     return asyncio.run(coro)
 
 
-def test_save_results_skips_pending():
-    v = _make_verifier()
-    v.conn.execute = AsyncMock()
-    results = [{"id": 1, "verdict": "PENDING", "reason": "아직"}]
-    resolved = run(v._save_results(results))
-    assert resolved == 0
-    v.conn.execute.assert_not_called()
+def _make_verifier():
+    """DB 연결 없는 PredictionVerifier 인스턴스."""
+    conn = MagicMock()
+    return PredictionVerifier(conn)
 
 
-def test_save_results_counts_correct():
+def test_batch_size_is_reasonable():
+    """배치 크기가 적절한 범위."""
+    assert 10 <= BATCH_SIZE <= 200
+
+
+def test_fetch_verifiable_query():
+    """_fetch_verifiable이 올바른 SQL 조건을 사용하는지."""
     v = _make_verifier()
-    v.conn.execute = AsyncMock()
-    results = [
-        {"id": 1, "verdict": "CORRECT",   "reason": "예측 적중"},
-        {"id": 2, "verdict": "INCORRECT", "reason": "반대 결과"},
-        {"id": 3, "verdict": "PENDING",   "reason": "미결"},
+    v.conn.fetch = AsyncMock(return_value=[])
+    run(v._fetch_verifiable())
+    sql = v.conn.fetch.call_args[0][0]
+    assert "is_correct IS NULL" in sql
+    assert "expected_date" in sql
+
+
+def test_export_creates_files(tmp_path):
+    """내보내기가 파일을 올바르게 생성하는지."""
+    v = _make_verifier()
+
+    # Monkey-patch EXPORT_DIR
+    import src.verify.verifier as mod
+    orig = mod.EXPORT_DIR
+    mod.EXPORT_DIR = tmp_path
+
+    preds = [
+        {
+            "id": 1, "prediction_text": "코스피 3000",
+            "predicted_direction": "up", "target_asset": "KOSPI",
+            "prediction_date": date(2024, 1, 1), "expected_date": date(2024, 6, 1),
+        },
+        {
+            "id": 2, "prediction_text": "환율 하락",
+            "predicted_direction": "down", "target_asset": "USD/KRW",
+            "prediction_date": date(2024, 2, 1), "expected_date": None,
+        },
     ]
-    resolved = run(v._save_results(results))
-    assert resolved == 2
-    assert v.conn.execute.call_count == 2
+
+    exported = run(v._export(preds))
+    assert exported == 2
+
+    files = list(tmp_path.glob("*.txt"))
+    assert len(files) == 1
+
+    content = files[0].read_text(encoding="utf-8")
+    assert "코스피 3000" in content
+    assert "환율 하락" in content
+
+    mod.EXPORT_DIR = orig
 
 
-def test_save_results_skips_missing_id():
+def test_run_returns_zero_when_no_pending():
+    """검증 대기 없으면 0 반환."""
     v = _make_verifier()
-    v.conn.execute = AsyncMock()
-    results = [{"verdict": "CORRECT", "reason": "근거"}]  # id 없음
-    resolved = run(v._save_results(results))
-    assert resolved == 0
+    v.conn.fetch = AsyncMock(return_value=[])
+    result = run(v.run())
+    assert result == 0
 
 
-def test_save_results_correct_flag():
-    """CORRECT → is_correct=True, INCORRECT → is_correct=False 로 저장."""
+def test_notify_skips_without_token():
+    """토큰 없으면 알림 건너뛰기."""
     v = _make_verifier()
-    calls = []
-
-    async def mock_execute(sql, is_correct, reason, pred_id):
-        calls.append({"is_correct": is_correct, "id": pred_id})
-
-    v.conn.execute = mock_execute
-
-    results = [
-        {"id": 10, "verdict": "CORRECT",   "reason": "맞음"},
-        {"id": 11, "verdict": "INCORRECT", "reason": "틀림"},
-    ]
-    run(v._save_results(results))
-
-    assert calls[0]["is_correct"] is True
-    assert calls[1]["is_correct"] is False
-
-
-# ── _verify_batch JSON 파싱 내성 테스트 ───────────────────────────────────────
-
-def test_verify_batch_handles_malformed_json():
-    """Claude가 JSON 외 텍스트를 반환해도 빈 리스트로 graceful 처리."""
-    v = _make_verifier()
-
-    async def fake_create(**kwargs):
-        msg = MagicMock()
-        msg.content = [MagicMock(text="죄송합니다, 판단할 수 없습니다.")]
-        return msg
-
-    v._claude.messages.create = fake_create
-    batch = [{"id": 1, "prediction_text": "코스피 3000", "predicted_direction": "up",
-              "target_asset": "KOSPI", "prediction_date": date(2024, 1, 1)}]
-    result = run(v._verify_batch(batch))
-    assert result == []
-
-
-def test_verify_batch_parses_valid_json():
-    """올바른 JSON 배열 반환 시 정상 파싱."""
-    v = _make_verifier()
-
-    async def fake_create(**kwargs):
-        msg = MagicMock()
-        msg.content = [MagicMock(text='[{"id": 1, "verdict": "CORRECT", "reason": "적중"}]')]
-        return msg
-
-    v._claude.messages.create = fake_create
-    batch = [{"id": 1, "prediction_text": "코스피 상승", "predicted_direction": "up",
-              "target_asset": "KOSPI", "prediction_date": date(2024, 1, 1)}]
-    result = run(v._verify_batch(batch))
-    assert len(result) == 1
-    assert result[0]["verdict"] == "CORRECT"
+    with patch.dict(os.environ, {"TELEGRAM_BOT_TOKEN": "", "TELEGRAM_TIER1_CHAT_ID": ""}):
+        # Should not raise
+        run(v._notify(5))

@@ -1,118 +1,105 @@
 """
-PredictionVerifier — 매일 미검증 예측을 Claude(Haiku)로 배치 검증.
+PredictionVerifier — expected_date 지난 PENDING 예측을 자동 내보내기 + 텔레그램 알림.
+
+자동 판정은 신뢰도 부족으로 제거됨 (실험 결과 README 참조).
+수동 검증은 claude.ai에서 진행하고, import_manual_verdicts.py로 DB 반영.
 """
 
-import asyncio
 import json
 import logging
+import os
+from datetime import date
+from pathlib import Path
 
-import anthropic
 import asyncpg
 
-from src.config.settings import ANTHROPIC_API_KEY, MODEL_OPUS
-from src.verify.prompt import BATCH_SIZE, SYSTEM
-
 log = logging.getLogger(__name__)
+
+EXPORT_DIR = Path("data/manual_verify/pending")
+BATCH_SIZE = 100
 
 
 class PredictionVerifier:
 
     def __init__(self, conn: asyncpg.Connection):
         self.conn = conn
-        self._claude = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
     async def run(self) -> int:
-        """미검증 예측 전체를 배치로 검증. 반환: 확정된 건수."""
-        preds = await self._fetch_pending()
+        """expected_date 지난 미검증 예측 내보내기 + 알림. 반환: 내보낸 건수."""
+        preds = await self._fetch_verifiable()
         if not preds:
-            log.info("검증할 예측 없음")
+            log.info("검증 대기 예측 없음")
             return 0
 
-        resolved = 0
-        for i in range(0, len(preds), BATCH_SIZE):
-            batch   = preds[i: i + BATCH_SIZE]
-            results = await self._verify_batch(batch)
-            resolved += await self._save_results(results)
-            if len(preds) > BATCH_SIZE:
-                await asyncio.sleep(0.3)
+        exported = await self._export(preds)
+        await self._notify(len(preds))
+        log.info(f"검증 대기 {len(preds)}건 내보내기 완료 → {EXPORT_DIR}")
+        return exported
 
-        log.info(f"예측 검증 완료: {resolved}/{len(preds)}건 확정")
-        return resolved
-
-    async def _fetch_pending(self) -> list[dict]:
+    async def _fetch_verifiable(self) -> list[dict]:
+        """expected_date가 지났거나 없는 미검증 예측 조회."""
         rows = await self.conn.fetch("""
             SELECT id, prediction_text, predicted_direction,
-                   target_asset, prediction_date
+                   target_asset, prediction_date, expected_date
             FROM mer_predictions
             WHERE is_correct IS NULL
               AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
-            ORDER BY prediction_date DESC
+            ORDER BY prediction_date, id
         """)
         return [dict(r) for r in rows]
 
-    async def _verify_batch(self, batch: list[dict]) -> list[dict]:
-        pred_list = "\n".join(
-            f'{p["id"]}. [{p["target_asset"]}] {p["prediction_text"]} '
-            f'(방향: {p["predicted_direction"]}, 예측일: {p["prediction_date"]})'
-            for p in batch
-        )
+    async def _export(self, preds: list[dict]) -> int:
+        """검증 대기 예측을 텍스트 파일로 내보내기."""
+        EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+        today = date.today().isoformat()
+
+        header = f"""# 수동 검증 대기 — {today} ({len(preds)}건)
+
+아래 예측들을 웹 검색으로 확인 후 CORRECT/INCORRECT/PENDING으로 판정해주세요.
+- CORRECT: 예측 조건이 충족됐고 결과가 예측과 일치
+- INCORRECT: 예측 조건이 충족됐으나 결과가 예측과 반대
+- PENDING: 아직 결과를 알 수 없는 미래 예측 → expected_date 필수
+
+출력 형식 (JSON 배열만, 설명 텍스트 없이):
+[{{"id": N, "verdict": "CORRECT|INCORRECT|PENDING", "reason": "한줄 근거", "expected_date": "YYYY-MM-DD (PENDING일 때만)"}}]
+
+---
+
+"""
+        total_parts = (len(preds) + BATCH_SIZE - 1) // BATCH_SIZE
+        for i in range(0, len(preds), BATCH_SIZE):
+            batch = preds[i:i + BATCH_SIZE]
+            part = i // BATCH_SIZE + 1
+            fname = EXPORT_DIR / f"{today}_part{part:02d}.txt"
+
+            with open(fname, "w", encoding="utf-8") as f:
+                f.write(header)
+                for p in batch:
+                    asset = p["target_asset"] or "기타"
+                    d = p["prediction_date"]
+                    date_str = d.isoformat() if d else "없음"
+                    f.write(
+                        f'{p["id"]}. [{asset}] {p["prediction_text"]} '
+                        f'(방향: {p["predicted_direction"]}, 예측일: {date_str})\n'
+                    )
+            log.info(f"  {fname.name}: {len(batch)}건")
+
+        return len(preds)
+
+    async def _notify(self, count: int):
+        """텔레그램으로 검증 대기 알림."""
+        token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        chat_id = os.environ.get("TELEGRAM_TIER1_CHAT_ID")
+        if not token or not chat_id:
+            return
+
         try:
-            resp = await self._claude.messages.create(
-                model=MODEL_OPUS,
-                max_tokens=8192,
-                system=[{
-                    "type": "text",
-                    "text": SYSTEM,
-                    "cache_control": {"type": "ephemeral"},
-                }],
-                messages=[{"role": "user", "content": f"[예측 목록]\n{pred_list}"}],
+            import requests
+            text = f"📋 예측 검증 대기: {count}건\ndata/manual_verify/pending/ 에서 확인"
+            requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": chat_id, "text": text},
+                timeout=10,
             )
-            raw = next((b.text for b in resp.content if hasattr(b, "text")), "").strip()
-
-            cache_read = getattr(resp.usage, "cache_read_input_tokens", 0) or 0
-            cache_create = getattr(resp.usage, "cache_creation_input_tokens", 0) or 0
-            if cache_read or cache_create:
-                log.debug(
-                    f"토큰: input={resp.usage.input_tokens} "
-                    f"cache_read={cache_read} cache_create={cache_create} "
-                    f"output={resp.usage.output_tokens}"
-                )
-
-            if resp.stop_reason == "max_tokens":
-                log.warning(
-                    f"응답 truncated (max_tokens). "
-                    f"input={resp.usage.input_tokens} output={resp.usage.output_tokens}"
-                )
-
-            start = raw.find("[")
-            end   = raw.rfind("]") + 1
-            if start >= 0 and end > start:
-                return json.loads(raw[start:end])
-
-            log.warning(f"JSON 파싱 불가. stop={resp.stop_reason} raw[:200]={raw[:200]!r}")
-            return []
-        except json.JSONDecodeError as e:
-            log.error(f"JSON 디코딩 오류: {e}. raw[:200]={raw[:200]!r}")
-            return []
         except Exception as e:
-            log.error(f"배치 검증 오류: {e}")
-            return []
-
-    async def _save_results(self, results: list[dict]) -> int:
-        resolved = 0
-        for r in results:
-            verdict = r.get("verdict", "PENDING")
-            if verdict == "PENDING":
-                continue
-            pred_id = r.get("id")
-            if not pred_id:
-                continue
-            await self.conn.execute("""
-                UPDATE mer_predictions
-                SET is_correct        = $1,
-                    actual_outcome    = $2,
-                    verification_date = CURRENT_DATE
-                WHERE id = $3 AND is_correct IS NULL
-            """, verdict == "CORRECT", r.get("reason", ""), pred_id)
-            resolved += 1
-        return resolved
+            log.warning(f"텔레그램 알림 실패: {e}")

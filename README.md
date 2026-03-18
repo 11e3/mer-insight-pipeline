@@ -21,9 +21,11 @@ flowchart TD
 
     subgraph "Daily Pipeline (01:00)"
         ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>new posts]
-        ED -->|2| PV[verify/verifier<br>Claude Opus judge]
+        ED -->|2| PV[verify/verifier<br>export + notify]
         MER --> C
-        PV -->|CORRECT / INCORRECT / PENDING| C
+        PV -->|pending export| EX[manual_verify/pending/]
+        EX -->|claude.ai| MAN[Manual Verification]
+        MAN -->|import_manual_verdicts.py| C
     end
 
     subgraph Hybrid Search
@@ -41,17 +43,38 @@ flowchart TD
 
 ## Prediction Verification
 
-Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Opus acting as an automated judge using its own knowledge.
+Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions`. Predictions with `expected_date` in the past are exported for **manual verification via claude.ai**, then imported back into the DB.
 
 **Verdicts**
 
 | Verdict | Condition |
 |---------|-----------|
-| `CORRECT` | Predicted outcome confirmed by Claude's knowledge |
+| `CORRECT` | Predicted outcome confirmed with evidence |
 | `INCORRECT` | Predicted outcome contradicted by evidence |
-| `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
+| `PENDING` | Condition not yet met — re-exported when `expected_date` passes |
 
-Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=60` predictions per Opus call with **prompt caching** enabled (~90% input cost reduction on cached context).
+### Workflow
+
+1. **Daily pipeline** exports verifiable predictions → `data/manual_verify/pending/`
+2. **Telegram alert** notifies when new predictions are ready
+3. **Manual verification** via claude.ai (Opus 4.6 with web search)
+4. **Import results** via `python scripts/ops/import_manual_verdicts.py`
+
+### Why Not Fully Automated?
+
+We ran extensive experiments comparing automated API verification against manual claude.ai verification on 77 predictions. **No automated approach achieved acceptable accuracy:**
+
+| Approach | Match Rate | Verdict Flips | Cost/pred | Notes |
+|----------|-----------|---------------|-----------|-------|
+| API only (no search) | 16.9% | 1 | $0.01 | 80% PENDING — model lacks post-cutoff knowledge |
+| API + one-shot Brave Search | 37.7% | 5 | $0.02 | Snippets insufficient for fact-checking |
+| API + built-in web_search (Sonnet) | 30% | 2 | $0.05 | Better search quality, still unreliable |
+| API + agentic tool_use (Opus) | 40% | 3 | $0.26 | Token accumulation makes cost prohibitive |
+| **claude.ai manual (Opus)** | **100%** | **0** | **$0** | **Subscription model, best quality** |
+
+**Root cause:** Prediction verification is a fact-checking problem requiring real-time information. The API cannot reliably access or interpret current events, and verdict flips (CORRECT↔INCORRECT) make even screening-level automation dangerous — wrong verdicts would pollute the database.
+
+**Conclusion:** Manual verification via claude.ai remains the only reliable method. The pipeline automates everything else: export, batching, notification, and import.
 
 **Current Stats**
 
@@ -87,7 +110,7 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 | Layer | Technology |
 |-------|------------|
 | LLM (extraction) | `claude-sonnet-4-6` (Haiku optional via `--haiku`) |
-| LLM (verification) | `claude-opus-4-6` |
+| LLM (verification) | claude.ai (Opus 4.6, manual) |
 | Batch API | Anthropic Batch API |
 | Embeddings | `intfloat/multilingual-e5-large` (1024-dim, local) |
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
@@ -146,7 +169,7 @@ python -m src.pipeline.event_dispatcher   # daily 01:00 scheduler
 Runs once daily at 01:00 (KST) via Cloud Scheduler or APScheduler:
 
 1. Mer blog — check for new posts, extract predictions
-2. Prediction verification — Claude Opus judges all pending predictions
+2. Prediction export — export verifiable predictions + Telegram alert
 
 ### Dashboard
 
@@ -180,16 +203,15 @@ Unit tests run without a database. Integration tests require `TEST_DATABASE_URL`
 
 ## Cost
 
-Daily verification runs Claude Opus on all pending predictions with the following optimizations:
+Prediction verification is manual (via claude.ai subscription, ~$20/month). The only API cost is real-time insight extraction when new posts are detected.
 
-| Optimization | Detail |
-|-------------|--------|
-| Prompt caching | `cache_control` on system prompt — ~90% input cost reduction from 2nd batch onward |
-| Batch size | `BATCH_SIZE=60` predictions per API call |
-| `max_tokens` | 8,192 (lower risks JSON truncation) |
-| Korean token multiplier | Korean text consumes 2-3x more tokens than English — budget accordingly |
+| Component | Cost | Frequency |
+|-----------|------|-----------|
+| Insight extraction (Sonnet) | ~$0.01/post | Per new post |
+| Prediction verification | $0 (claude.ai subscription) | Weekly batch |
+| Embedding (local) | $0 | Per new insight |
 
-**Estimated monthly cost ≈ $10-30** (daily pipeline only, Opus 4.6 pricing, ~$0.008/prediction). Prompt caching keeps the bulk of input at the 90%-discounted read rate. Ad-hoc Sonnet batch extraction is separate and usage-dependent.
+**Estimated monthly cost ≈ $2-5** (extraction only). Verification is covered by claude.ai subscription.
 
 ---
 
@@ -229,8 +251,8 @@ mer-insight-pipeline/
 │   │   ├── posts.py                # JSON → mer_posts bulk loader
 │   │   └── date_parser.py          # Korean date string parser
 │   ├── verify/                     # Prediction Verification
-│   │   ├── verifier.py             # PredictionVerifier (Claude Opus batch)
-│   │   └── prompt.py               # System prompt, constants
+│   │   ├── verifier.py             # Export verifiable predictions + Telegram notify
+│   │   └── prompt.py               # Constants (batch size)
 │   ├── search/                     # Hybrid Search
 │   │   ├── bm25_index.py           # BM25 with kiwipiepy + pickle cache
 │   │   ├── vector_index.py         # pgvector HNSW wrapper (1024-dim)
