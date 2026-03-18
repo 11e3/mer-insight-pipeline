@@ -9,7 +9,7 @@ import logging
 import anthropic
 import asyncpg
 
-from src.config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
+from src.config.settings import ANTHROPIC_API_KEY, MODEL_OPUS
 from src.verify.prompt import BATCH_SIZE, SYSTEM
 
 log = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class PredictionVerifier:
         )
         try:
             resp = await self._claude.messages.create(
-                model=MODEL_HAIKU,
+                model=MODEL_OPUS,
                 max_tokens=8192,
                 system=[{
                     "type": "text",

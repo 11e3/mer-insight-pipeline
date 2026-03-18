@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline**은 [메르(ranto28)](https://blog.naver.com/ranto28)의 한국 경제 블로그 포스트에서 금융 예측을 자동으로 추적하고 검증하는 파이프라인입니다.
 
-Claude Batch API로 예측을 추출하고, Claude Haiku가 자동 심판으로 매일 각 예측을 검증합니다 — 현재 5,368건 추적, 4,219건 검증 완료. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
+Claude Batch API로 예측을 추출하고, Claude Opus가 자동 심판으로 매일 각 예측을 검증합니다 — 현재 5,368건 추적, 4,219건 검증 완료. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
 
 [English README](README.md)
 
@@ -21,7 +21,7 @@ flowchart TD
 
     subgraph "일일 파이프라인 (01:00)"
         ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>신규 글 수집]
-        ED -->|2| PV[verify/verifier<br>Claude Haiku 심판]
+        ED -->|2| PV[verify/verifier<br>Claude Opus 심판]
         MER --> C
         PV -->|CORRECT / INCORRECT / PENDING| C
     end
@@ -41,7 +41,7 @@ flowchart TD
 
 ## 예측 검증 파이프라인
 
-메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Haiku가 자체 지식을 활용해 자동 검증합니다.
+메르 포스트에서 추출된 모든 `prediction` 타입 인사이트는 `mer_predictions`에 저장되고, 매일 Claude Opus가 자체 지식을 활용해 자동 검증합니다.
 
 **판정 기준**
 
@@ -51,7 +51,7 @@ flowchart TD
 | `INCORRECT` | 근거에 의해 예측 내용이 반박됨 |
 | `PENDING` | 조건 미충족 또는 정보 부족 — 다음날 재검증 |
 
-만기 없이 확정될 때까지 큐에 유지. `BATCH_SIZE=60` 예측을 Haiku에 전달하며, **프롬프트 캐싱** 적용 (캐시된 입력 비용 ~90% 절감).
+만기 없이 확정될 때까지 큐에 유지. `BATCH_SIZE=60` 예측을 Opus에 전달하며, **프롬프트 캐싱** 적용 (캐시된 입력 비용 ~90% 절감).
 
 **현재 현황**
 
@@ -87,7 +87,7 @@ flowchart TD
 | 레이어 | 기술 |
 |--------|------|
 | LLM (추출) | `claude-sonnet-4-6` (Haiku 선택 가능: `--haiku`) |
-| LLM (검증) | `claude-haiku-4-5` |
+| LLM (검증) | `claude-opus-4-6` |
 | 배치 API | Anthropic Batch API |
 | 임베딩 | `intfloat/multilingual-e5-large` (1024차원, 로컬) |
 | 벡터 DB | PostgreSQL 16 + pgvector (HNSW 인덱스) |
@@ -146,7 +146,7 @@ python -m src.pipeline.event_dispatcher   # 매일 01:00 스케줄러
 매일 01:00 (KST) Cloud Scheduler 또는 APScheduler로 실행:
 
 1. 메르 블로그 — 신규 글 확인, 예측 추출
-2. 예측 검증 — Claude Haiku가 모든 미검증 예측 판정
+2. 예측 검증 — Claude Opus가 모든 미검증 예측 판정
 
 ### 대시보드
 
@@ -180,7 +180,7 @@ TEST_DATABASE_URL=postgresql://mer:pass@localhost:5432/mer_test \
 
 ## 비용
 
-일일 검증은 모든 미검증 예측에 대해 Claude Haiku를 실행하며, 다음과 같이 비용을 최적화합니다:
+일일 검증은 모든 미검증 예측에 대해 Claude Opus를 실행하며, 다음과 같이 비용을 최적화합니다:
 
 | 최적화 | 상세 |
 |--------|------|
@@ -189,7 +189,7 @@ TEST_DATABASE_URL=postgresql://mer:pass@localhost:5432/mer_test \
 | `max_tokens` | 8,192 (너무 작으면 JSON 응답 잘림 → 파싱 실패) |
 | 한국어 토큰 배수 | 한국어 텍스트는 영어 대비 토큰 소비 2-3배 → 비용 견적 시 2배로 계산 |
 
-**월 예상 비용 ≈ $2-5** (일일 파이프라인만, Haiku 4.5 기준). 프롬프트 캐싱으로 대부분의 input이 90% 할인된 read rate로 처리됩니다. Sonnet 배치 추출은 별도.
+**월 예상 비용 ≈ $10-30** (일일 파이프라인만, Opus 4.6 기준, 건당 ~$0.008). 프롬프트 캐싱으로 대부분의 input이 90% 할인된 read rate로 처리됩니다. Sonnet 배치 추출은 별도.
 
 ---
 
@@ -229,7 +229,7 @@ mer-insight-pipeline/
 │   │   ├── posts.py                # JSON → mer_posts 일괄 적재
 │   │   └── date_parser.py          # 한국어 날짜 문자열 파서
 │   ├── verify/                     # 예측 검증
-│   │   ├── verifier.py             # PredictionVerifier (Claude Haiku 배치)
+│   │   ├── verifier.py             # PredictionVerifier (Claude Opus 배치)
 │   │   └── prompt.py               # 시스템 프롬프트, 상수
 │   ├── search/                     # 하이브리드 검색
 │   │   ├── bm25_index.py           # BM25 + kiwipiepy + pickle 캐시

@@ -13,6 +13,7 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 
 MODEL_SONNET = "claude-sonnet-4-6"
 MODEL_HAIKU  = "claude-haiku-4-5-20251001"
+MODEL_OPUS   = "claude-opus-4-6"
 
 # ─── 블로그 ──────────────────────────────────────────────────────────────────
 BLOG_ID  = "ranto28"

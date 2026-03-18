@@ -96,7 +96,7 @@ src/
 │   ├── posts.py         # JSON → mer_posts 적재
 │   └── date_parser.py   # 메르 블로그 날짜 파싱
 ├── verify/         # 예측 자동 검증
-│   ├── verifier.py      # PredictionVerifier (Claude Haiku 배치)
+│   ├── verifier.py      # PredictionVerifier (Claude Opus 배치)
 │   └── prompt.py        # 시스템 프롬프트, 상수
 ├── search/         # 하이브리드 검색
 │   ├── bm25_index.py    # kiwipiepy 형태소 분석 + rank-bm25 + pickle 캐시

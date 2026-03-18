@@ -2,7 +2,7 @@
 
 **mer-insight-pipeline** automates financial prediction tracking and verification from [Mer (ranto28)](https://blog.naver.com/ranto28)'s Korean finance blog posts.
 
-The pipeline extracts predictions with Claude Batch API and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked, 4,219 verified so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
+The pipeline extracts predictions with Claude Batch API and verifies each prediction daily with Claude Opus as an automated judge — 5,368 predictions tracked, 4,219 verified so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
 [한국어 README](README_KR.md)
 
@@ -21,7 +21,7 @@ flowchart TD
 
     subgraph "Daily Pipeline (01:00)"
         ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>new posts]
-        ED -->|2| PV[verify/verifier<br>Claude Haiku judge]
+        ED -->|2| PV[verify/verifier<br>Claude Opus judge]
         MER --> C
         PV -->|CORRECT / INCORRECT / PENDING| C
     end
@@ -41,7 +41,7 @@ flowchart TD
 
 ## Prediction Verification
 
-Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge using its own knowledge.
+Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Opus acting as an automated judge using its own knowledge.
 
 **Verdicts**
 
@@ -51,7 +51,7 @@ Every `prediction`-type insight extracted from Mer's posts is stored in `mer_pre
 | `INCORRECT` | Predicted outcome contradicted by evidence |
 | `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
 
-Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=60` predictions per Haiku call with **prompt caching** enabled (~90% input cost reduction on cached context).
+Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=60` predictions per Opus call with **prompt caching** enabled (~90% input cost reduction on cached context).
 
 **Current Stats**
 
@@ -87,7 +87,7 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 | Layer | Technology |
 |-------|------------|
 | LLM (extraction) | `claude-sonnet-4-6` (Haiku optional via `--haiku`) |
-| LLM (verification) | `claude-haiku-4-5` |
+| LLM (verification) | `claude-opus-4-6` |
 | Batch API | Anthropic Batch API |
 | Embeddings | `intfloat/multilingual-e5-large` (1024-dim, local) |
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
@@ -146,7 +146,7 @@ python -m src.pipeline.event_dispatcher   # daily 01:00 scheduler
 Runs once daily at 01:00 (KST) via Cloud Scheduler or APScheduler:
 
 1. Mer blog — check for new posts, extract predictions
-2. Prediction verification — Claude Haiku judges all pending predictions
+2. Prediction verification — Claude Opus judges all pending predictions
 
 ### Dashboard
 
@@ -180,7 +180,7 @@ Unit tests run without a database. Integration tests require `TEST_DATABASE_URL`
 
 ## Cost
 
-Daily verification runs Claude Haiku on all pending predictions with the following optimizations:
+Daily verification runs Claude Opus on all pending predictions with the following optimizations:
 
 | Optimization | Detail |
 |-------------|--------|
@@ -189,7 +189,7 @@ Daily verification runs Claude Haiku on all pending predictions with the followi
 | `max_tokens` | 8,192 (lower risks JSON truncation) |
 | Korean token multiplier | Korean text consumes 2-3x more tokens than English — budget accordingly |
 
-**Estimated monthly cost ≈ $2-5** (daily pipeline only, Haiku 4.5 pricing). Prompt caching keeps the bulk of input at the 90%-discounted read rate. Ad-hoc Sonnet batch extraction is separate and usage-dependent.
+**Estimated monthly cost ≈ $10-30** (daily pipeline only, Opus 4.6 pricing, ~$0.008/prediction). Prompt caching keeps the bulk of input at the 90%-discounted read rate. Ad-hoc Sonnet batch extraction is separate and usage-dependent.
 
 ---
 
@@ -229,7 +229,7 @@ mer-insight-pipeline/
 │   │   ├── posts.py                # JSON → mer_posts bulk loader
 │   │   └── date_parser.py          # Korean date string parser
 │   ├── verify/                     # Prediction Verification
-│   │   ├── verifier.py             # PredictionVerifier (Claude Haiku batch)
+│   │   ├── verifier.py             # PredictionVerifier (Claude Opus batch)
 │   │   └── prompt.py               # System prompt, constants
 │   ├── search/                     # Hybrid Search
 │   │   ├── bm25_index.py           # BM25 with kiwipiepy + pickle cache
