@@ -99,7 +99,7 @@ async def parse_and_insert(jsonl_path: str):
                     INSERT INTO mer_insights
                         (post_id, insight_type, content, structured_data)
                     VALUES ($1, $2, $3, $4)
-                    ON CONFLICT DO NOTHING
+                    ON CONFLICT (post_id, insight_type, md5(content)) DO NOTHING
                 """,
                     post_id,
                     insight_type,

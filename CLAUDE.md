@@ -26,7 +26,12 @@ python -m src.search.bm25_index  # 캐시 → data/bm25_cache.pkl
 
 # 단일 잡 실행 (GCP Cloud Run Job 진입점)
 python -m scripts.run_job
-python -m scripts.run_job --job verify_predictions
+
+# DB 기동
+docker compose up -d db
+
+# 대시보드
+streamlit run src/dashboard/app.py
 ```
 
 ## 핵심 Gotcha
@@ -56,7 +61,7 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 수집 + 검증)
 
 ### Prediction Verifier 비용 최적화
-- Prompt caching 적용 (`cache_control` on system + context) → 2번째 배치부터 input 90% 할인
+- Prompt caching 적용 (`cache_control` on system prompt) → 2번째 배치부터 input 90% 할인
 - `BATCH_SIZE=60`: API 호출 수 최소화
 - 외부 컨텍스트 수집 없음 — Claude 자체 지식으로 판단
 - `max_tokens=8192` (너무 작으면 JSON 응답 truncation → 파싱 실패)
@@ -66,14 +71,8 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - `src/db/connection.py`의 `connect()`, `get_pool()` async context manager 사용
 - 수동 `conn.close()` 대신 `async with connect() as conn:` 패턴
 
-### 삭제된 모듈 (리팩토링 완료)
-- `src/agent/`, `src/guard/`, `src/observability/` — 에이전트/가드/트레이서 삭제
-- `src/ingest/` — `src/collect/`로 통합
-- `src/pipeline/prediction_verifier.py` — `src/verify/`로 분할
-- `src/extract/embedder.py`, `local_embedder.py`, `embeddings.py` — `src/embed/`로 분리
-- 미사용 deps 제거: yfinance, psycopg2-binary, fredapi, matplotlib, pydantic
-- `src/collect/dart.py`, `news.py`, `macro.py` — DART/뉴스/매크로 수집 제거 (미사용)
-- `macro_daily` 테이블, `events` 테이블의 dart/news/macro_alert 타입 제거
+### 삭제된 모듈
+과거 존재했으나 제거된 모듈: `src/agent/`, `src/guard/`, `src/observability/`, `src/ingest/`, `src/collect/dart.py`, `src/collect/news.py`, `src/collect/macro.py`, `src/verify/context.py`. import 참조 발견 시 삭제된 것으로 간주.
 
 ## 아키텍처 요약
 
@@ -121,8 +120,9 @@ scripts/
 ├── reembed_all.py       # 전체 재임베딩 (모델 교체 시)
 ├── naver_blog_scraper.py # 블로그 스크래퍼
 ├── ops/                 # 데이터 운영 스크립트
-│   ├── export_*.py      # 예측 내보내기 (manual_verify, grouped, round2, round3)
+│   ├── export_*.py      # 예측 내보내기 (round1~5)
 │   ├── import_*.py      # 수동 검증 결과 가져오기
+│   ├── compare_*.py     # Haiku vs Opus 검증 퀄리티 비교
 │   ├── fill_*.py        # expected_date 등 필드 채우기
 │   ├── migrate_predictions.py  # mer_insights → mer_predictions 소급 적재
 │   ├── populate_topics.py      # 주제 일괄 분류

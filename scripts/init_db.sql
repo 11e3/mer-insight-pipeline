@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS mer_insights (
 
 CREATE INDEX IF NOT EXISTS idx_insights_post_id ON mer_insights (post_id);
 CREATE INDEX IF NOT EXISTS idx_insights_type    ON mer_insights (insight_type);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_insights_content
+    ON mer_insights (post_id, insight_type, md5(content));
 
 -- HNSW 인덱스 (2000개 수준에서 ivfflat보다 빠르고 recall 높음)
 CREATE INDEX IF NOT EXISTS idx_insights_embedding

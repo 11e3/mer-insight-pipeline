@@ -24,31 +24,27 @@ from src.verify import PredictionVerifier
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
+BM25_CACHE = Path("data/bm25_cache.pkl")
+
 
 class EventDispatcher:
 
     def __init__(self):
         self.pool: asyncpg.Pool | None = None
-        self.conn: asyncpg.Connection | None = None
         self.embedder = None
-        self.mer_monitor: MerMonitor | None = None
         self.bm25_index: BM25Index | None = None
-        self.verifier: PredictionVerifier | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
     async def _init(self):
-        """공유 리소스 초기화."""
+        """공유 리소스 초기화 (풀 + 임베더 + BM25)."""
         self.pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
-        self.conn = await self.pool.acquire()
         self.embedder = get_embedder()
-        self.mer_monitor = MerMonitor(self.conn)
 
-        bm25_cache = Path("data/bm25_cache.pkl")
         self.bm25_index = BM25Index()
-        if not self.bm25_index.load(bm25_cache):
-            await self.bm25_index.build(self.conn)
-            self.bm25_index.save(bm25_cache)
-        self.verifier = PredictionVerifier(self.conn)
+        async with self.pool.acquire() as conn:
+            if not self.bm25_index.load(BM25_CACHE):
+                await self.bm25_index.build(conn)
+                self.bm25_index.save(BM25_CACHE)
 
     async def run(self) -> None:
         """전체 파이프라인 1회 실행 후 종료."""
@@ -56,7 +52,6 @@ class EventDispatcher:
         try:
             await self._run_pipeline()
         finally:
-            await self.pool.release(self.conn)
             await self.pool.close()
 
     async def start(self):
@@ -75,35 +70,41 @@ class EventDispatcher:
         try:
             await asyncio.Event().wait()
         finally:
-            await self.pool.release(self.conn)
             await self.pool.close()
 
     # --- 파이프라인 ---
 
     async def _run_pipeline(self):
-        """1. 메르 신규 글 → 2. 예측 검증"""
+        """1. 메르 신규 글 → 2. 예측 검증 (매 실행마다 커넥션 acquire/release)"""
         log.info("=== 일일 파이프라인 시작 ===")
 
-        # 1. 메르 신규 글 수집 + 예측 추출
-        try:
-            new_posts = await self.mer_monitor.check_new()
-            if new_posts:
-                for post in new_posts:
-                    extracted = await extract_and_save(self.conn, self.embedder, post)
-                    log.info(f"  인사이트 {extracted['count']}개 추출 ({post.get('title', '')[:40]})")
-                log.info(f"메르 신규 글 {len(new_posts)}건 처리 완료")
-            else:
-                log.info("메르 신규 글 없음")
-        except Exception as e:
-            log.error(f"메르 글 수집 오류: {e}")
+        async with self.pool.acquire() as conn:
+            # 1. 메르 신규 글 수집 + 예측 추출
+            try:
+                monitor = MerMonitor(conn)
+                new_posts = await monitor.check_new()
+                if new_posts:
+                    for post in new_posts:
+                        extracted = await extract_and_save(conn, self.embedder, post)
+                        log.info(f"  인사이트 {extracted['count']}개 추출 ({post.get('title', '')[:40]})")
+                    log.info(f"메르 신규 글 {len(new_posts)}건 처리 완료")
+                    # BM25 인덱스 갱신
+                    await self.bm25_index.build(conn)
+                    self.bm25_index.save(BM25_CACHE)
+                    log.info("BM25 인덱스 갱신 완료")
+                else:
+                    log.info("메르 신규 글 없음")
+            except Exception as e:
+                log.error(f"메르 글 수집 오류: {e}")
 
-        # 2. 예측 검증
-        log.info("예측 검증 시작")
-        try:
-            resolved = await self.verifier.run()
-            log.info(f"예측 검증 완료: {resolved}건 확정")
-        except Exception as e:
-            log.error(f"예측 검증 오류: {e}")
+            # 2. 예측 검증
+            log.info("예측 검증 시작")
+            try:
+                verifier = PredictionVerifier(conn)
+                resolved = await verifier.run()
+                log.info(f"예측 검증 완료: {resolved}건 확정")
+            except Exception as e:
+                log.error(f"예측 검증 오류: {e}")
 
         log.info("=== 일일 파이프라인 완료 ===")
 

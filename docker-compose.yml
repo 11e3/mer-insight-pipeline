@@ -41,7 +41,7 @@ services:
       DATABASE_URL: postgresql://mer:${DB_PASSWORD}@db:5432/mer_pipeline
     ports:
       - "8501:8501"
-    command: streamlit run src/dashboard/prediction_dashboard.py --server.address=0.0.0.0
+    command: streamlit run src/dashboard/app.py --server.address=0.0.0.0
 
 volumes:
   pgdata:

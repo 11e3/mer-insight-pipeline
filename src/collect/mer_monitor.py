@@ -3,14 +3,17 @@
 네이버 RSS를 우선 사용, 실패 시 PostTitleListAsync API 폴백.
 """
 
+import asyncio
+import logging
 import re
-import time
+
 import asyncpg
 import requests
 from xml.etree import ElementTree as ET
 
 from src.config.settings import BLOG_ID, BLOG_RSS
 
+log = logging.getLogger(__name__)
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -25,7 +28,7 @@ class MerMonitor:
 
     async def check_new(self) -> list[dict]:
         """DB에 없는 신규 글만 반환 (본문 포함)."""
-        log_nos = self._get_recent_log_nos()
+        log_nos = await asyncio.to_thread(self._get_recent_log_nos)
         if not log_nos:
             return []
 
@@ -44,11 +47,11 @@ class MerMonitor:
 
         posts = []
         for log_no in new_log_nos:
-            post = self._scrape_post(log_no)
+            post = await asyncio.to_thread(self._scrape_post, log_no)
             if post:
                 posts.append(post)
                 await self._save_post(post)
-                time.sleep(0.5)
+                await asyncio.sleep(0.5)
 
         return posts
 
@@ -66,8 +69,8 @@ class MerMonitor:
                         log_nos.append(m.group(1))
                 if log_nos:
                     return log_nos
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning(f"RSS 파싱 실패, API 폴백: {e}")
 
         # 폴백: PostTitleListAsync API
         try:
@@ -78,7 +81,8 @@ class MerMonitor:
             )
             resp = requests.get(url, headers=HEADERS, timeout=10)
             return re.findall(r'logNo[\"=:]+(\d{10,})', resp.text)
-        except Exception:
+        except Exception as e:
+            log.warning(f"PostTitleListAsync API 실패: {e}")
             return []
 
     def _scrape_post(self, log_no: str) -> dict | None:
@@ -90,7 +94,8 @@ class MerMonitor:
         try:
             resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
-        except Exception:
+        except Exception as e:
+            log.warning(f"포스트 스크래핑 실패 ({log_no}): {e}")
             return None
 
         soup = BeautifulSoup(resp.text, "lxml")

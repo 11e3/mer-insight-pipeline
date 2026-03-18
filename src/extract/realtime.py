@@ -91,7 +91,7 @@ async def extract_and_save(
                 INSERT INTO mer_insights
                     (post_id, insight_type, content, structured_data, embedding)
                 VALUES ($1, $2, $3, $4, $5::vector)
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (post_id, insight_type, md5(content)) DO NOTHING
                 RETURNING id
             """,
                 post_id,
