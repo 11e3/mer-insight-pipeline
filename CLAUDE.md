@@ -121,7 +121,6 @@ scripts/
 ├── ops/                 # 데이터 운영 스크립트
 │   ├── export_*.py      # 예측 내보내기 (round1~5)
 │   ├── import_*.py      # 수동 검증 결과 가져오기
-│   ├── compare_*.py     # Haiku vs Opus 검증 퀄리티 비교
 │   ├── fill_*.py        # expected_date 등 필드 채우기
 │   ├── migrate_predictions.py  # mer_insights → mer_predictions 소급 적재
 │   ├── populate_topics.py      # 주제 일괄 분류
