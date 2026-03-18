@@ -2,7 +2,7 @@
 Week 1 전체 파이프라인 실행 스크립트.
 
 단계별 실행:
-    python scripts/run_batch.py phase1       # DB 적재 + 매크로
+    python scripts/run_batch.py phase1       # DB 적재
     python scripts/run_batch.py test100      # Haiku 100개 테스트
     python scripts/run_batch.py batch        # Sonnet 전체 배치 실행
     python scripts/run_batch.py status <id>  # 배치 진행 확인
@@ -18,7 +18,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import asyncio
 
 from src.ingest.load_posts import load_posts
-from src.ingest.load_macro import load_macro
 from src.extract.batch_api import create_batch, check_status, download_results, create_retokenize_batch
 from src.extract.parse_results import parse_and_insert
 from src.extract.embeddings import fill_embeddings
@@ -34,11 +33,8 @@ async def phase1():
     print("Phase 1: 데이터 적재")
     print("=" * 50)
 
-    print("\n[1/2] 포스트 JSON → PostgreSQL")
+    print("\n[1/1] 포스트 JSON → PostgreSQL")
     await load_posts()
-
-    print("\n[2/2] 매크로 데이터 수집 (2015~)")
-    await load_macro(start="2015-01-01")
 
 
 async def run_all():

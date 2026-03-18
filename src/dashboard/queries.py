@@ -46,7 +46,7 @@ def load_predictions_for_topics():
     async def _():
         conn = await _get_conn()
         rows = await conn.fetch("""
-            SELECT prediction_text, is_correct, COALESCE(topic, '기타') AS topic
+            SELECT prediction_text, is_correct
             FROM mer_predictions
             WHERE skipped_at IS NULL
         """)
@@ -83,7 +83,6 @@ def load_all_predictions():
             SELECT
                 mp.prediction_date, mp.prediction_text, mp.predicted_direction,
                 mp.target_asset, mp.is_correct, mp.actual_outcome, mp.verification_date,
-                COALESCE(mp.topic, '기타') AS topic,
                 p.url AS post_url
             FROM mer_predictions mp
             LEFT JOIN mer_insights mi ON mi.id = mp.insight_id

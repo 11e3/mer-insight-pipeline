@@ -28,8 +28,6 @@ services:
     environment:
       DATABASE_URL: postgresql://mer:${DB_PASSWORD}@db:5432/mer_pipeline
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      FRED_API_KEY: ${FRED_API_KEY}
-      BOK_API_KEY: ${BOK_API_KEY}
     volumes:
       - ./data:/app/data
 

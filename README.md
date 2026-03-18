@@ -1,8 +1,8 @@
 # mer-insight-pipeline
 
-**mer-insight-pipeline** automates financial prediction tracking and verification from [Mer (ranto28)](https://blog.naver.com/ranto28)'s 2,193 Korean finance blog posts using macro data from FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, and Google News.
+**mer-insight-pipeline** automates financial prediction tracking and verification from [Mer (ranto28)](https://blog.naver.com/ranto28)'s Korean finance blog posts.
 
-The pipeline extracts predictions with Claude Batch API, collects real market data from 6 external sources, and verifies each prediction daily with Claude Haiku as an automated judge — 5,010 predictions tracked so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
+The pipeline extracts predictions with Claude Batch API and verifies each prediction daily with Claude Haiku as an automated judge — 5,368 predictions tracked, 4,219 verified so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
 [한국어 README](README_KR.md)
 
@@ -13,7 +13,7 @@ The pipeline extracts predictions with Claude Batch API, collects real market da
 ```mermaid
 flowchart TD
     subgraph Batch Extraction
-        A[Naver Blog<br>2,193 posts] -->|scrape| B[parse_results.py]
+        A[Naver Blog<br>2,223 posts] -->|scrape| B[parse_results.py]
         B -->|rules / predictions<br>evaluations / macro_views| C[(PostgreSQL<br>+ pgvector)]
         C --> EMB[embed/local.py<br>1024-dim vectors]
         EMB --> C
@@ -21,12 +21,8 @@ flowchart TD
 
     subgraph "Daily Pipeline (01:00)"
         ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>new posts]
-        ED -->|2| DC[collect/dart<br>DART filings]
-        ED -->|2| LM[collect/macro<br>FRED · BOK ECOS]
-        ED -->|2| NC[collect/news<br>Fed · BOK · Google News]
-        ED -->|3| PV[verify/verifier<br>Claude Haiku judge]
+        ED -->|2| PV[verify/verifier<br>Claude Haiku judge]
         MER --> C
-        DC & LM & NC --> C
         PV -->|CORRECT / INCORRECT / PENDING| C
     end
 
@@ -34,10 +30,9 @@ flowchart TD
         HS1[BM25<br>kiwipiepy] & HS2[pgvector<br>HNSW] -->|RRF α=0.6| HS3[HybridSearcher]
     end
 
-    PV -.->|context lookup| HS3
     HS3 --> C
 
-    C --> Q[Streamlit Dashboard<br>port 8501]
+    C --> Q[Streamlit Dashboard]
 
     EV[eval/experiment.py<br>offline ablation] -.-> HS3
 ```
@@ -46,40 +41,32 @@ flowchart TD
 
 ## Prediction Verification
 
-Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge.
-
-All data sources listed below are collected daily and fed to Claude as verification context.
+Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions` and verified daily by Claude Haiku acting as an automated judge using its own knowledge.
 
 **Verdicts**
 
 | Verdict | Condition |
 |---------|-----------|
-| `CORRECT` | Predicted outcome confirmed by context or Claude's knowledge |
+| `CORRECT` | Predicted outcome confirmed by Claude's knowledge |
 | `INCORRECT` | Predicted outcome contradicted by evidence |
 | `PENDING` | Condition not yet met, or insufficient information — re-checked next day |
 
 Predictions stay in the queue until resolved — no expiry. `BATCH_SIZE=60` predictions per Haiku call with **prompt caching** enabled (~90% input cost reduction on cached context).
 
----
+**Current Stats**
 
-## Macro Data Pipeline
-
-| Source | Data |
-|--------|------|
-| FRED API | VIX, US 10Y Treasury, WTI crude, BTC/USD, Fed Funds Rate, CPI YoY, Unemployment |
-| BOK ECOS | USD/KRW, KOSPI, KOSDAQ, Korea base rate |
-| Naver Finance | Monthly H/L/C + latest close for 10 major Korean stocks |
-| DART | Corporate disclosure filings via RSS |
-| Fed / BOK RSS | Central bank press releases, rate decisions |
-| Google News | Geopolitical events — sanctions, tariffs, trade war keywords |
-
-All data is collected once daily before prediction verification and fed to Claude Haiku as context for judging predictions.
+| Status | Count |
+|--------|-------|
+| CORRECT | 3,706 |
+| INCORRECT | 513 |
+| PENDING | 1,149 |
+| **Total** | **5,368** |
 
 ---
 
 ## Search Infrastructure
 
-Hybrid BM25 + vector search serves as the retrieval backbone for context assembly and the eval pipeline.
+Hybrid BM25 + vector search serves as the retrieval backbone for the eval pipeline.
 
 Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB.
 
@@ -99,15 +86,14 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 
 | Layer | Technology |
 |-------|------------|
-| LLM (analysis · verification) | `claude-sonnet-4-6` |
-| LLM (extraction, default) | `claude-sonnet-4-6` (Haiku optional via `--haiku`) |
+| LLM (extraction) | `claude-sonnet-4-6` (Haiku optional via `--haiku`) |
+| LLM (verification) | `claude-haiku-4-5` |
 | Batch API | Anthropic Batch API |
 | Embeddings | `intfloat/multilingual-e5-large` (1024-dim, local) |
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
 | Scheduler | APScheduler (local) / GCP Cloud Scheduler + Cloud Run Job |
-| Data Sources | FRED, BOK ECOS, DART, Naver Finance, Fed/BOK RSS, Google News |
 | Dashboard | Streamlit |
 
 ---
@@ -116,12 +102,13 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 
 | Metric | Value |
 |--------|-------|
-| Processed posts | 2,193 |
+| Processed posts | 2,223 |
 | Extracted insights | 25,090 |
-| Tracked predictions | 5,010 |
+| Tracked predictions | 5,368 |
+| Verified predictions | 4,219 (78.6%) |
+| Accuracy (CORRECT rate) | 87.8% |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 1024 |
-| BM25 index size | 19,702 documents |
 
 ---
 
@@ -139,12 +126,11 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 git clone https://github.com/11e3/mer-insight-pipeline.git
 cd mer-insight-pipeline
 cp .env.example .env        # fill in your API keys
-cp config/prompts.example.py config/prompts.py
 
 # 2. Start the database
 docker compose up -d db
 
-# 3. Run batch extraction (2,193 posts → 25,090 insights)
+# 3. Run batch extraction (posts → insights)
 python scripts/run_batch.py all
 
 # 4. Build BM25 index cache
@@ -160,13 +146,12 @@ python -m src.pipeline.event_dispatcher   # daily 01:00 scheduler
 Runs once daily at 01:00 (KST) via Cloud Scheduler or APScheduler:
 
 1. Mer blog — check for new posts, extract predictions
-2. DART / FRED / BOK ECOS / News RSS — collect latest data
-3. Prediction verification — Claude Haiku judges all pending predictions
+2. Prediction verification — Claude Haiku judges all pending predictions
 
 ### Dashboard
 
 ```bash
-streamlit run src/dashboard/app.py   # http://localhost:8501
+streamlit run src/dashboard/app.py
 ```
 
 ### Eval
@@ -199,13 +184,12 @@ Daily verification runs Claude Haiku on all pending predictions with the followi
 
 | Optimization | Detail |
 |-------------|--------|
-| Prompt caching | `cache_control` on system + context — ~90% input cost reduction from 2nd batch onward |
+| Prompt caching | `cache_control` on system prompt — ~90% input cost reduction from 2nd batch onward |
 | Batch size | `BATCH_SIZE=60` predictions per API call |
-| Context cap | 30 days stock prices, 20 DART/news items per batch |
 | `max_tokens` | 8,192 (lower risks JSON truncation) |
-| Korean token multiplier | Korean text consumes 2–3x more tokens than English — budget accordingly |
+| Korean token multiplier | Korean text consumes 2-3x more tokens than English — budget accordingly |
 
-**Estimated monthly cost ≈ $2–5** (daily pipeline only, Haiku 4.5 pricing as of 2025-10). Verification ~60 predictions × ~5K cached-input tokens + extraction ~1 post/day. Prompt caching keeps the bulk of input at the 90%-discounted read rate. Ad-hoc Sonnet batch extraction is separate and usage-dependent.
+**Estimated monthly cost ≈ $2-5** (daily pipeline only, Haiku 4.5 pricing). Prompt caching keeps the bulk of input at the 90%-discounted read rate. Ad-hoc Sonnet batch extraction is separate and usage-dependent.
 
 ---
 
@@ -217,8 +201,6 @@ Daily verification runs Claude Haiku on all pending predictions with the followi
 | `ANTHROPIC_API_KEY` | ✓ | Claude API key |
 | `GCP_PROJECT_ID` | optional | GCP project ID (for Vertex AI embeddings) |
 | `GCP_LOCATION` | optional | Vertex AI region (default: us-central1) |
-| `FRED_API_KEY` | optional | FRED economic data (free) |
-| `BOK_API_KEY` | optional | Bank of Korea ECOS API (free) |
 
 ---
 
@@ -244,15 +226,11 @@ mer-insight-pipeline/
 │   │   └── realtime.py             # Real-time insight extraction (Haiku)
 │   ├── collect/                    # Data Collection
 │   │   ├── mer_monitor.py          # Blog RSS watcher
-│   │   ├── dart.py                 # DART corporate filings
-│   │   ├── news.py                 # RSS feeds: Fed · BOK · geopolitics
-│   │   ├── macro.py                # FRED / BOK ECOS macro data
 │   │   ├── posts.py                # JSON → mer_posts bulk loader
 │   │   └── date_parser.py          # Korean date string parser
 │   ├── verify/                     # Prediction Verification
 │   │   ├── verifier.py             # PredictionVerifier (Claude Haiku batch)
-│   │   ├── context.py              # Macro/stock/DART/news context assembly
-│   │   └── prompt.py               # System prompt, stock codes, constants
+│   │   └── prompt.py               # System prompt, constants
 │   ├── search/                     # Hybrid Search
 │   │   ├── bm25_index.py           # BM25 with kiwipiepy + pickle cache
 │   │   ├── vector_index.py         # pgvector HNSW wrapper (1024-dim)
@@ -269,14 +247,13 @@ mer-insight-pipeline/
 │       ├── app.py                  # Layout & rendering
 │       ├── queries.py              # DB query functions
 │       └── topics.py               # Topic classification (TOPIC_KEYWORDS)
-├── config/                         # Backward-compat shims → src/config/
 ├── scripts/
 │   ├── run_job.py                  # Cloud Run Job / local pipeline entry
 │   ├── run_batch.py                # Batch extraction orchestrator
 │   ├── reembed_all.py              # Full re-embedding (model swap)
 │   ├── naver_blog_scraper.py       # Blog scraper
 │   ├── ops/                        # Data operation scripts
-│   │   ├── export_*.py             # Prediction export (manual_verify, grouped, rounds)
+│   │   ├── export_*.py             # Prediction export (manual_verify, rounds)
 │   │   ├── import_*.py             # Manual verdict import
 │   │   ├── fill_*.py               # Field backfill (expected_date, etc.)
 │   │   ├── migrate_predictions.py  # One-time backfill: insights → predictions
@@ -286,7 +263,6 @@ mer-insight-pipeline/
 │   └── eval/                       # Eval scripts
 │       ├── expand_eval_dataset.py  # Auto-expand gold dataset
 │       └── compare_judges.py       # Judge comparison
-├── app.py                          # Streamlit Cloud entry point
 ├── eval_data/
 │   └── gold_extended.json          # Gold dataset: 200 queries with relevant IDs
 ├── docker-compose.yml

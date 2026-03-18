@@ -65,7 +65,7 @@ if not pie_data.empty:
         title="판정 분포",
     )
     fig_pie.update_traces(textinfo="percent+value")
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.plotly_chart(fig_pie, width="stretch")
 
 st.divider()
 
@@ -99,7 +99,7 @@ if preds:
             title="주제별 검증 결과",
             labels={"topic": "주제", "count": "건수", "verdict": "판정"},
         )
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width="stretch")
 
         # 주제별 정확도 테이블
         topic_acc = df_verified.groupby("topic").apply(
@@ -111,7 +111,7 @@ if preds:
             include_groups=False,
         ).reset_index()
         topic_acc = topic_acc.sort_values("correct", ascending=False)
-        st.dataframe(topic_acc, use_container_width=True, hide_index=True)
+        st.dataframe(topic_acc, width="stretch", hide_index=True)
     else:
         st.info("검증 완료된 예측이 없습니다.")
 else:
@@ -154,7 +154,7 @@ if monthly:
         legend=dict(x=0.01, y=0.99),
     )
 
-    st.plotly_chart(fig_trend, use_container_width=True)
+    st.plotly_chart(fig_trend, width="stretch")
 else:
     st.info("월별 데이터가 없습니다.")
 
@@ -167,6 +167,9 @@ st.subheader("전체 예측 목록")
 all_preds = load_all_predictions()
 
 if all_preds:
+    for p in all_preds:
+        if not p.get("topic"):
+            p["topic"] = classify_topic(p["prediction_text"])
     # 필터
     col_f1, col_f2, col_f3 = st.columns(3)
     verdict_filter = col_f1.selectbox("판정", ["전체", "CORRECT", "INCORRECT", "PENDING"])

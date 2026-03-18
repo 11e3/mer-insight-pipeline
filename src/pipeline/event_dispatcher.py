@@ -1,5 +1,5 @@
 """
-Event Dispatcher: 메르 글 수집 → 예측 추출 → 데이터 수집 → 자동 검증
+Event Dispatcher: 메르 글 수집 → 예측 추출 → 자동 검증
 
 매일 01:00 단일 잡으로 전체 파이프라인 실행.
 
@@ -9,16 +9,14 @@ Usage:
 
 import asyncio
 import logging
-from datetime import date
+from pathlib import Path
 
 import asyncpg
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from src.config.settings import DATABASE_URL, MACRO_ALERT_THRESHOLDS
+from src.config.settings import DATABASE_URL
 from src.embed import get_embedder
 from src.collect.mer_monitor import MerMonitor
-from src.collect.dart import DartCollector
-from src.collect.news import NewsCollector
 from src.extract.realtime import extract_and_save
 from src.search.bm25_index import BM25Index
 from src.verify import PredictionVerifier
@@ -34,21 +32,16 @@ class EventDispatcher:
         self.conn: asyncpg.Connection | None = None
         self.embedder = None
         self.mer_monitor: MerMonitor | None = None
-        self.dart: DartCollector | None = None
-        self.news_collector: NewsCollector | None = None
         self.bm25_index: BM25Index | None = None
         self.verifier: PredictionVerifier | None = None
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
 
     async def _init(self):
         """공유 리소스 초기화."""
-        from pathlib import Path
         self.pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
         self.conn = await self.pool.acquire()
         self.embedder = get_embedder()
         self.mer_monitor = MerMonitor(self.conn)
-        self.dart = DartCollector(self.conn)
-        self.news_collector = NewsCollector(self.conn)
 
         bm25_cache = Path("data/bm25_cache.pkl")
         self.bm25_index = BM25Index()
@@ -88,7 +81,7 @@ class EventDispatcher:
     # --- 파이프라인 ---
 
     async def _run_pipeline(self):
-        """1. 메르 신규 글 → 2. 외부 데이터 수집 → 3. 예측 검증"""
+        """1. 메르 신규 글 → 2. 예측 검증"""
         log.info("=== 일일 파이프라인 시작 ===")
 
         # 1. 메르 신규 글 수집 + 예측 추출
@@ -104,13 +97,7 @@ class EventDispatcher:
         except Exception as e:
             log.error(f"메르 글 수집 오류: {e}")
 
-        # 2. 외부 데이터 수집
-        log.info("외부 데이터 수집 시작")
-        await self._collect_dart()
-        await self._collect_macro()
-        await self._collect_news()
-
-        # 3. 예측 검증
+        # 2. 예측 검증
         log.info("예측 검증 시작")
         try:
             resolved = await self.verifier.run()
@@ -119,49 +106,6 @@ class EventDispatcher:
             log.error(f"예측 검증 오류: {e}")
 
         log.info("=== 일일 파이프라인 완료 ===")
-
-    # --- 데이터 수집 ---
-
-    async def _collect_dart(self):
-        try:
-            filings = await self.dart.fetch_recent()
-            if filings:
-                log.info(f"  DART 공시 {len(filings)}건 수집")
-        except Exception as e:
-            log.error(f"DART 수집 오류: {e}")
-
-    async def _collect_macro(self):
-        try:
-            from src.collect.macro import load_macro
-            today = date.today().isoformat()
-            await load_macro(start=today, end=today)
-
-            # 급변 감지
-            rows = await self.conn.fetch("""
-                SELECT * FROM macro_daily
-                WHERE date >= CURRENT_DATE - INTERVAL '2 days'
-                ORDER BY date DESC LIMIT 2
-            """)
-            if len(rows) >= 2:
-                today_row, prev_row = dict(rows[0]), dict(rows[1])
-                for col, threshold in MACRO_ALERT_THRESHOLDS.items():
-                    curr, prev = today_row.get(col), prev_row.get(col)
-                    if not curr or not prev or prev == 0:
-                        continue
-                    change = abs(curr - prev) / abs(prev)
-                    if change >= threshold:
-                        direction = "상승" if curr > prev else "하락"
-                        log.info(f"  매크로 급변: {col} {prev:.2f} → {curr:.2f} ({direction} {change*100:.1f}%)")
-        except Exception as e:
-            log.error(f"매크로 수집 오류: {e}")
-
-    async def _collect_news(self):
-        try:
-            articles = await self.news_collector.fetch_recent()
-            if articles:
-                log.info(f"  뉴스 {len(articles)}건 수집")
-        except Exception as e:
-            log.error(f"뉴스 수집 오류: {e}")
 
 
 if __name__ == "__main__":

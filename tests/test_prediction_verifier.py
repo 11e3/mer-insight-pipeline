@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # 필수 환경변수 stub — 실제 연결 없이 import만 허용
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY", "GCP_PROJECT_ID",
              "TELEGRAM_BOT_TOKEN", "TELEGRAM_TIER1_CHAT_ID",
-             "DART_API_KEY", "BOK_API_KEY", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET"):
+             "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET"):
     os.environ.setdefault(_var, "test")
 
 from src.verify import PredictionVerifier
@@ -114,7 +114,7 @@ def test_verify_batch_handles_malformed_json():
     v._claude.messages.create = fake_create
     batch = [{"id": 1, "prediction_text": "코스피 3000", "predicted_direction": "up",
               "target_asset": "KOSPI", "prediction_date": date(2024, 1, 1)}]
-    result = run(v._verify_batch(batch, "컨텍스트"))
+    result = run(v._verify_batch(batch))
     assert result == []
 
 
@@ -130,6 +130,6 @@ def test_verify_batch_parses_valid_json():
     v._claude.messages.create = fake_create
     batch = [{"id": 1, "prediction_text": "코스피 상승", "predicted_direction": "up",
               "target_asset": "KOSPI", "prediction_date": date(2024, 1, 1)}]
-    result = run(v._verify_batch(batch, "컨텍스트"))
+    result = run(v._verify_batch(batch))
     assert len(result) == 1
     assert result[0]["verdict"] == "CORRECT"

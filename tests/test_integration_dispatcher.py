@@ -82,7 +82,7 @@ async def test_auto_analyses_insert_with_fk(pg_conn):
     from datetime import datetime
     event_id = await pg_conn.fetchval("""
         INSERT INTO events (event_type, title, event_date)
-        VALUES ('dart', 'DART 공시', $1)
+        VALUES ('mer_new_post', '메르 새 글', $1)
         RETURNING id
     """, datetime.now())
 
@@ -108,7 +108,7 @@ async def test_cascade_delete(pg_conn):
     from datetime import datetime
     event_id = await pg_conn.fetchval("""
         INSERT INTO events (event_type, title, event_date)
-        VALUES ('news', '뉴스', $1) RETURNING id
+        VALUES ('mer_new_post', '메르 글', $1) RETURNING id
     """, datetime.now())
     await pg_conn.execute("""
         INSERT INTO auto_analyses (event_id, analysis_text, rules_used, macro_context)

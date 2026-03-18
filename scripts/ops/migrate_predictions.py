@@ -11,11 +11,14 @@ import logging
 import os
 
 import asyncpg
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://mer:Mtoknplm!1@34.64.127.93:5432/mer_pipeline")
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 
 async def main():

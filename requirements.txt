@@ -4,7 +4,7 @@ asyncpg==0.29.0
 # Claude API
 anthropic==0.40.0
 
-# 매크로 데이터
+# 데이터 처리
 pandas==2.2.0
 requests==2.31.0
 

@@ -53,14 +53,14 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 
 ### GCP Cloud Run Job vs 로컬 APScheduler
 - **로컬**: `event_dispatcher.py`가 APScheduler로 매일 01:00 단일 잡 실행
-- **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 + DART/매크로/뉴스 수집 + 검증)
+- **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 수집 + 검증)
 
 ### Prediction Verifier 비용 최적화
 - Prompt caching 적용 (`cache_control` on system + context) → 2번째 배치부터 input 90% 할인
 - `BATCH_SIZE=60`: API 호출 수 최소화
-- 일간 주가 30일, DART/뉴스 20건으로 context 크기 제한
+- 외부 컨텍스트 수집 없음 — Claude 자체 지식으로 판단
 - `max_tokens=8192` (너무 작으면 JSON 응답 truncation → 파싱 실패)
-- 한국어 context는 토큰 소비 2-3배 → 비용 견적 시 영어 기준의 2배로 계산
+- 한국어 텍스트는 토큰 소비 2-3배 → 비용 견적 시 영어 기준의 2배로 계산
 
 ### DB 연결 패턴
 - `src/db/connection.py`의 `connect()`, `get_pool()` async context manager 사용
@@ -72,6 +72,8 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - `src/pipeline/prediction_verifier.py` — `src/verify/`로 분할
 - `src/extract/embedder.py`, `local_embedder.py`, `embeddings.py` — `src/embed/`로 분리
 - 미사용 deps 제거: yfinance, psycopg2-binary, fredapi, matplotlib, pydantic
+- `src/collect/dart.py`, `news.py`, `macro.py` — DART/뉴스/매크로 수집 제거 (미사용)
+- `macro_daily` 테이블, `events` 테이블의 dart/news/macro_alert 타입 제거
 
 ## 아키텍처 요약
 
@@ -89,17 +91,13 @@ src/
 │   ├── batch_api.py     # 배치 생성/상태/다운로드 CLI
 │   ├── parse_results.py # JSONL → DB (INSIGHT_TYPE_MAP, extract_content)
 │   └── realtime.py      # 실시간 인사이트 추출
-├── collect/        # 데이터 수집 (블로그, DART, 뉴스, 매크로, 포스트)
+├── collect/        # 데이터 수집 (블로그, 포스트)
 │   ├── mer_monitor.py   # 블로그 RSS 감시
-│   ├── dart.py          # DART 공시 수집
-│   ├── news.py          # 연준/한국은행/지정학 뉴스
-│   ├── macro.py         # FRED/한국은행 ECOS 매크로
 │   ├── posts.py         # JSON → mer_posts 적재
 │   └── date_parser.py   # 메르 블로그 날짜 파싱
 ├── verify/         # 예측 자동 검증
 │   ├── verifier.py      # PredictionVerifier (Claude Haiku 배치)
-│   ├── context.py       # 매크로/주가/DART/뉴스 컨텍스트 수집
-│   └── prompt.py        # 시스템 프롬프트, 종목코드, 상수
+│   └── prompt.py        # 시스템 프롬프트, 상수
 ├── search/         # 하이브리드 검색
 │   ├── bm25_index.py    # kiwipiepy 형태소 분석 + rank-bm25 + pickle 캐시
 │   ├── vector_index.py  # pgvector HNSW 래퍼 (1024-dim)
@@ -139,7 +137,7 @@ scripts/
 
 | 잡 이름 | 동작 | 스케줄 |
 |---------|------|--------|
-| `daily_pipeline` | 메르 글 수집 + DART/매크로/뉴스 수집 + 예측 검증 | 매일 01:00 |
+| `daily_pipeline` | 메르 글 수집 + 예측 검증 | 매일 01:00 |
 
 ## 환경변수
 
@@ -149,8 +147,6 @@ scripts/
 | `ANTHROPIC_API_KEY` | ✓ | Claude API 키 |
 | `GCP_PROJECT_ID` | 선택 | Vertex AI 임베딩 활성화 |
 | `GCP_LOCATION` | 선택 | Vertex AI 리전 (기본: us-central1) |
-| `FRED_API_KEY` | 선택 | FRED 거시경제 데이터 |
-| `BOK_API_KEY` | 선택 | 한국은행 ECOS |
 
 ## 검색 실험 결과 (search_experiment.json 기준)
 

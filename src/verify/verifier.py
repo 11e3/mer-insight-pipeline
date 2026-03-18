@@ -10,7 +10,6 @@ import anthropic
 import asyncpg
 
 from src.config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
-from src.verify.context import build_context
 from src.verify.prompt import BATCH_SIZE, SYSTEM
 
 log = logging.getLogger(__name__)
@@ -29,13 +28,10 @@ class PredictionVerifier:
             log.info("검증할 예측 없음")
             return 0
 
-        oldest = min(p["prediction_date"] for p in preds)
-        ctx    = await build_context(self.conn, oldest)
-
         resolved = 0
         for i in range(0, len(preds), BATCH_SIZE):
             batch   = preds[i: i + BATCH_SIZE]
-            results = await self._verify_batch(batch, ctx)
+            results = await self._verify_batch(batch)
             resolved += await self._save_results(results)
             if len(preds) > BATCH_SIZE:
                 await asyncio.sleep(0.3)
@@ -54,7 +50,7 @@ class PredictionVerifier:
         """)
         return [dict(r) for r in rows]
 
-    async def _verify_batch(self, batch: list[dict], ctx: str) -> list[dict]:
+    async def _verify_batch(self, batch: list[dict]) -> list[dict]:
         pred_list = "\n".join(
             f'{p["id"]}. [{p["target_asset"]}] {p["prediction_text"]} '
             f'(방향: {p["predicted_direction"]}, 예측일: {p["prediction_date"]})'
@@ -69,17 +65,7 @@ class PredictionVerifier:
                     "text": SYSTEM,
                     "cache_control": {"type": "ephemeral"},
                 }],
-                messages=[{"role": "user", "content": [
-                    {
-                        "type": "text",
-                        "text": f"[컨텍스트]\n{ctx}",
-                        "cache_control": {"type": "ephemeral"},
-                    },
-                    {
-                        "type": "text",
-                        "text": f"[예측 목록]\n{pred_list}",
-                    },
-                ]}],
+                messages=[{"role": "user", "content": f"[예측 목록]\n{pred_list}"}],
             )
             raw = next((b.text for b in resp.content if hasattr(b, "text")), "").strip()
 

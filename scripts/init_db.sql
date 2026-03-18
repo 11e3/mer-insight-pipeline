@@ -41,22 +41,6 @@ CREATE INDEX IF NOT EXISTS idx_insights_embedding
     ON mer_insights USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 
--- ─── 매크로 일별 데이터 ─────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS macro_daily (
-    date          DATE PRIMARY KEY,
-    kospi         FLOAT,
-    kosdaq        FLOAT,
-    usd_krw       FLOAT,
-    us_10y        FLOAT,   -- 미국 10년물 금리
-    kr_base_rate  FLOAT,   -- 한국 기준금리
-    wti           FLOAT,
-    btc_usd       FLOAT,
-    vix           FLOAT,
-    fed_funds_rate  FLOAT,
-    us_cpi_yoy      FLOAT,   -- 미국 CPI YoY
-    us_unemployment FLOAT    -- 미국 실업률
-);
-
 -- ─── 예측 트래킹 ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS mer_predictions (
     id                  SERIAL PRIMARY KEY,
@@ -81,7 +65,7 @@ CREATE TABLE IF NOT EXISTS events (
     id          SERIAL PRIMARY KEY,
     event_type  VARCHAR(20) NOT NULL
                 CHECK (event_type IN (
-                    'dart','news','mer_new_post','macro_alert',
+                    'mer_new_post',
                     'report_daily','report_weekly','report_monthly',
                     'report_quarterly','report_annual'
                 )),
@@ -98,4 +82,3 @@ CREATE INDEX IF NOT EXISTS idx_events_date ON events (event_date);
 CREATE INDEX IF NOT EXISTS idx_events_embedding
     ON events USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
-
