@@ -4,7 +4,7 @@
 
 The pipeline extracts predictions with Claude Batch API and verifies each prediction daily with Claude Opus as an automated judge — 5,368 predictions tracked, 4,219 verified so far. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
-[한국어 README](README_KR.md) · [Live Dashboard](https://mer-insight-pipeline.streamlit.app/)
+[한국어 README](README_KR.md) · **[📊 Live Dashboard](https://mer-insight-pipeline.streamlit.app/)**
 
 ---
 

@@ -4,7 +4,7 @@
 
 Claude Batch API로 예측을 추출하고, 검증은 claude.ai에서 수동으로 진행합니다 — 현재 5,368건 추적, 4,219건 검증 완료. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
 
-[English README](README.md) · [라이브 대시보드](https://mer-insight-pipeline.streamlit.app/)
+[English README](README.md) · **[📊 라이브 대시보드](https://mer-insight-pipeline.streamlit.app/)**
 
 ---
 
