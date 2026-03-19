@@ -102,11 +102,20 @@ async def extract_and_save(
             )
             # prediction 타입이면 mer_predictions에도 삽입
             if insight_type == "prediction" and insight_id and item.get("verifiable"):
+                # expected_date 파싱
+                exp_date = None
+                if item.get("expected_date"):
+                    try:
+                        from datetime import date as _date
+                        exp_date = _date.fromisoformat(item["expected_date"])
+                    except (ValueError, TypeError):
+                        pass
+
                 await conn.execute("""
                     INSERT INTO mer_predictions
                         (insight_id, prediction_text, predicted_direction,
-                         target_asset, prediction_date)
-                    VALUES ($1, $2, $3, $4, $5)
+                         target_asset, prediction_date, expected_date)
+                    VALUES ($1, $2, $3, $4, $5, $6)
                     ON CONFLICT DO NOTHING
                 """,
                     insight_id,
@@ -114,6 +123,7 @@ async def extract_and_save(
                     item.get("direction", "neutral"),
                     item.get("target_asset", ""),
                     post.get("date"),
+                    exp_date,
                 )
             count += 1
 

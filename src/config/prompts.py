@@ -14,7 +14,11 @@ INSIGHT_SYSTEM_PROMPT = """\
 2. **prediction (예측/전망)**
    - 미래에 대한 검증 가능한 주장
    - 방향성(up/down/neutral)이 있는 것만 추출
-   - 예: "금리가 오르면 부동산 가격은 하락할 것"
+   - **claim**: 반드시 "예/아니오"로 답할 수 있는 명확한 문장으로 변환
+     - ✗ "금리가 오르면 부동산 가격은 하락할 것" (조건부)
+     - ✓ "2024년 하반기 서울 아파트 매매가격이 하락한다" (검증 가능)
+   - **search_keywords**: 뉴스 검색으로 확인할 수 있는 키워드 3-5개
+   - **expected_date**: 검증 가능 시점 (추정 가능하면 YYYY-MM-DD)
 
 3. **evaluation (기업/자산/정책 평가)**
    - 특정 기업, 자산, 정책에 대한 메르의 평가
@@ -62,10 +66,13 @@ INSIGHT_SYSTEM_PROMPT = """\
     "predictions": [
         {
             "prediction": "예측 내용",
+            "claim": "예/아니오로 답할 수 있는 검증 가능한 명제 (예: '미국 기준금리가 2024년 내 인하된다')",
             "basis": "근거",
             "target_asset": "대상 자산/지표",
             "direction": "up/down/neutral",
             "timeframe": "예상 기간 (모호하면 'unspecified')",
+            "expected_date": "검증 가능 시점 YYYY-MM-DD (추정 가능하면)",
+            "search_keywords": ["뉴스 검색용 키워드 3-5개"],
             "verifiable": true,
             "verification_metric": "검증 지표"
         }
