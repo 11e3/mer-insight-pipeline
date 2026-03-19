@@ -38,7 +38,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install test dependencies
-        run: pip install pytest pytest-asyncio anyio anthropic asyncpg pytest-cov requests python-dotenv ruff rank-bm25
+        run: pip install pytest pytest-asyncio pytest-mock anyio anthropic asyncpg pytest-cov requests python-dotenv ruff rank-bm25 psycopg2-binary beautifulsoup4 lxml tqdm apscheduler
 
       - name: Lint (ruff)
         run: ruff check src/ tests/ scripts/ --select E,W,F --ignore E501,E402,F841

@@ -76,10 +76,10 @@ async def main():
         out_file.write_text(content, encoding="utf-8")
 
     print(f"\n생성 완료: {OUT_DIR}/batch_001.txt ~ batch_{total_batches:03d}.txt")
-    print(f"\n사용법:")
-    print(f"  1. 각 batch_NNN.txt 내용을 claude.ai에 붙여넣기")
+    print("\n사용법:")
+    print("  1. 각 batch_NNN.txt 내용을 claude.ai에 붙여넣기")
     print(f"  2. JSON 배열 결과를 {OUT_DIR}/result_NNN.json에 저장")
-    print(f"  3. python3 scripts/import_manual_verify.py 실행")
+    print("  3. python3 scripts/import_manual_verify.py 실행")
 
 
 if __name__ == "__main__":

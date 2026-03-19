@@ -109,10 +109,10 @@ def main():
         print(f"  {topic}: {len(items)}건 → {(len(items) + BATCH_SIZE - 1) // BATCH_SIZE}개 파일")
 
     print(f"\n생성 완료: {OUT_DIR}/ ({total_files}개 파일, 총 {len(preds)}건)")
-    print(f"\n사용법:")
-    print(f"  1. 각 .txt 파일을 claude.ai에 붙여넣기 (같은 주제끼리 묶여 있어 효율적)")
+    print("\n사용법:")
+    print("  1. 각 .txt 파일을 claude.ai에 붙여넣기 (같은 주제끼리 묶여 있어 효율적)")
     print(f"  2. JSON 결과를 {IN_DIR}/result_NNN.json에 저장 (번호 이어서)")
-    print(f"  3. python3 scripts/import_manual_verify.py 실행")
+    print("  3. python3 scripts/import_manual_verify.py 실행")
 
 
 if __name__ == "__main__":

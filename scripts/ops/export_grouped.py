@@ -107,7 +107,7 @@ async def export():
         print(f"  {topic}: {len(items)}건 대표 → {total_parts}파일")
 
     print(f"\n총 {len(rows)}건 대표 → {total_files}개 파일")
-    print(f"검증 후 클러스터 전파: 2,724건 판정 → 5,010건에 적용")
+    print("검증 후 클러스터 전파: 2,724건 판정 → 5,010건에 적용")
 
 
 if __name__ == "__main__":

@@ -71,9 +71,9 @@ async def main():
     stats = await conn.fetch(
         "SELECT is_correct, COUNT(*) FROM mer_predictions GROUP BY is_correct ORDER BY is_correct"
     )
-    print(f"\n=== Import 완료 ===")
+    print("\n=== Import 완료 ===")
     print(f"이번 import: CORRECT={correct_count}, INCORRECT={incorrect_count}, PENDING(skip)={pending_count}")
-    print(f"\n=== DB 전체 현황 ===")
+    print("\n=== DB 전체 현황 ===")
     for row in stats:
         label = {True: "CORRECT", False: "INCORRECT", None: "PENDING"}[row[0]]
         print(f"  {label}: {row[1]}")

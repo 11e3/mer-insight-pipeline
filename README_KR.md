@@ -1,5 +1,8 @@
 # mer-insight-pipeline
 
+[![CI](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml/badge.svg)](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml)
+[![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
+
 **mer-insight-pipeline**은 [메르(ranto28)](https://blog.naver.com/ranto28)의 한국 경제 블로그 포스트에서 금융 예측을 자동으로 추적하고 검증하는 파이프라인입니다.
 
 Claude Batch API로 예측을 추출하고, 검증은 claude.ai에서 수동으로 진행합니다 — 현재 5,368건 추적, 4,219건 검증 완료. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.

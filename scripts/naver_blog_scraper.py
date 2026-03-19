@@ -226,11 +226,11 @@ def main():
         time.sleep(DELAY)
 
     # 요약
-    print(f"\n=== 완료 ===")
+    print("\n=== 완료 ===")
     print(f"성공: {success}개 / 실패: {fail}개")
     print(f"저장 위치: {os.path.abspath(OUTPUT_DIR)}/")
-    print(f"  txt/  - 읽기 좋은 텍스트 파일")
-    print(f"  json/ - 전체 데이터 (이미지 URL 포함)")
+    print("  txt/  - 읽기 좋은 텍스트 파일")
+    print("  json/ - 전체 데이터 (이미지 URL 포함)")
 
 
 if __name__ == "__main__":

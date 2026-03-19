@@ -129,7 +129,7 @@ async def main():
     print(f"    - 판정 상반 (CORRECT↔INCORRECT): {mismatch - haiku_pending_opus_not - opus_pending_haiku_not}건")
 
     if details:
-        print(f"\n불일치 상세:")
+        print("\n불일치 상세:")
         for d in details:
             print(f"  #{d['id']}: Opus={d['opus']} vs Haiku={d['haiku']}")
             print(f"    Opus:  {d['opus_reason'][:80]}")

@@ -5,7 +5,6 @@ prediction_verifier.py 단위 테스트 — DB/네트워크 의존성 없음.
 
 import os
 import sys
-import json
 from pathlib import Path
 from datetime import date
 from unittest.mock import MagicMock, AsyncMock, patch

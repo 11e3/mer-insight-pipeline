@@ -1,92 +1,65 @@
 {
   "k": 5,
-  "n": 5,
+  "n": 2,
   "averages": {
     "vector": {
-      "precision": 0.52,
-      "recall": 0.52,
-      "mrr": 0.9
+      "precision": 0.2,
+      "recall": 0.5,
+      "mrr": 0.5
     },
     "bm25": {
-      "precision": 0.44000000000000006,
-      "recall": 0.44000000000000006,
-      "mrr": 0.8
+      "precision": 0.2,
+      "recall": 0.75,
+      "mrr": 0.75
     },
     "hybrid": {
-      "precision": 1.0,
+      "precision": 0.30000000000000004,
       "recall": 1.0,
-      "mrr": 1.0
+      "mrr": 0.6666666666666666
     }
   },
   "ablation": {
     "alphas_tested": [
       0.0,
-      0.2,
-      0.3,
-      0.4,
-      0.6,
-      0.8,
+      0.5,
       1.0
     ],
     "k": 5,
-    "dataset": "eval_data\\gold_extended.json",
+    "dataset": "C:\\Users\\moons\\AppData\\Local\\Temp\\pytest-of-moons\\pytest-15\\test_run_ablation0\\gold.json",
     "results": [
       {
         "alpha": 0.0,
-        "precision": 0.199,
-        "recall": 0.995,
-        "mrr": 0.995
-      },
-      {
-        "alpha": 0.2,
-        "precision": 0.199,
-        "recall": 0.995,
-        "mrr": 0.995
-      },
-      {
-        "alpha": 0.3,
-        "precision": 0.199,
-        "recall": 0.995,
-        "mrr": 0.99
-      },
-      {
-        "alpha": 0.4,
-        "precision": 0.199,
-        "recall": 0.995,
-        "mrr": 0.98625
-      },
-      {
-        "alpha": 0.6,
         "precision": 0.2,
         "recall": 1.0,
-        "mrr": 0.9684999999999999
+        "mrr": 1.0
       },
       {
-        "alpha": 0.8,
-        "precision": 0.199,
-        "recall": 0.995,
-        "mrr": 0.9602083333333333
+        "alpha": 0.5,
+        "precision": 0.2,
+        "recall": 1.0,
+        "mrr": 1.0
       },
       {
         "alpha": 1.0,
-        "precision": 0.196,
-        "recall": 0.98,
-        "mrr": 0.9353472222222223
+        "precision": 0.2,
+        "recall": 1.0,
+        "mrr": 1.0
       }
     ],
     "best": {
       "precision": {
-        "alpha": 0.6,
+        "alpha": 0.0,
         "value": 0.2
       },
       "recall": {
-        "alpha": 0.6,
+        "alpha": 0.0,
         "value": 1.0
       },
       "mrr": {
         "alpha": 0.0,
-        "value": 0.995
+        "value": 1.0
       }
     }
-  }
+  },
+  "dataset": "C:\\Users\\moons\\AppData\\Local\\Temp\\pytest-of-moons\\pytest-15\\test_run_experiment0\\gold.json"
 }

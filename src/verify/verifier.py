@@ -5,7 +5,6 @@ PredictionVerifier — expected_date 지난 PENDING 예측을 자동 내보내�
 수동 검증은 claude.ai에서 진행하고, import_manual_verdicts.py로 DB 반영.
 """
 
-import json
 import logging
 import os
 from datetime import date

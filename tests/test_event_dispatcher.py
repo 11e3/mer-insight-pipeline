@@ -1,0 +1,177 @@
+"""pipeline/event_dispatcher.py 단위 테스트."""
+
+import os
+import sys
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
+    os.environ.setdefault(_var, "test")
+
+
+class FakePoolAcquire:
+    """Fake pool.acquire() that acts as an async context manager."""
+    def __init__(self, conn):
+        self._conn = conn
+
+    async def __aenter__(self):
+        return self._conn
+
+    async def __aexit__(self, *args):
+        return False
+
+
+def _make_dispatcher():
+    """Mock된 EventDispatcher 생성."""
+    with patch("src.pipeline.event_dispatcher.AsyncIOScheduler"):
+        from src.pipeline.event_dispatcher import EventDispatcher
+        d = EventDispatcher()
+
+    mock_conn = AsyncMock()
+    mock_pool = MagicMock()
+    mock_pool.acquire.return_value = FakePoolAcquire(mock_conn)
+    mock_pool.close = AsyncMock()
+    d.pool = mock_pool
+
+    d.embedder = MagicMock()
+
+    d.bm25_index = MagicMock()
+    d.bm25_index.load.return_value = True
+    d.bm25_index.build = AsyncMock()
+    d.bm25_index.save = MagicMock()
+
+    return d, mock_conn
+
+
+# ─── _run_pipeline ───────────────────────────────────────────────────────────
+
+async def test_run_pipeline_no_new_posts():
+    d, mock_conn = _make_dispatcher()
+
+    mock_monitor = MagicMock()
+    mock_monitor.check_new = AsyncMock(return_value=[])
+
+    mock_verifier = MagicMock()
+    mock_verifier.run = AsyncMock(return_value=0)
+
+    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        await d._run_pipeline()
+
+    mock_monitor.check_new.assert_called_once()
+    mock_verifier.run.assert_called_once()
+
+
+async def test_run_pipeline_with_new_posts():
+    d, mock_conn = _make_dispatcher()
+
+    posts = [{"log_no": "111", "title": "테스트", "content_text": "내용"}]
+    mock_monitor = MagicMock()
+    mock_monitor.check_new = AsyncMock(return_value=posts)
+
+    mock_verifier = MagicMock()
+    mock_verifier.run = AsyncMock(return_value=0)
+
+    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+         patch("src.pipeline.event_dispatcher.extract_and_save",
+               AsyncMock(return_value={"count": 3})) as mock_extract, \
+         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        await d._run_pipeline()
+
+    mock_extract.assert_called_once()
+    d.bm25_index.build.assert_called_once()
+    d.bm25_index.save.assert_called_once()
+
+
+async def test_run_pipeline_monitor_error():
+    d, mock_conn = _make_dispatcher()
+
+    mock_monitor = MagicMock()
+    mock_monitor.check_new = AsyncMock(side_effect=Exception("monitor error"))
+
+    mock_verifier = MagicMock()
+    mock_verifier.run = AsyncMock(return_value=2)
+
+    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        await d._run_pipeline()
+
+    mock_verifier.run.assert_called_once()
+
+
+async def test_run_pipeline_verifier_error():
+    d, mock_conn = _make_dispatcher()
+
+    mock_monitor = MagicMock()
+    mock_monitor.check_new = AsyncMock(return_value=[])
+
+    mock_verifier = MagicMock()
+    mock_verifier.run = AsyncMock(side_effect=Exception("verify error"))
+
+    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        await d._run_pipeline()  # should not raise
+
+
+# ─── run ─────────────────────────────────────────────────────────────────────
+
+async def test_run_full_cycle():
+    d, mock_conn = _make_dispatcher()
+
+    d._init = AsyncMock()
+    d._run_pipeline = AsyncMock()
+
+    await d.run()
+
+    d._init.assert_called_once()
+    d._run_pipeline.assert_called_once()
+    d.pool.close.assert_called_once()
+
+
+# ─── _init ────────────────────────────────────────────────────────────────────
+
+async def test_init_loads_bm25_from_cache():
+    with patch("src.pipeline.event_dispatcher.AsyncIOScheduler"):
+        from src.pipeline.event_dispatcher import EventDispatcher
+        d = EventDispatcher()
+
+    mock_conn = AsyncMock()
+    mock_pool = MagicMock()
+    mock_pool.acquire.return_value = FakePoolAcquire(mock_conn)
+
+    mock_bm25 = MagicMock()
+    mock_bm25.load.return_value = True
+
+    with patch("src.pipeline.event_dispatcher.asyncpg.create_pool",
+               AsyncMock(return_value=mock_pool)), \
+         patch("src.pipeline.event_dispatcher.get_embedder", return_value=MagicMock()), \
+         patch("src.pipeline.event_dispatcher.BM25Index", return_value=mock_bm25):
+        await d._init()
+
+    mock_bm25.load.assert_called_once()
+    mock_bm25.build.assert_not_called()
+
+
+async def test_init_builds_bm25_on_cache_miss():
+    with patch("src.pipeline.event_dispatcher.AsyncIOScheduler"):
+        from src.pipeline.event_dispatcher import EventDispatcher
+        d = EventDispatcher()
+
+    mock_conn = AsyncMock()
+    mock_pool = MagicMock()
+    mock_pool.acquire.return_value = FakePoolAcquire(mock_conn)
+
+    mock_bm25 = MagicMock()
+    mock_bm25.load.return_value = False
+    mock_bm25.build = AsyncMock()
+
+    with patch("src.pipeline.event_dispatcher.asyncpg.create_pool",
+               AsyncMock(return_value=mock_pool)), \
+         patch("src.pipeline.event_dispatcher.get_embedder", return_value=MagicMock()), \
+         patch("src.pipeline.event_dispatcher.BM25Index", return_value=mock_bm25):
+        await d._init()
+
+    mock_bm25.build.assert_called_once()
+    mock_bm25.save.assert_called_once()
