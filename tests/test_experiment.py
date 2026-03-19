@@ -1,5 +1,6 @@
 """eval/experiment.py 단위 테스트 — DB/임베딩을 mock."""
 
+import json
 import os
 import sys
 from pathlib import Path
