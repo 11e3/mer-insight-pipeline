@@ -2,17 +2,21 @@
 
 import os
 import sys
-import json
-import numpy as np
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
     os.environ.setdefault(_var, "test")
 
-from src.eval.experiment import _avg_embedding, _vector_search_by_vec
+try:
+    from src.eval.experiment import _avg_embedding, _vector_search_by_vec
+    import numpy as np
+except ImportError:
+    pytest.skip("scipy/numpy not installed", allow_module_level=True)
 
 
 # ─── _avg_embedding ──────────────────────────────────────────────────────────
