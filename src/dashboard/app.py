@@ -55,8 +55,9 @@ col4.metric("PENDING", f"{summary['pending']:,}건")
 verified = summary["correct"] + summary["incorrect"]
 if verified > 0:
     accuracy = summary["correct"] / verified * 100
-    st.metric("검증 완료 적중률", f"{accuracy:.1f}%",
-              help=f"검증 완료 {verified:,}건 중 CORRECT 비율")
+    st.metric("검증 완료 적중률",
+              f"{accuracy:.1f}% ({verified:,}건)",
+              help=f"전체 {summary['total']:,}건 중 검증 완료 {verified:,}건의 CORRECT 비율")
 
 # 파이 차트
 pie_data = pd.DataFrame({

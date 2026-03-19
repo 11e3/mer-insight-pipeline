@@ -65,6 +65,14 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - `verifier.py`는 검증 대기 예측을 **내보내기 + 텔레그램 알림**만 수행
 - 실제 판정은 claude.ai에서 수동으로 진행 후 `import_manual_verdicts.py`로 반영
 - 상세 실험 결과: README.md "Why Not Fully Automated?" 참조
+- **배치 크기 20건 제한** — 50건 이상 배치 시 ID-verdict 밀림 발생
+- **source_url 필수** — URL 없는 CORRECT/INCORRECT는 import 시 스킵
+- **grouped/ 폴더 import 금지** — 오염 원인 확인됨
+
+### 검증 데이터 리셋 이력
+- 2026-03-19: 배치 검증 오염(36%, 50건 블라인드 감사) 확인 → 전체 verdict 리셋
+- 백업: `mer_predictions_verdict_backup_20260319` 테이블
+- 리셋 후 정책: 배치 크기 20건, source_url 필수, grouped/ import 금지
 
 ### DB 연결 패턴
 - `src/db/connection.py`의 `connect()`, `get_pool()` async context manager 사용

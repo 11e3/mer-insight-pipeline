@@ -44,11 +44,17 @@ async def main():
     correct_count = 0
     incorrect_count = 0
     pending_count = 0
+    skipped_no_url = 0
 
     for r in all_results:
         verdict = r["verdict"]
         reason = r.get("reason", "")
         source_url = r.get("source_url", "")
+
+        if verdict in ("CORRECT", "INCORRECT") and not source_url:
+            skipped_no_url += 1
+            print(f"  ⚠️ ID {r['id']}: source_url 누락 — 스킵")
+            continue
 
         if verdict == "CORRECT":
             await conn.execute(
@@ -82,7 +88,7 @@ async def main():
         "SELECT is_correct, COUNT(*) FROM mer_predictions GROUP BY is_correct ORDER BY is_correct"
     )
     print("\n=== Import 완료 ===")
-    print(f"이번 import: CORRECT={correct_count}, INCORRECT={incorrect_count}, PENDING(skip)={pending_count}")
+    print(f"이번 import: CORRECT={correct_count}, INCORRECT={incorrect_count}, PENDING(skip)={pending_count}, source_url 누락 스킵={skipped_no_url}")
     print("\n=== DB 전체 현황 ===")
     for row in stats:
         label = {True: "CORRECT", False: "INCORRECT", None: "PENDING"}[row[0]]

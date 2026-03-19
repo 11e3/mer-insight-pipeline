@@ -15,7 +15,7 @@ import asyncpg
 log = logging.getLogger(__name__)
 
 EXPORT_DIR = Path("data/manual_verify/pending")
-BATCH_SIZE = 100
+BATCH_SIZE = 20  # ID 밀림 방지 (기존 100 → 20)
 
 
 class PredictionVerifier:

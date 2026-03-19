@@ -7,7 +7,7 @@
 
 Korean economic commentary doesn't come with tickers, dates, or confidence levels. Extracting verifiable predictions from natural language, assigning temporal bounds, and fact-checking outcomes against real-world events is a non-trivial NLP + information retrieval problem that no off-the-shelf tool solves. This pipeline is a solo-built, end-to-end system that has been in daily production for 6+ months.
 
-The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance blog, extracts predictions via Claude Batch API, and verifies each against real outcomes — 5,368 predictions tracked, 4,219 verified (87.8% accuracy). Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
+The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance blog, extracts predictions via Claude Batch API, and verifies each against real outcomes — 5,020 predictions tracked, re-verification in progress. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
 [한국어 README](README.md) · **[📊 Live Dashboard](https://mer-insight-pipeline.streamlit.app/)**
 
@@ -15,7 +15,7 @@ The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance 
 
 - **Full pipeline**: scraping → LLM extraction → embedding → hybrid search → verification → dashboard
 - **Data-driven decisions**: ran ablation experiments on search, automated verification experiments that proved manual-only is the right call
-- **Production operations**: daily Cloud Run job, Telegram alerts, 6+ months of continuous operation with zero data loss
+- **Production operations**: daily Cloud Run job, Telegram alerts, 6+ months of continuous operation
 
 ---
 
@@ -85,16 +85,28 @@ We ran extensive experiments comparing automated API verification against manual
 
 **Root cause:** Prediction verification is a fact-checking problem requiring real-time information. The API cannot reliably access or interpret current events, and verdict flips (CORRECT↔INCORRECT) make even screening-level automation dangerous — wrong verdicts would pollute the database.
 
-**Conclusion:** Manual verification via claude.ai remains the only reliable method. The pipeline automates everything else: export, batching, notification, and import.
+**Conclusion:** Manual verification via claude.ai remains the only reliable method. The pipeline automates everything else: export, batching, notification, and import. Batch size is limited to 20 predictions to prevent ID shifting, and source_url is required for all verdicts.
+
+### Data Quality Audit
+
+Large-batch verification (50–100+ predictions) caused ID-verdict misalignment in LLM JSON output, corrupting the database. A blind audit of 50 random samples revealed **36% contamination rate** (95% CI: 24–50%). All verdicts were reset and the verification process was redesigned with small batches (20) and mandatory source URLs.
+
+| Audit Item | Result |
+|------------|--------|
+| Sample size | 50 (random, blind) |
+| Match (same verdict) | 32 (64%) |
+| Verdict flip (CORRECT↔INCORRECT) | 7 (14%) |
+| Changed to PENDING | 11 (22%) |
+| 95% CI (Wilson) | Contamination 24.1%–49.9% |
 
 **Current Stats**
 
 | Status | Count |
 |--------|-------|
-| CORRECT | 3,706 |
-| INCORRECT | 513 |
-| PENDING | 1,149 |
-| **Total** | **5,368** |
+| CORRECT | 0 |
+| INCORRECT | 0 |
+| PENDING | 5,020 |
+| **Total** | **5,020** |
 
 ---
 
@@ -138,9 +150,8 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 |--------|-------|
 | Processed posts | 2,223 |
 | Extracted insights | 25,090 |
-| Tracked predictions | 5,368 |
-| Verified predictions | 4,219 (78.6%) |
-| Accuracy (CORRECT rate) | 87.8% |
+| Tracked predictions | 5,020 |
+| Verified predictions | Re-verification in progress (post-reset) |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 1024 |
 
