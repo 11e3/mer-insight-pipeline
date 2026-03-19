@@ -40,7 +40,7 @@ st.set_page_config(page_title="Mer Pipeline — Prediction Accuracy", layout="wi
 # ─── 1. 전체 요약 ────────────────────────────────────────────────────────────
 
 st.title("예측 검증 대시보드")
-st.caption("메르 블로그 예측 → Claude 자동 검증 결과")
+st.caption("메르 블로그 예측 → 수동 검증 결과")
 
 st.subheader("전체 요약")
 
