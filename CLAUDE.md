@@ -69,6 +69,20 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - **source_url 필수** — URL 없는 CORRECT/INCORRECT는 import 시 스킵
 - **grouped/ 폴더 import 금지** — 오염 원인 확인됨
 
+### 뉴스 헤드라인 DB
+- `news_headlines` 테이블: 헤드라인 + source_url + keywords(TEXT[] GIN) + published_at
+- 수집: `src/collect/news_collector.py` — Google News RSS 15개 피드, 일일 자동 수집
+- 키워드: `src/collect/keyword_extractor.py` — kiwipiepy(한국어) + regex(영어), LLM 없음
+- 매칭: `src/verify/headline_matcher.py` — prediction ↔ headline 키워드 GIN 매칭
+- 백필: `scripts/ops/backfill_news.py --start 2022-01 --end 2025-12`
+- event_dispatcher에서 매일 자동 수집 (파이프라인 step 2)
+
+### 예측 추출 형식 (신규)
+- `claim`: yes/no로 답할 수 있는 검증 가능한 명제
+- `search_keywords`: 뉴스 검색용 키워드 3-5개
+- `expected_date`: 검증 가능 시점 YYYY-MM-DD
+- 기존 5,020건은 구형식 (claim/keywords 없음), 신규 글부터 적용
+
 ### 검증 데이터 리셋 이력
 - 2026-03-19: 배치 검증 오염(36%, 50건 블라인드 감사) 확인 → 전체 verdict 리셋
 - 백업: `mer_predictions_verdict_backup_20260319` 테이블
@@ -97,13 +111,17 @@ src/
 │   ├── batch_api.py     # 배치 생성/상태/다운로드 CLI
 │   ├── parse_results.py # JSONL → DB (INSIGHT_TYPE_MAP, extract_content)
 │   └── realtime.py      # 실시간 인사이트 추출
-├── collect/        # 데이터 수집 (블로그, 포스트)
-│   ├── mer_monitor.py   # 블로그 RSS 감시
-│   ├── posts.py         # JSON → mer_posts 적재
-│   └── date_parser.py   # 메르 블로그 날짜 파싱
-├── verify/         # 예측 검증 (수동 검증용 내보내기 + 알림)
-│   ├── verifier.py      # PredictionVerifier (내보내기 + 텔레그램)
-│   └── prompt.py        # 상수 (배치 크기)
+├── collect/        # 데이터 수집
+│   ├── mer_monitor.py       # 블로그 RSS 감시
+│   ├── posts.py             # JSON → mer_posts 적재
+│   ├── date_parser.py       # 메르 블로그 날짜 파싱
+│   ├── news_collector.py    # 뉴스 헤드라인 RSS 수집 (15개 피드)
+│   ├── feeds.py             # RSS 피드 정의
+│   └── keyword_extractor.py # 키워드 추출 (kiwipiepy + regex)
+├── verify/         # 예측 검증
+│   ├── verifier.py          # PredictionVerifier (내보내기 + 텔레그램)
+│   ├── headline_matcher.py  # 예측 ↔ 헤드라인 키워드 매칭
+│   └── prompt.py            # 상수 (배치 크기)
 ├── search/         # 하이브리드 검색
 │   ├── bm25_index.py    # kiwipiepy 형태소 분석 + rank-bm25 + pickle 캐시
 │   ├── vector_index.py  # pgvector HNSW 래퍼 (1024-dim)
