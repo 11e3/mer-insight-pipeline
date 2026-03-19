@@ -19,6 +19,7 @@ from src.embed import get_embedder
 from src.collect.mer_monitor import MerMonitor
 from src.extract.realtime import extract_and_save
 from src.search.bm25_index import BM25Index
+from src.collect.news_collector import NewsCollector
 from src.verify import PredictionVerifier
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -98,7 +99,15 @@ class EventDispatcher:
             except Exception as e:
                 log.error(f"메르 글 수집 오류: {e}")
 
-            # 2. 예측 검증
+            # 2. 뉴스 헤드라인 수집
+            try:
+                news_collector = NewsCollector(conn)
+                news_count = await news_collector.run_daily()
+                log.info(f"뉴스 헤드라인 {news_count}건 수집 완료")
+            except Exception as e:
+                log.error(f"뉴스 수집 오류: {e}")
+
+            # 3. 예측 검증
             log.info("예측 검증 시작")
             try:
                 verifier = PredictionVerifier(conn)

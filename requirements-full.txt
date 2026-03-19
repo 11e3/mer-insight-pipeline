@@ -20,6 +20,9 @@ APScheduler==3.10.4
 beautifulsoup4==4.12.3
 lxml==5.2.2
 
+# RSS 뉴스 수집
+feedparser==6.0.11
+
 # 대시보드
 streamlit==1.36.0
 plotly==5.22.0
