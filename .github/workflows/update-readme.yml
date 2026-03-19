@@ -54,4 +54,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
-          fail_ci_if_error: false
+          slug: 11e3/mer-insight-pipeline
+          fail_ci_if_error: true
+          verbose: true
