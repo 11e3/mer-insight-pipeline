@@ -9,6 +9,7 @@ venv/
 
 # Environment
 .env
+.streamlit/secrets.toml
 
 # IDE
 .idea/
