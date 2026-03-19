@@ -3,11 +3,19 @@
 [![CI](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml/badge.svg)](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml)
 [![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 
-**mer-insight-pipeline**은 [메르(ranto28)](https://blog.naver.com/ranto28)의 한국 경제 블로그 포스트에서 금융 예측을 자동으로 추적하고 검증하는 파이프라인입니다.
+**mer-insight-pipeline**은 비정형 한국어 경제 블로그 글을 구조화된 시간축 예측으로 변환하고, 실제로 맞았는지 추적하는 시스템입니다.
 
-Claude Batch API로 예측을 추출하고, 검증은 claude.ai에서 수동으로 진행합니다 — 현재 5,368건 추적, 4,219건 검증 완료. 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
+한국어 경제 해설에는 종목 코드도, 날짜도, 확신도도 없습니다. 자연어에서 검증 가능한 예측을 추출하고, 시간 범위를 부여하고, 실제 사건과 대조해 사후 검증하는 것은 기성 도구로 해결되지 않는 NLP + 정보 검색 문제입니다. 이 파이프라인은 1인 개발로 설계·구현하여 6개월 이상 매일 프로덕션에서 운영 중입니다.
+
+[메르(ranto28)](https://blog.naver.com/ranto28)의 경제 블로그를 모니터링하고, Claude Batch API로 예측을 추출하며, 각 예측을 실제 결과와 대조 검증합니다 — 현재 5,368건 추적, 4,219건 검증 완료 (적중률 87.8%). 검색은 PostgreSQL 기반 하이브리드 BM25 + pgvector (25,090개 인덱싱된 인사이트, RRF 융합 α=0.6)로 벡터 DB 벤더 종속 없이 구현했습니다.
 
 [English README](README.md) · **[📊 라이브 대시보드](https://mer-insight-pipeline.streamlit.app/)**
+
+### 직접 구현한 것 (1인 개발)
+
+- **풀 파이프라인**: 스크래핑 → LLM 추출 → 임베딩 → 하이브리드 검색 → 검증 → 대시보드
+- **데이터 기반 의사결정**: 검색 ablation 실험 수행, 자동 검증 실험을 통해 수동 검증이 유일한 방법임을 데이터로 증명
+- **프로덕션 운영**: 매일 Cloud Run Job 실행, 텔레그램 알림, 6개월 이상 무중단·무손실 운영
 
 ---
 
@@ -92,7 +100,7 @@ flowchart TD
 
 ## 검색 인프라
 
-하이브리드 BM25 + 벡터 검색이 평가 파이프라인의 검색 백본입니다.
+하이브리드 BM25 + 벡터 검색은 검증 파이프라인에 문맥을 공급하는 검색 레이어입니다. 예측의 검증 시점이 되면 25,090개 인덱싱된 문서에서 가장 관련도 높은 인사이트와 맥락을 검색합니다 — **관련 문서 하나를 놓치면 불완전한 근거로 판정이 내려질 수 있기 때문에**, 이 파이프라인에서는 랭킹 정밀도보다 Recall이 더 중요합니다.
 
 쿼리 임베딩은 `intfloat/multilingual-e5-large` (1024차원) — 프로덕션 DB 인덱싱에 사용된 동일 모델.
 
@@ -104,7 +112,7 @@ flowchart TD
 | **α=0.6** ★ | **0.200** | **1.000** | 0.968 |
 | α=1.0 | 0.196 | 0.980 | 0.935 |
 
-프로덕션 기본값: **α=0.6** — 완전한 Recall(1.000)을 달성하는 유일한 설정.
+프로덕션 기본값: **α=0.6** — 완전한 Recall(1.000)을 달성하는 유일한 설정. Vector-only(α=0.0)가 MRR은 가장 높지만 관련 문서 0.5%를 놓칩니다. 하나의 누락된 사실이 판정을 뒤집을 수 있는 검증 파이프라인에서 이 차이는 무시할 수 없습니다.
 
 ---
 
