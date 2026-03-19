@@ -7,14 +7,15 @@
 
 Korean economic commentary doesn't come with tickers, dates, or confidence levels. Extracting verifiable predictions from natural language, assigning temporal bounds, and fact-checking outcomes against real-world events is a non-trivial NLP + information retrieval problem that no off-the-shelf tool solves. This pipeline is a solo-built, end-to-end system.
 
-The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance blog, extracts predictions via Claude Batch API, and verifies each against real outcomes — 5,010 predictions tracked, re-verification in progress. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
+The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance blog, extracts predictions via Claude Batch API, and verifies each against real outcomes — currently tracking 5,020 predictions, 41,000 news headlines DB built, re-verification in progress. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
 [한국어 README](README.md) · **[📊 Live Dashboard](https://mer-insight-pipeline.streamlit.app/)**
 
 ### What I Built (Solo)
 
-- **Full pipeline**: scraping → LLM extraction → embedding → hybrid search → verification → dashboard
-- **Data-driven decisions**: ran ablation experiments on search, automated verification experiments that proved manual-only is the right call
+- **Full pipeline**: scraping → LLM extraction → embedding → hybrid search → news DB → verification → dashboard
+- **Data-driven decisions**: search ablation experiments, 5-way automated verification comparison, data quality audit
+- **Cost optimization**: web_search $175 → news DB + Batch API $1.50 — 99% cost reduction by design
 
 ---
 
@@ -31,11 +32,18 @@ flowchart TD
 
     subgraph "Daily Pipeline (01:00)"
         ED[event_dispatcher.py] -->|1| MER[collect/mer_monitor<br>new posts]
-        ED -->|2| PV[verify/verifier<br>export + notify]
+        ED -->|2| NEWS[collect/news_collector<br>news headlines]
+        ED -->|3| PV[verify/verifier<br>export + notify]
         MER --> C
-        PV -->|pending export| EX[manual_verify/pending/]
-        EX -->|claude.ai| MAN[Manual Verification]
-        MAN -->|import_manual_verdicts.py| C
+        NEWS -->|15 RSS feeds| NH[(news_headlines<br>41,000)]
+    end
+
+    subgraph Verification Pipeline
+        NH -->|keyword GIN matching| HM[headline_matcher]
+        HM -->|matched headlines| BATCH[Batch API<br>yes/no verdict]
+        BATCH --> C
+        PV -->|unmatched| EX[Manual verification<br>claude.ai]
+        EX -->|import_manual_verdicts.py| C
     end
 
     subgraph Hybrid Search
@@ -43,9 +51,7 @@ flowchart TD
     end
 
     HS3 --> C
-
     C --> Q[Streamlit Dashboard]
-
     EV[eval/experiment.py<br>offline ablation] -.-> HS3
 ```
 
@@ -53,42 +59,95 @@ flowchart TD
 
 ## Prediction Verification
 
-Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions`. Predictions with `expected_date` in the past are exported for **manual verification via claude.ai**, then imported back into the DB.
+Every `prediction`-type insight extracted from Mer's posts is stored in `mer_predictions`. Verification is structured in 3 tiers:
 
-**Verdicts**
+| Tier | Verification Source | Cost | Expected Coverage |
+|------|-------------------|------|-------------------|
+| 1. Headline matching | news_headlines DB + Batch API | ~$1.50 / 5,000 | ~40-50% |
+| 2. Data APIs | FX/stock/rate APIs (free) | $0 | +20-30% (planned) |
+| 3. Manual verification | claude.ai (Opus + web search) | $20/mo subscription | remainder |
+
+### Verdict Criteria
 
 | Verdict | Condition |
 |---------|-----------|
 | `CORRECT` | Predicted outcome confirmed with evidence |
 | `INCORRECT` | Predicted outcome contradicted by evidence |
-| `PENDING` | Condition not yet met — re-exported when `expected_date` passes |
+| `PENDING` | Condition not yet met or insufficient info — re-verified after `expected_date` passes |
 
-### Workflow
+### News Headlines DB (Automated Verification Infrastructure)
 
-1. **Daily pipeline** exports verifiable predictions → `data/manual_verify/pending/`
-2. **Telegram alert** notifies when new predictions are ready
-3. **Manual verification** via claude.ai (Opus 4.6 with web search)
-4. **Import results** via `python scripts/ops/import_manual_verdicts.py`
+Verifying predictions one-by-one with web_search API costs $0.035/prediction (5,000 = $175). To cut this cost by 99%, we built a news headlines database.
 
-### Why Not Fully Automated?
+**Principle:** Most predictions can be verified from news headlines alone. "BOJ raised rates in July" → appears directly in headlines. By collecting headlines daily, verification only requires keyword matching against the DB — no web_search needed.
 
-We ran extensive experiments comparing automated API verification against manual claude.ai verification on 77 predictions. **No automated approach achieved acceptable accuracy:**
+```
+Collection: Google News RSS 15 feeds → feedparser → kiwipiepy keyword extraction → news_headlines (GIN index)
+Matching:   prediction.keywords ↔ headlines.keywords (±30 days) → matched headlines + claim → Batch API yes/no
+```
+
+| Item | Value |
+|------|-------|
+| Sources | Google News RSS 15 feeds (10 Korean + 5 English) |
+| Frequency | Daily automatic (event_dispatcher pipeline step 2) |
+| Keyword extraction | kiwipiepy (Korean NNG/NNP/SL) + regex (English), no LLM |
+| Index | PostgreSQL GIN on TEXT[] (keyword array) |
+| Backfill completed | 2022-01 to 2026-03, **41,233 headlines** |
+| Daily collection | ~240 headlines |
+| Collection cost | $0 (RSS free) |
+| Storage | ~25MB |
+
+**Headlines by year:**
+
+| Year | Count |
+|------|-------|
+| 2022 | 7,768 |
+| 2023 | 8,664 |
+| 2024 | 9,957 |
+| 2025 | 14,573 |
+| 2026 | 271 |
+| **Total** | **41,233** |
+
+### Prediction Extraction Format (New)
+
+Previous predictions stored only natural language text. For automated verification, we switched to a structured format:
+
+```json
+{
+  "prediction": "Original prediction text",
+  "claim": "US Fed will cut rates before end of 2024",
+  "search_keywords": ["Federal Reserve", "interest rate", "cut", "2024"],
+  "expected_date": "2024-12-31",
+  "direction": "down",
+  "target_asset": "US federal funds rate"
+}
+```
+
+- **claim**: A clear proposition answerable with yes/no
+- **search_keywords**: For news DB keyword matching
+- **expected_date**: When the prediction becomes verifiable
+
+Existing 5,020 predictions use the old format (no claim). New posts use the structured format. For old predictions, `headline_matcher` extracts keywords from `prediction_text` at runtime.
+
+### Automated Verification Experiments
+
+We compared 5 automated API verification approaches against manual claude.ai verification on 77 predictions:
 
 | Approach | Match Rate | Verdict Flips | Cost/pred | Notes |
 |----------|-----------|---------------|-----------|-------|
-| API only (no search) | 16.9% | 1 | $0.01 | 80% PENDING — model lacks post-cutoff knowledge |
-| API + one-shot Brave Search | 37.7% | 5 | $0.02 | Snippets insufficient for fact-checking |
-| API + built-in web_search (Sonnet) | 30% | 2 | $0.05 | Better search quality, still unreliable |
-| API + agentic tool_use (Opus) | 40% | 3 | $0.26 | Token accumulation makes cost prohibitive |
-| **claude.ai manual (Opus)** | **100%** | **0** | **$0** | **Subscription model, best quality** |
+| API only (no search) | 16.9% | 1 | $0.01 | 80% PENDING — knowledge cutoff |
+| API + one-shot Brave Search | 37.7% | 5 | $0.02 | Snippets insufficient |
+| API + built-in web_search (Sonnet) | 30% | 2 | $0.05 | Unreliable |
+| API + agentic tool_use (Opus) | 40% | 3 | $0.26 | Token accumulation cost explosion |
+| API + web_search per-prediction (Haiku) | 80% | 1 | $0.035 | 5,000 = $175 |
+| **News DB + Batch API (design)** | **TBD** | **TBD** | **$0.0003** | **5,000 = ~$1.50** |
+| **claude.ai manual (Opus)** | **baseline** | **0** | **$0** | **$20/mo subscription** |
 
-**Root cause:** Prediction verification is a fact-checking problem requiring real-time information. The API cannot reliably access or interpret current events, and verdict flips (CORRECT↔INCORRECT) make even screening-level automation dangerous — wrong verdicts would pollute the database.
-
-**Conclusion:** Manual verification via claude.ai remains the only reliable method. The pipeline automates everything else: export, batching, notification, and import. Batch size is limited to 20 predictions to prevent ID shifting, and source_url is required for all verdicts.
+**Root cause — cost:** web_search results are billed as input tokens (30K–100K tokens per prediction). The news DB approach feeds only headline text (~100 tokens), cutting cost by 99%.
 
 ### Data Quality Audit
 
-Large-batch verification (50–100+ predictions) caused ID-verdict misalignment in LLM JSON output, corrupting the database. A blind audit of 50 random samples revealed **36% contamination rate** (95% CI: 24–50%). All verdicts were reset and the verification process was redesigned with small batches (20) and mandatory source URLs.
+Large-batch verification (50–100+ predictions) caused ID-verdict misalignment in LLM JSON output, corrupting the database. A blind audit of 50 random samples quantified the contamination:
 
 | Audit Item | Result |
 |------------|--------|
@@ -96,57 +155,33 @@ Large-batch verification (50–100+ predictions) caused ID-verdict misalignment 
 | Match (same verdict) | 32 (64%) |
 | Verdict flip (CORRECT↔INCORRECT) | 7 (14%) |
 | Changed to PENDING | 11 (22%) |
-| 95% CI (Wilson) | Contamination 24.1%–49.9% |
+| 95% CI (Wilson) | **Contamination 24.1%–49.9%** |
 
-### 3-Stage Compressed Verification Pipeline
+**Response:** Full verdict reset (backup preserved) → switched to small batches (20) + mandatory source_url.
 
-Verifying 5,000 predictions one-by-one costs ~$142 (Haiku). Instead, we group predictions by topic, extract unique verification checkpoints, and search once per checkpoint.
-
-```
-5,020 predictions → 16 topics → 223 checkpoints → web_search → 302 predictions mapped
-```
-
-| Stage | Action | API Calls | Cost |
-|-------|--------|-----------|------|
-| Stage 1 | Topic classification (Haiku, no search) | 51 | $0.66 |
-| Stage 2 | Checkpoint extraction (Haiku, no search) | 31 | $1.22 |
-| Stage 3 | Search + verdict (Haiku + web_search) | 223 | $10.21 |
-| Stage 4 | Map to individual predictions (local) | 0 | $0 |
-| web_search billing | ~446 searches × ~$0.02 | - | ~$9 |
-| **Total** | | **305** | **~$21** |
-
-**Result:** 136 CONFIRMED, 61 DENIED, 26 UNKNOWN checkpoints. 302 predictions mapped (178 CORRECT, 89 INCORRECT, 35 PENDING).
-
-**Limitation:** Stage 2 failed to extract checkpoints for 11 topics (4,718 predictions) due to Haiku output length limits on 200-item batches. Reducible by smaller batch sizes (200→50) with additional budget.
-
-**Current Stats**
+### Current Status
 
 | Status | Count |
 |--------|-------|
-| Draft CORRECT | 178 |
-| Draft INCORRECT | 89 |
-| PENDING | 4,753 |
-| **Total** | **5,020** |
-
-*Draft verdicts pending human review before DB import. source_url required.*
+| PENDING (awaiting re-verification) | 5,020 |
+| News headlines DB | 41,233 |
+| **Total predictions** | **5,020** |
 
 ---
 
 ## Search Infrastructure
 
-Hybrid BM25 + vector search is the retrieval layer that feeds the verification pipeline. When a prediction comes due for verification, the searcher retrieves the most relevant insights and context from 25,090 indexed documents — **missing a relevant document means a prediction could be verified with incomplete evidence.** That's why Recall matters more than ranking precision here.
-
-Query embeddings use `intfloat/multilingual-e5-large` (1024-dim) — the same model used to index the production DB.
+Hybrid BM25 + vector search retrieves relevant context from 25,090 indexed insights. **Missing a relevant document means incomplete evidence for verdict decisions**, so Recall matters more than Precision.
 
 **Alpha ablation** — N=200 queries, K=5:
 
 | α (BM25 weight) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
-| **α=0.0** | 0.199 | 0.995 | **0.995** |
+| α=0.0 (vector-only) | 0.199 | 0.995 | **0.995** |
 | **α=0.6** ★ | **0.200** | **1.000** | 0.968 |
-| α=1.0 | 0.196 | 0.980 | 0.935 |
+| α=1.0 (BM25-only) | 0.196 | 0.980 | 0.935 |
 
-Production default: **α=0.6** — the only setting that achieves perfect Recall (1.000). Vector-only (α=0.0) has the best MRR but misses 0.5% of relevant documents; for a verification pipeline where one missed fact can flip a verdict, that gap matters.
+Production default: **α=0.6** — the only setting that achieves perfect Recall (1.000).
 
 ---
 
@@ -154,15 +189,16 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 
 | Layer | Technology |
 |-------|------------|
-| LLM (extraction) | `claude-sonnet-4-6` (Haiku optional via `--haiku`) |
-| LLM (verification) | claude.ai (Opus 4.6, manual) |
-| Batch API | Anthropic Batch API |
+| LLM (extraction) | Claude Sonnet 4.6 / Haiku 4.5 (Batch API) |
+| LLM (verification) | claude.ai (Opus 4.6, manual) → Batch API (planned) |
 | Embeddings | `intfloat/multilingual-e5-large` (1024-dim, local) |
 | Vector DB | PostgreSQL 16 + pgvector (HNSW index) |
 | Keyword Search | rank-bm25 + kiwipiepy (Korean morphological analysis) |
+| News collection | Google News RSS + feedparser |
+| Keyword extraction | kiwipiepy (Korean) + regex (English) |
 | Hybrid Fusion | Reciprocal Rank Fusion (RRF, α=0.6) |
-| Scheduler | APScheduler (local) / GCP Cloud Scheduler + Cloud Run Job |
-| Dashboard | Streamlit |
+| Scheduler | APScheduler / GCP Cloud Run Job |
+| Dashboard | Streamlit (Cloud deployment) |
 
 ---
 
@@ -173,9 +209,11 @@ Production default: **α=0.6** — the only setting that achieves perfect Recall
 | Processed posts | 2,223 |
 | Extracted insights | 25,090 |
 | Tracked predictions | 5,020 |
-| Verified predictions | Re-verification in progress (post-reset) |
+| News headlines | 41,233 (2022–2026) |
+| Verification status | Re-verification in progress |
 | Insight types | 4 (rule, prediction, evaluation, macro_view) |
 | Embedding dimensions | 1024 |
+| Test coverage | 90%+ (219 tests) |
 
 ---
 
@@ -203,7 +241,10 @@ python scripts/run_batch.py all
 # 4. Build BM25 index cache
 python -m src.search.bm25_index
 
-# 5. Run pipeline once (or start the daily scheduler)
+# 5. Backfill news headlines (2022–present)
+PYTHONPATH=. python scripts/ops/backfill_news.py --start 2022-01 --end 2026-03
+
+# 6. Run pipeline once or start daily scheduler
 python -m scripts.run_job                 # run once
 python -m src.pipeline.event_dispatcher   # daily 01:00 scheduler
 ```
@@ -213,7 +254,8 @@ python -m src.pipeline.event_dispatcher   # daily 01:00 scheduler
 Runs once daily at 01:00 (KST) via Cloud Scheduler or APScheduler:
 
 1. Mer blog — check for new posts, extract predictions
-2. Prediction export — export verifiable predictions + Telegram alert
+2. News headlines — collect from 15 Google News RSS feeds
+3. Prediction export — export verifiable predictions + Telegram alert
 
 ### Dashboard
 
@@ -241,21 +283,21 @@ TEST_DATABASE_URL=postgresql://mer:pass@localhost:5432/mer_test \
   pytest tests/test_integration_dispatcher.py -v
 ```
 
-Unit tests run without a database. Integration tests require `TEST_DATABASE_URL` — they are automatically skipped when the variable is not set.
+219 tests, 90%+ coverage. Unit tests run without a database.
 
 ---
 
 ## Cost
 
-Prediction verification is manual (via claude.ai subscription, ~$20/month). The only API cost is real-time insight extraction when new posts are detected.
-
 | Component | Cost | Frequency |
 |-----------|------|-----------|
-| Insight extraction (Sonnet) | ~$0.01/post | Per new post |
-| Prediction verification | $0 (claude.ai subscription) | Weekly batch |
+| Insight extraction (Sonnet/Haiku) | ~$0.01/post | Per new post |
+| News headline collection (RSS) | $0 | Daily automatic |
+| Headline matching verification (Batch API) | ~$0.0003/pred | On verification (planned) |
+| Manual verification (claude.ai) | $20/mo subscription | Unmatched predictions |
 | Embedding (local) | $0 | Per new insight |
 
-**Estimated monthly cost ≈ $2-5** (extraction only). Verification is covered by claude.ai subscription.
+**Estimated monthly cost ≈ $2-5** (extraction only). Verification transitioning to news DB + Batch API (~$1.50 total).
 
 ---
 
@@ -265,8 +307,10 @@ Prediction verification is manual (via claude.ai subscription, ~$20/month). The 
 |----------|----------|-------------|
 | `DATABASE_URL` | ✓ | PostgreSQL connection string |
 | `ANTHROPIC_API_KEY` | ✓ | Claude API key |
-| `GCP_PROJECT_ID` | optional | GCP project ID (for Vertex AI embeddings) |
-| `GCP_LOCATION` | optional | Vertex AI region (default: us-central1) |
+| `TELEGRAM_BOT_TOKEN` | optional | Telegram notification bot token |
+| `TELEGRAM_CHAT_ID` | optional | Telegram chat ID |
+| `NAVER_CLIENT_ID` | optional | Naver News API (supplementary collection) |
+| `NAVER_CLIENT_SECRET` | optional | Naver News API |
 
 ---
 
@@ -275,65 +319,68 @@ Prediction verification is manual (via claude.ai subscription, ~$20/month). The 
 ```
 mer-insight-pipeline/
 ├── src/
-│   ├── config/                     # Settings & Prompts
+│   ├── config/                     # Settings
 │   │   ├── settings.py             # All configuration, loaded from .env
-│   │   └── prompts.py              # Claude extraction prompts
+│   │   └── prompts.py              # Claude extraction prompts (claim, search_keywords)
 │   ├── db/                         # Shared DB Utilities
 │   │   └── connection.py           # connect(), get_pool() context managers
 │   ├── embed/                      # Embedding
 │   │   ├── protocol.py             # Embedder Protocol interface
 │   │   ├── local.py                # multilingual-e5-large 1024-dim (default)
-│   │   ├── vertex.py               # Vertex AI 768-dim (GCP only)
 │   │   ├── factory.py              # get_embedder() factory + vec_str()
 │   │   └── backfill.py             # Batch fill NULL embeddings
 │   ├── extract/                    # Insight Extraction
 │   │   ├── batch_api.py            # Claude Batch API orchestration
 │   │   ├── parse_results.py        # Batch result JSONL → DB
-│   │   └── realtime.py             # Real-time insight extraction (Haiku)
+│   │   └── realtime.py             # Real-time insight extraction (expected_date)
 │   ├── collect/                    # Data Collection
 │   │   ├── mer_monitor.py          # Blog RSS watcher
+│   │   ├── news_collector.py       # News headline RSS collection (15 feeds)
+│   │   ├── feeds.py                # Google News RSS feed definitions
+│   │   ├── keyword_extractor.py    # Keyword extraction (kiwipiepy + regex)
 │   │   ├── posts.py                # JSON → mer_posts bulk loader
 │   │   └── date_parser.py          # Korean date string parser
 │   ├── verify/                     # Prediction Verification
 │   │   ├── verifier.py             # Export verifiable predictions + Telegram notify
-│   │   └── prompt.py               # Constants (batch size)
+│   │   ├── headline_matcher.py     # Prediction ↔ headline keyword GIN matching
+│   │   └── prompt.py               # Constants (batch size 20)
 │   ├── search/                     # Hybrid Search
-│   │   ├── bm25_index.py           # BM25 with kiwipiepy + pickle cache
+│   │   ├── bm25_index.py           # BM25 + kiwipiepy + pickle cache
 │   │   ├── vector_index.py         # pgvector HNSW wrapper (1024-dim)
 │   │   └── hybrid.py               # RRF fusion (α=0.6)
 │   ├── eval/                       # Eval Pipeline
 │   │   ├── experiment.py           # Ablation: vector vs BM25 vs hybrid
-│   │   ├── eval_runner.py          # Main runner (--mode retrieval_only | full)
+│   │   ├── eval_runner.py          # Main runner
 │   │   ├── metrics.py              # Precision@K, Recall@K, MRR
 │   │   ├── llm_judge.py            # LLM-as-judge (Claude Sonnet)
 │   │   └── report.py               # Markdown + JSON report generator
 │   ├── pipeline/                   # Orchestration
-│   │   └── event_dispatcher.py     # APScheduler / Cloud Run Job entry
+│   │   └── event_dispatcher.py     # APScheduler / Cloud Run Job
 │   └── dashboard/                  # Streamlit Dashboard
 │       ├── app.py                  # Layout & rendering
-│       ├── queries.py              # DB query functions
+│       ├── queries.py              # DB query functions (psycopg2)
 │       └── topics.py               # Topic classification (TOPIC_KEYWORDS)
 ├── scripts/
-│   ├── run_job.py                  # Cloud Run Job / local pipeline entry
+│   ├── run_job.py                  # Cloud Run Job entry point
 │   ├── run_batch.py                # Batch extraction orchestrator
-│   ├── reembed_all.py              # Full re-embedding (model swap)
 │   ├── naver_blog_scraper.py       # Blog scraper
+│   ├── migrate_news_headlines.sql  # News DB migration
 │   ├── ops/                        # Data operation scripts
-│   │   ├── export_*.py             # Prediction export (manual_verify, rounds)
-│   │   ├── import_*.py             # Manual verdict import
-│   │   ├── fill_*.py               # Field backfill (expected_date, etc.)
-│   │   ├── migrate_predictions.py  # One-time backfill: insights → predictions
-│   │   ├── populate_topics.py      # Batch topic classification
-│   │   ├── cluster_insights.py     # DBSCAN deduplication
-│   │   └── regroup_by_topic.py     # Topic re-classification
+│   │   ├── backfill_news.py        # News headline historical backfill
+│   │   ├── import_manual_verdicts.py  # Manual verdict import
+│   │   ├── verify_pipeline/        # 3-stage compressed verification pipeline
+│   │   └── ...                     # Other operation scripts
 │   └── eval/                       # Eval scripts
-│       ├── expand_eval_dataset.py  # Auto-expand gold dataset
-│       └── compare_judges.py       # Judge comparison
+├── data/
+│   ├── verify_pipeline/            # Verification pipeline intermediate results
+│   ├── manual_verify/              # Manual verification results (by round)
+│   └── audit/                      # Data quality audit results
 ├── eval_data/
-│   └── gold_extended.json          # Gold dataset: 200 queries with relevant IDs
+│   └── gold_extended.json          # Gold dataset: 200 queries
 ├── docker-compose.yml
 ├── Dockerfile
-└── requirements.txt
+├── requirements.txt                # Streamlit Cloud (lightweight)
+└── requirements-full.txt           # Full dependencies
 ```
 
 ---
