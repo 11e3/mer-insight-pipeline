@@ -37,7 +37,7 @@ async def test_connect_uses_default_url():
     # Should use DATABASE_URL default
     mock_connect_fn.assert_called_once()
     args = mock_connect_fn.call_args[0]
-    assert args[0] == "test"  # DATABASE_URL env var
+    assert args[0] == os.environ["DATABASE_URL"]
 
 
 async def test_connect_closes_on_error():

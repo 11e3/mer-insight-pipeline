@@ -6,10 +6,17 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
     os.environ.setdefault(_var, "test")
+
+try:
+    from src.eval.eval_runner import EvalRunner
+except ImportError:
+    pytest.skip("sentence_transformers not installed", allow_module_level=True)
 
 from src.eval.eval_dataset import TestCase
 from src.eval.metrics import CaseResult
@@ -39,7 +46,6 @@ async def test_eval_runner_run():
 
     with patch("src.eval.eval_runner.judge_context_relevance",
                AsyncMock(return_value={"score": 4, "reasoning": "ok"})):
-        from src.eval.eval_runner import EvalRunner
         runner = EvalRunner(mock_conn, mock_embedder, mock_bm25, k=5)
         results = await runner.run(cases)
 
@@ -63,7 +69,6 @@ async def test_eval_runner_judge_error():
 
     with patch("src.eval.eval_runner.judge_context_relevance",
                AsyncMock(side_effect=Exception("judge error"))):
-        from src.eval.eval_runner import EvalRunner
         runner = EvalRunner(mock_conn, mock_embedder, mock_bm25, k=5)
         results = await runner.run(cases)
 
@@ -77,7 +82,7 @@ async def test_main_no_dataset(tmp_path):
     """데이터셋 없으면 템플릿 생성."""
     dataset_path = tmp_path / "nonexistent.json"
 
-    from src.eval.eval_runner import main
+    from src.eval.eval_runner import main  # noqa: F811
     with patch("src.eval.eval_runner.save_template") as mock_save:
         await main(dataset_path, tmp_path / "output", k=5)
         mock_save.assert_called_once()
@@ -88,7 +93,7 @@ async def test_main_empty_cases(tmp_path):
     dataset_path = tmp_path / "gold.json"
     dataset_path.write_text('{"test_cases": []}', encoding="utf-8")
 
-    from src.eval.eval_runner import main
+    from src.eval.eval_runner import main  # noqa: F811
     await main(dataset_path, tmp_path / "output", k=5)
     # Should return without error
 
@@ -120,7 +125,7 @@ async def test_main_full_run(tmp_path):
 
     output_dir = tmp_path / "results"
 
-    from src.eval.eval_runner import main
+    from src.eval.eval_runner import main  # noqa: F811
     with patch("src.eval.eval_runner.asyncpg.connect", AsyncMock(return_value=mock_conn)), \
          patch("src.eval.eval_runner.SentenceTransformer", return_value=mock_embedder), \
          patch("src.eval.eval_runner.BM25Index", return_value=mock_bm25), \
