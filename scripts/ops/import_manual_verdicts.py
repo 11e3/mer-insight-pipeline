@@ -22,9 +22,9 @@ async def main():
     # Later rounds override earlier verdicts (last wins per ID)
     by_id = {}
     base = str(verify_dir)
+    # grouped/ 제외 — ID-reason 매핑 오류로 DB 오염 확인됨
     files = sorted(
-        glob.glob(f"{base}/grouped/*결과*.json")
-        + glob.glob(f"{base}/result_*.json")
+        glob.glob(f"{base}/result_*.json")
         + glob.glob(f"{base}/round*/*결과*.json")
         + glob.glob(f"{base}/round*/*재판정*.json")
         + glob.glob(f"{base}/round*/*_results.json")
