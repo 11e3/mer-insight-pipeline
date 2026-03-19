@@ -1,45 +1,5 @@
-# DB
 asyncpg==0.29.0
-
-# Claude API
-anthropic==0.40.0
-
-# 데이터 처리
 pandas==2.2.0
-requests==2.31.0
-
-# 벡터 임베딩
-google-cloud-aiplatform==1.60.0     # Vertex AI (optional, GCP 환경)
-vertexai==1.60.0                    # Vertex AI (optional, GCP 환경)
-sentence-transformers>=2.2.0        # 로컬 임베딩 (intfloat/multilingual-e5-large, 1024-dim)
-
-# 스케줄러
-APScheduler==3.10.4
-
-# 웹 스크래핑 (메르 신규글 감지)
-beautifulsoup4==4.12.3
-lxml==5.2.2
-
-# 대시보드
 streamlit==1.36.0
 plotly==5.22.0
-
-# 유틸
 python-dotenv==1.0.1
-tqdm==4.66.4
-
-# Hybrid Search
-rank-bm25==0.2.2
-kiwipiepy==0.17.1
-
-# 통계 검증 (eval)
-scipy==1.13.0
-
-# 클러스터링 (eval용)
-scikit-learn==1.4.2
-numpy==1.26.4
-
-# 테스트
-pytest==8.2.2
-pytest-asyncio==0.23.7
-pytest-cov==5.0.0
