@@ -12,19 +12,26 @@ load_dotenv()
 
 
 async def main():
+    from pathlib import Path
+    project_root = Path(__file__).parent.parent.parent
+    verify_dir = project_root / "data" / "manual_verify"
+    assert verify_dir.exists(), f"Run from project root: {verify_dir} not found"
+
     conn = await asyncpg.connect(os.environ["DATABASE_URL"])
 
     # Later rounds override earlier verdicts (last wins per ID)
     by_id = {}
+    base = str(verify_dir)
     files = sorted(
-        glob.glob("data/manual_verify/grouped/*결과*.json")
-        + glob.glob("data/manual_verify/result_*.json")
-        + glob.glob("data/manual_verify/round*/*결과*.json")
-        + glob.glob("data/manual_verify/round*/*재판정*.json")
-        + glob.glob("data/manual_verify/round*/*_results.json")
+        glob.glob(f"{base}/grouped/*결과*.json")
+        + glob.glob(f"{base}/result_*.json")
+        + glob.glob(f"{base}/round*/*결과*.json")
+        + glob.glob(f"{base}/round*/*재판정*.json")
+        + glob.glob(f"{base}/round*/*_results.json")
     )
     for f in files:
-        items = json.load(open(f, encoding="utf-8"))
+        with open(f, encoding="utf-8") as fh:
+            items = json.load(fh)
         for item in items:
             pid = item["id"]
             # Non-PENDING verdict always overrides PENDING

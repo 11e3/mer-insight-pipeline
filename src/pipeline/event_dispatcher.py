@@ -24,7 +24,8 @@ from src.verify import PredictionVerifier
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-BM25_CACHE = Path("data/bm25_cache.pkl")
+_PROJECT_ROOT = Path(__file__).parent.parent.parent
+BM25_CACHE = _PROJECT_ROOT / "data" / "bm25_cache.pkl"
 
 
 class EventDispatcher:

@@ -127,8 +127,10 @@ async def test_parse_and_insert_basic(tmp_path):
     mock_conn = AsyncMock()
     mock_conn.fetch.return_value = [{"log_no": "12345", "id": 1}]
 
-    with patch("src.extract.parse_results.asyncpg") as mock_asyncpg:
-        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+    with patch("src.db.connection.connect", return_value=mock_cm):
         from src.extract.parse_results import parse_and_insert
         await parse_and_insert(str(jsonl_file))
 
@@ -148,8 +150,10 @@ async def test_parse_and_insert_error_result(tmp_path):
     mock_conn = AsyncMock()
     mock_conn.fetch.return_value = [{"log_no": "12345", "id": 1}]
 
-    with patch("src.extract.parse_results.asyncpg") as mock_asyncpg:
-        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+    with patch("src.db.connection.connect", return_value=mock_cm):
         from src.extract.parse_results import parse_and_insert
         await parse_and_insert(str(jsonl_file))
 
@@ -179,8 +183,10 @@ async def test_parse_and_insert_json_in_code_block(tmp_path):
     mock_conn = AsyncMock()
     mock_conn.fetch.return_value = [{"log_no": "99999", "id": 2}]
 
-    with patch("src.extract.parse_results.asyncpg") as mock_asyncpg:
-        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+    with patch("src.db.connection.connect", return_value=mock_cm):
         from src.extract.parse_results import parse_and_insert
         await parse_and_insert(str(jsonl_file))
 
@@ -202,8 +208,10 @@ async def test_parse_and_insert_missing_post_id(tmp_path):
     mock_conn = AsyncMock()
     mock_conn.fetch.return_value = []  # no posts in DB
 
-    with patch("src.extract.parse_results.asyncpg") as mock_asyncpg:
-        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+    with patch("src.db.connection.connect", return_value=mock_cm):
         from src.extract.parse_results import parse_and_insert
         await parse_and_insert(str(jsonl_file))
 

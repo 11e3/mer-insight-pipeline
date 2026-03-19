@@ -8,10 +8,8 @@ Usage:
 import sys
 import json
 import asyncio
-import asyncpg
 from tqdm import tqdm
 
-from src.config.settings import DATABASE_URL
 
 
 INSIGHT_TYPE_MAP = {
@@ -39,8 +37,12 @@ def extract_content(item: dict, insight_type: str) -> str:
 
 
 async def parse_and_insert(jsonl_path: str):
-    conn = await asyncpg.connect(DATABASE_URL)
+    from src.db.connection import connect
+    async with connect() as conn:
+        await _parse_and_insert_inner(conn, jsonl_path)
 
+
+async def _parse_and_insert_inner(conn, jsonl_path: str):
     # log_no → post_id 캐시
     rows = await conn.fetch("SELECT log_no, id FROM mer_posts")
     log_no_map = {r["log_no"]: r["id"] for r in rows}
@@ -108,7 +110,6 @@ async def parse_and_insert(jsonl_path: str):
                 )
                 total_insights += 1
 
-    await conn.close()
     print(f"\n완료: 인사이트 {total_insights}개 삽입 | 오류 {errors}건")
 
 

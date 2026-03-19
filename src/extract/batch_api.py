@@ -14,7 +14,7 @@ import asyncio
 import asyncpg
 import anthropic
 
-from src.config.settings import DATABASE_URL, ANTHROPIC_API_KEY, MODEL_SONNET, MODEL_HAIKU
+from src.config.settings import ANTHROPIC_API_KEY, MODEL_SONNET, MODEL_HAIKU
 from src.config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
 
 BATCH_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "batches")
@@ -60,9 +60,9 @@ async def fetch_unprocessed_posts(conn: asyncpg.Connection) -> list[dict]:
 
 async def create_batch(model: str = MODEL_SONNET, limit: int | None = None) -> str:
     """배치 생성 → batch_id 반환."""
-    conn = await asyncpg.connect(DATABASE_URL)
-    posts = await fetch_unprocessed_posts(conn)
-    await conn.close()
+    from src.db.connection import connect
+    async with connect() as conn:
+        posts = await fetch_unprocessed_posts(conn)
 
     if limit:
         posts = posts[:limit]
@@ -111,13 +111,13 @@ async def create_retokenize_batch(results_jsonl: str, model: str = MODEL_SONNET)
         return ""
 
     # 2. DB에서 해당 포스트 조회
-    conn = await asyncpg.connect(DATABASE_URL)
-    rows = await conn.fetch("""
-        SELECT log_no, title, date::text, url, content_text
-        FROM mer_posts
-        WHERE log_no = ANY($1::text[])
-    """, list(truncated_log_nos))
-    await conn.close()
+    from src.db.connection import connect
+    async with connect() as conn:
+        rows = await conn.fetch("""
+            SELECT log_no, title, date::text, url, content_text
+            FROM mer_posts
+            WHERE log_no = ANY($1::text[])
+        """, list(truncated_log_nos))
 
     posts = [dict(r) for r in rows]
     print(f"DB에서 조회된 포스트: {len(posts)}개 / 모델: {model} / max_tokens: 8192")

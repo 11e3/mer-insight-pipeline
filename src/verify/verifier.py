@@ -93,9 +93,11 @@ class PredictionVerifier:
             return
 
         try:
+            import asyncio
             import requests
             text = f"📋 예측 검증 대기: {count}건\ndata/manual_verify/pending/ 에서 확인"
-            requests.post(
+            await asyncio.to_thread(
+                requests.post,
                 f"https://api.telegram.org/bot{token}/sendMessage",
                 json={"chat_id": chat_id, "text": text},
                 timeout=10,

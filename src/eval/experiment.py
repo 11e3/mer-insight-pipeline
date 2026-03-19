@@ -114,7 +114,7 @@ async def run_experiment(dataset_path: Path, k: int = 10):
 
         # Hybrid (RRF)
         from src.search.hybrid import _rrf_fuse
-        fused = _rrf_fuse(b_res, v_res, alpha=0.4)[:k * 2]
+        fused = _rrf_fuse(b_res, v_res, alpha=0.6)[:k * 2]
         h_ids = [doc_id for doc_id, _ in fused]
 
         for name, ids in [("vector", v_ids), ("bm25", b_ids), ("hybrid", h_ids)]:
