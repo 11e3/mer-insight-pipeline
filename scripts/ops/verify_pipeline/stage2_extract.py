@@ -32,22 +32,45 @@ SYSTEM = """\
 ]}
 """
 
-GROUP_BATCH = 200  # 큰 그룹은 200건씩 분할
+GROUP_BATCH = 50  # 큰 그룹은 50건씩 분할 (200건은 출력 잘림 발생)
 
 
 def _parse_json(text: str) -> dict | None:
     text = text.strip()
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
+    # 코드블록 제거
+    if "```" in text:
+        parts = text.split("```")
+        for part in parts:
+            p = part.strip()
+            if p.startswith("json"):
+                p = p[4:].strip()
+            if p.startswith("{"):
+                text = p
+                break
+
     start = text.find("{")
+    if start < 0:
+        return None
+
+    # 정상 파싱 시도
     end = text.rfind("}") + 1
-    if start >= 0 and end > start:
+    if end > start:
         try:
             return json.loads(text[start:end])
         except json.JSONDecodeError:
             pass
+
+    # 잘린 JSON 복구: 마지막 완전한 checkpoint 항목까지 자르기
+    truncated = text[start:]
+    # 마지막 완전한 }를 찾아 배열을 닫기
+    last_complete = truncated.rfind("},")
+    if last_complete > 0:
+        repaired = truncated[:last_complete + 1] + "]}"
+        try:
+            return json.loads(repaired)
+        except json.JSONDecodeError:
+            pass
+
     return None
 
 
@@ -103,25 +126,33 @@ async def run(tracker: CostTracker, dry_run: bool = False) -> list[dict]:
 
             user_msg = f"[주제: {topic}]\n" + "\n".join(lines)
 
-            resp = await client.messages.create(
-                model=MODEL,
-                max_tokens=8192,
-                system=SYSTEM,
-                messages=[{"role": "user", "content": user_msg}],
-            )
+            # 최대 2회 재시도 (0개 반환 시)
+            for attempt in range(3):
+                resp = await client.messages.create(
+                    model=MODEL,
+                    max_tokens=8192,
+                    system=SYSTEM,
+                    messages=[{"role": "user", "content": user_msg}],
+                )
 
-            tracker.add("stage2", resp.usage.input_tokens, resp.usage.output_tokens)
-            tracker.check_budget()
+                tracker.add("stage2", resp.usage.input_tokens, resp.usage.output_tokens)
+                tracker.check_budget()
 
-            parsed = _parse_json(resp.content[0].text)
-            if parsed and "checkpoints" in parsed:
-                for cp in parsed["checkpoints"]:
-                    cp_counter += 1
-                    cp["cp_id"] = cp_counter
-                    cp["topic"] = topic
-                    all_checkpoints.append(cp)
+                parsed = _parse_json(resp.content[0].text)
+                if parsed and "checkpoints" in parsed and len(parsed["checkpoints"]) > 0:
+                    for cp in parsed["checkpoints"]:
+                        cp_counter += 1
+                        cp["cp_id"] = cp_counter
+                        cp["topic"] = topic
+                        all_checkpoints.append(cp)
+                    break
 
-            print(f"  {topic} ({len(chunk_ids)}건) → {len(parsed.get('checkpoints', [])) if parsed else 0}개 검증 포인트")
+                if attempt < 2:
+                    print(f"    재시도 {attempt + 1}/2 ({topic}, {len(chunk_ids)}건)")
+                    await asyncio.sleep(1)
+
+            cp_count = len(parsed.get("checkpoints", [])) if parsed else 0
+            print(f"  {topic} ({len(chunk_ids)}건) → {cp_count}개 검증 포인트")
             await asyncio.sleep(0.3)
 
     # 저장

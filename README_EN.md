@@ -5,9 +5,9 @@
 
 **mer-insight-pipeline** turns unstructured Korean financial blog prose into structured, time-bound predictions — then tracks whether they actually come true.
 
-Korean economic commentary doesn't come with tickers, dates, or confidence levels. Extracting verifiable predictions from natural language, assigning temporal bounds, and fact-checking outcomes against real-world events is a non-trivial NLP + information retrieval problem that no off-the-shelf tool solves. This pipeline is a solo-built, end-to-end system that has been in daily production for 6+ months.
+Korean economic commentary doesn't come with tickers, dates, or confidence levels. Extracting verifiable predictions from natural language, assigning temporal bounds, and fact-checking outcomes against real-world events is a non-trivial NLP + information retrieval problem that no off-the-shelf tool solves. This pipeline is a solo-built, end-to-end system.
 
-The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance blog, extracts predictions via Claude Batch API, and verifies each against real outcomes — 5,020 predictions tracked, re-verification in progress. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
+The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance blog, extracts predictions via Claude Batch API, and verifies each against real outcomes — 5,010 predictions tracked, re-verification in progress. Retrieval is powered by hybrid BM25 + pgvector search (25,090 indexed insights, RRF fusion at α=0.6) on PostgreSQL with no vector-DB vendor lock-in.
 
 [한국어 README](README.md) · **[📊 Live Dashboard](https://mer-insight-pipeline.streamlit.app/)**
 
@@ -15,7 +15,6 @@ The pipeline monitors [Mer (ranto28)](https://blog.naver.com/ranto28)'s finance 
 
 - **Full pipeline**: scraping → LLM extraction → embedding → hybrid search → verification → dashboard
 - **Data-driven decisions**: ran ablation experiments on search, automated verification experiments that proved manual-only is the right call
-- **Production operations**: daily Cloud Run job, Telegram alerts, 6+ months of continuous operation
 
 ---
 
