@@ -60,7 +60,7 @@ class PredictionVerifier:
 - PENDING: 아직 결과를 알 수 없는 미래 예측 → expected_date 필수
 
 출력 형식 (JSON 배열만, 설명 텍스트 없이):
-[{{"id": N, "verdict": "CORRECT|INCORRECT|PENDING", "reason": "한줄 근거", "expected_date": "YYYY-MM-DD (PENDING일 때만)"}}]
+[{{"id": N, "verdict": "CORRECT|INCORRECT|PENDING", "source_url": "판정 근거 링크", "expected_date": "YYYY-MM-DD (PENDING일 때만)"}}]
 
 ---
 

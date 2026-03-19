@@ -73,8 +73,8 @@ def load_all_predictions():
     return _fetchall("""
         SELECT
             mp.prediction_date, mp.prediction_text, mp.predicted_direction,
-            mp.target_asset, mp.is_correct, mp.actual_outcome, mp.verification_date,
-            p.url AS post_url
+            mp.target_asset, mp.is_correct, mp.actual_outcome, mp.source_url,
+            mp.verification_date, p.url AS post_url
         FROM mer_predictions mp
         LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
         LEFT JOIN mer_posts p ON p.id = mi.post_id

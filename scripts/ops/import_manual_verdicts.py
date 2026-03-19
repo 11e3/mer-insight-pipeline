@@ -48,21 +48,24 @@ async def main():
     for r in all_results:
         verdict = r["verdict"]
         reason = r.get("reason", "")
+        source_url = r.get("source_url", "")
 
         if verdict == "CORRECT":
             await conn.execute(
                 """UPDATE mer_predictions
-                   SET is_correct = true, actual_outcome = $1, verification_date = $2
-                   WHERE id = $3""",
-                reason, today, r["id"],
+                   SET is_correct = true, actual_outcome = $1, source_url = $2,
+                       verification_date = $3
+                   WHERE id = $4""",
+                reason, source_url or None, today, r["id"],
             )
             correct_count += 1
         elif verdict == "INCORRECT":
             await conn.execute(
                 """UPDATE mer_predictions
-                   SET is_correct = false, actual_outcome = $1, verification_date = $2
-                   WHERE id = $3""",
-                reason, today, r["id"],
+                   SET is_correct = false, actual_outcome = $1, source_url = $2,
+                       verification_date = $3
+                   WHERE id = $4""",
+                reason, source_url or None, today, r["id"],
             )
             incorrect_count += 1
         else:

@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS mer_predictions (
     prediction_date     DATE,
     verification_date   DATE,
     actual_outcome      TEXT,
+    source_url          TEXT,             -- 검증 근거 링크
     is_correct          BOOLEAN,
     skipped_at          DATE,
     expected_date       DATE,         -- 미래 예측의 예상 실현 시점 (해당 날짜까지 검증 건너뜀)
