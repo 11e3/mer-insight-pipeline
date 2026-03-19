@@ -99,14 +99,37 @@ Large-batch verification (50–100+ predictions) caused ID-verdict misalignment 
 | Changed to PENDING | 11 (22%) |
 | 95% CI (Wilson) | Contamination 24.1%–49.9% |
 
+### 3-Stage Compressed Verification Pipeline
+
+Verifying 5,000 predictions one-by-one costs ~$142 (Haiku). Instead, we group predictions by topic, extract unique verification checkpoints, and search once per checkpoint.
+
+```
+5,020 predictions → 16 topics → 223 checkpoints → web_search → 302 predictions mapped
+```
+
+| Stage | Action | API Calls | Cost |
+|-------|--------|-----------|------|
+| Stage 1 | Topic classification (Haiku, no search) | 51 | $0.66 |
+| Stage 2 | Checkpoint extraction (Haiku, no search) | 31 | $1.22 |
+| Stage 3 | Search + verdict (Haiku + web_search) | 223 | $10.21 |
+| Stage 4 | Map to individual predictions (local) | 0 | $0 |
+| web_search billing | ~446 searches × ~$0.02 | - | ~$9 |
+| **Total** | | **305** | **~$21** |
+
+**Result:** 136 CONFIRMED, 61 DENIED, 26 UNKNOWN checkpoints. 302 predictions mapped (178 CORRECT, 89 INCORRECT, 35 PENDING).
+
+**Limitation:** Stage 2 failed to extract checkpoints for 11 topics (4,718 predictions) due to Haiku output length limits on 200-item batches. Reducible by smaller batch sizes (200→50) with additional budget.
+
 **Current Stats**
 
 | Status | Count |
 |--------|-------|
-| CORRECT | 0 |
-| INCORRECT | 0 |
-| PENDING | 5,020 |
+| Draft CORRECT | 178 |
+| Draft INCORRECT | 89 |
+| PENDING | 4,753 |
 | **Total** | **5,020** |
+
+*Draft verdicts pending human review before DB import. source_url required.*
 
 ---
 

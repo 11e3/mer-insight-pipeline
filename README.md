@@ -106,14 +106,37 @@ flowchart TD
 | PENDING 전환 | 11건 (22%) |
 | 95% 신뢰구간 (Wilson) | 오염률 24.1% ~ 49.9% |
 
+### 3단계 압축 검증 파이프라인
+
+5,000건을 1건씩 검증하면 ~$142(Haiku)이므로, 예측을 주제별로 묶고 고유 검증 포인트로 압축하여 검색 횟수를 줄이는 파이프라인을 설계했습니다.
+
+```
+5,020 predictions → 16개 주제 분류 → 223개 검증 포인트 추출 → web_search 판정 → 302건 매핑
+```
+
+| 단계 | 동작 | API 호출 | 비용 |
+|------|------|---------|------|
+| Stage 1 | 주제 분류 (Haiku, no search) | 51회 | $0.66 |
+| Stage 2 | 검증 포인트 추출 (Haiku, no search) | 31회 | $1.22 |
+| Stage 3 | 검색 + 판정 (Haiku + web_search) | 223회 | $10.21 |
+| Stage 4 | 개별 예측에 매핑 (로컬) | 0 | $0 |
+| web_search 과금 | ~446회 × ~$0.02 | - | ~$9 |
+| **합계** | | **305회** | **~$21** |
+
+**결과:** 223개 검증 포인트 중 CONFIRMED 136, DENIED 61, UNKNOWN 26. 302건 예측에 draft verdict 매핑 (CORRECT 178, INCORRECT 89, PENDING 35).
+
+**한계:** Stage 2에서 200건 배치가 Haiku의 출력 한계를 초과하여 11개 주제(4,718건)가 누락됨. 배치 크기 축소(200→50)로 해결 가능하나 추가 예산 필요.
+
 **현재 현황**
 
 | 상태 | 건수 |
 |------|------|
-| CORRECT | 0 |
-| INCORRECT | 0 |
-| PENDING | 5,020 |
+| Draft CORRECT | 178 |
+| Draft INCORRECT | 89 |
+| PENDING | 4,753 |
 | **합계** | **5,020** |
+
+*Draft verdict는 사람 검토 후 DB 반영 예정. source_url 필수.*
 
 ---
 
