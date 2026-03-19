@@ -1,7 +1,7 @@
 # mer-insight-pipeline
 
 [![CI](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml/badge.svg)](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml)
-[![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
+[![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg?token=WEE9EGD2QP)](https://codecov.io/gh/11e3/mer-insight-pipeline)
 
 **mer-insight-pipeline**은 비정형 한국어 경제 블로그 글을 구조화된 시간축 예측으로 변환하고, 실제로 맞았는지 추적하는 시스템입니다.
 
