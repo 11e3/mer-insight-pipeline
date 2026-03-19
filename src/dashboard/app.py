@@ -19,6 +19,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Streamlit Cloud: secrets → 환경변수
+import os
+if not os.environ.get("DATABASE_URL") and hasattr(st, "secrets"):
+    try:
+        os.environ["DATABASE_URL"] = st.secrets["DATABASE_URL"]
+    except (KeyError, FileNotFoundError):
+        pass
+
 from src.dashboard.queries import (
     load_prediction_summary,
     load_predictions_for_topics,
