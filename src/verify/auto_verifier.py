@@ -157,14 +157,13 @@ class AutoVerifier:
         except json.JSONDecodeError:
             pass
 
-        # fallback: greedy JSON 객체 찾기 (reason에 {}가 포함될 수 있음)
-        m = re.search(r"\{.*\}", text, re.DOTALL)
-        if m:
+        # fallback: flat JSON 객체 찾기 (중첩 없는 스키마)
+        for m in re.finditer(r"\{[^{}]+\}", text, re.DOTALL):
             try:
                 obj = json.loads(m.group())
                 if "verdict" in obj:
                     return obj
             except json.JSONDecodeError:
-                pass
+                continue
 
         return {"verdict": "PENDING", "reason": "JSON 파싱 실패", "source_url": ""}
