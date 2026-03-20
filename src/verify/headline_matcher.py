@@ -43,13 +43,17 @@ async def find_matching_headlines(
     if len(all_keywords) < 2:
         return []
 
-    # 날짜 범위 결정
-    ref_date = expected_date or prediction_date
-    if not ref_date:
+    # 날짜 범위: 예측일 이후 ~ 오늘 (과거 데이터 혼입 방지)
+    from datetime import date as _date
+
+    if prediction_date:
+        date_start = prediction_date
+    elif expected_date:
+        date_start = expected_date - timedelta(days=365)
+    else:
         return []
 
-    date_start = ref_date - timedelta(days=MATCH_WINDOW_DAYS)
-    date_end = ref_date + timedelta(days=MATCH_WINDOW_DAYS)
+    date_end = _date.today()
 
     # GIN 인덱스 활용: keywords && ARRAY[...] (overlap 연산자)
     rows = await conn.fetch("""
