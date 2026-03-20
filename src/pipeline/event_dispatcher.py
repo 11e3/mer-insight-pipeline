@@ -20,7 +20,7 @@ from src.collect.factory import get_collector
 from src.extract.realtime import extract_and_save
 from src.search.bm25_index import BM25Index
 from src.collect.news_collector import NewsCollector
-from src.verify import AutoVerifier, PredictionVerifier
+from src.verify import AutoVerifier
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -140,13 +140,6 @@ class EventDispatcher:
             except Exception as e:
                 log.error(f"자동 검증 오류: {e}")
 
-            # 3b. 나머지 수동 검증 내보내기
-            try:
-                verifier = PredictionVerifier(conn)
-                exported = await verifier.run()
-                log.info(f"수동 검증 대기 {exported}건 내보내기")
-            except Exception as e:
-                log.error(f"수동 검증 내보내기 오류: {e}")
 
         log.info("=== 일일 파이프라인 완료 ===")
 

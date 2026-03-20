@@ -62,11 +62,11 @@ async def test_run_pipeline_no_new_posts():
 
     collector = _make_collector(posts=[])
     mock_verifier = MagicMock()
-    mock_verifier.run = AsyncMock(return_value=0)
+    mock_verifier.run = AsyncMock(return_value={"auto_resolved": 0, "pending": 0, "errors": 0, "cost_usd": 0})
 
     with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
          patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
-         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+         patch("src.pipeline.event_dispatcher.AutoVerifier", return_value=mock_verifier):
         MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()
 
@@ -85,13 +85,13 @@ async def test_run_pipeline_with_new_posts():
     mock_conn.fetchval = AsyncMock(return_value="blog")
 
     mock_verifier = MagicMock()
-    mock_verifier.run = AsyncMock(return_value=0)
+    mock_verifier.run = AsyncMock(return_value={"auto_resolved": 0, "pending": 0, "errors": 0, "cost_usd": 0})
 
     with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
          patch("src.pipeline.event_dispatcher.extract_and_save",
                AsyncMock(return_value={"count": 3})) as mock_extract, \
          patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
-         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+         patch("src.pipeline.event_dispatcher.AutoVerifier", return_value=mock_verifier):
         MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()
 
@@ -107,11 +107,11 @@ async def test_run_pipeline_monitor_error():
     collector.check_new = AsyncMock(side_effect=Exception("monitor error"))
 
     mock_verifier = MagicMock()
-    mock_verifier.run = AsyncMock(return_value=2)
+    mock_verifier.run = AsyncMock(return_value={"auto_resolved": 2, "pending": 0, "errors": 0, "cost_usd": 0})
 
     with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
          patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
-         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+         patch("src.pipeline.event_dispatcher.AutoVerifier", return_value=mock_verifier):
         MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()
 
@@ -128,7 +128,7 @@ async def test_run_pipeline_verifier_error():
 
     with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
          patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
-         patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+         patch("src.pipeline.event_dispatcher.AutoVerifier", return_value=mock_verifier):
         MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()  # should not raise
 
