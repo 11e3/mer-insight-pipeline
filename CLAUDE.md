@@ -2,8 +2,8 @@
 
 ## 프로젝트 개요
 
-메르(ranto28) 네이버 블로그 모니터링 → Claude로 인사이트 추출 → 예측 수동 검증 파이프라인.
-PostgreSQL + pgvector 기반 하이브리드 검색 (BM25 + 벡터), 예측 수동 검증 (자동화 불가 — README 실험 결과 참조).
+다중 소스 경제 블로그 모니터링 → Claude로 인사이트 추출 → 뉴스 헤드라인 DB 기반 자동 검증 파이프라인.
+PostgreSQL + pgvector 기반 하이브리드 검색 (BM25 + 벡터). 검증은 3계층: 헤드라인 매칭 자동 → 데이터 API(예정) → 수동.
 
 ## 주요 명령어
 
@@ -32,6 +32,11 @@ docker compose up -d db
 
 # 대시보드
 streamlit run src/dashboard/app.py
+
+# 배치 검증 (Batch API)
+python -m scripts.ops.batch_verify create   # 매칭 + 배치 제출
+python -m scripts.ops.batch_verify status   # 진행 확인 + 결과 다운로드
+python -m scripts.ops.batch_verify apply    # 결과 DB 반영
 ```
 
 ## 핵심 Gotcha
@@ -60,14 +65,14 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - **로컬**: `event_dispatcher.py`가 APScheduler로 매일 01:00 단일 잡 실행
 - **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 수집 + 검증)
 
-### 예측 검증은 수동만 가능
-- API 자동 검증 실험 결과: 판정 상반(CORRECT↔INCORRECT) 발생 → DB 오염 위험
-- `verifier.py`는 검증 대기 예측을 **내보내기 + 텔레그램 알림**만 수행
-- 실제 판정은 claude.ai에서 수동으로 진행 후 `import_manual_verdicts.py`로 반영
-- 상세 실험 결과: README.md "Why Not Fully Automated?" 참조
-- **배치 크기 20건 제한** — 50건 이상 배치 시 ID-verdict 밀림 발생
-- **source_url 필수** — URL 없는 CORRECT/INCORRECT는 import 시 스킵
+### 예측 검증 (3계층)
+1. **자동 (헤드라인 매칭)**: `auto_verifier.py` — headline_matcher로 매칭 → Haiku verdict only (source_url은 코드에서 자동 할당, 모델에 URL 반환 요구하지 않음)
+2. **배치 자동**: `scripts/ops/batch_verify.py create/status/apply` — Batch API 50% 할인
+3. **수동**: `verifier.py`가 나머지를 내보내기 → claude.ai에서 검증 → `import_manual_verdicts.py`
+- **source_url 필수** — URL 없는 CORRECT/INCORRECT는 DB 반영 안 함
+- **UPDATE WHERE is_correct IS NULL** — 수동 verdict 덮어쓰기 방지
 - **grouped/ 폴더 import 금지** — 오염 원인 확인됨
+- 수동 배치 크기 20건 제한 (ID 밀림 방지)
 
 ### 뉴스 헤드라인 DB
 - `news_headlines` 테이블: 헤드라인 + source_url + keywords(TEXT[] GIN) + published_at
@@ -78,10 +83,12 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - event_dispatcher에서 매일 자동 수집 (파이프라인 step 2)
 
 ### 자동 검증 (AutoVerifier)
-- `src/verify/auto_verifier.py`: headline match → Haiku 1건씩 판정 → DB 반영
-- source_url 없는 CORRECT/INCORRECT는 DB 반영 안 함
-- daily_limit=200, CALL_DELAY=0.5
-- event_dispatcher step 3a에서 자동 실행, 3b에서 나머지 수동 내보내기
+- `src/verify/auto_verifier.py`: headline match → Haiku verdict + reason만 반환 → source_url은 최고 overlap 헤드라인에서 자동 할당
+- `scripts/ops/batch_verify.py`: Batch API로 일괄 검증 (50% 할인)
+- 키워드 불용어 필터 적용 (`_KO_STOPWORDS` in keyword_extractor.py)
+- 날짜 범위: `prediction_date + 1일 ~ 현재` (예측 당일 뉴스 제외)
+- `MIN_KEYWORD_OVERLAP = 3` (2는 false positive 많음)
+- daily_limit=200, event_dispatcher step 3a에서 자동 실행
 
 ### 예측 추출 형식 (신규)
 - `claim`: yes/no로 답할 수 있는 검증 가능한 명제
@@ -162,6 +169,8 @@ scripts/
 ├── reembed_all.py       # 전체 재임베딩 (모델 교체 시)
 ├── naver_blog_scraper.py # 블로그 스크래퍼
 ├── ops/                 # 데이터 운영 스크립트
+│   ├── batch_verify.py       # Batch API 일괄 검증 (create/status/apply)
+│   ├── backfill_news.py     # 뉴스 헤드라인 역사 백필
 │   ├── export_*.py      # 예측 내보내기 (round1~5)
 │   ├── import_*.py      # 수동 검증 결과 가져오기
 │   ├── fill_*.py        # expected_date 등 필드 채우기

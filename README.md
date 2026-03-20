@@ -83,7 +83,9 @@ web_search API로 예측을 1건씩 검증하면 건당 $0.035 (5,000건 = $175)
 
 ```
 수집: Google News RSS 15개 피드 → feedparser → kiwipiepy 키워드 추출 → news_headlines (GIN 인덱스)
-매칭: prediction.keywords ↔ headlines.keywords (±30일) → 매칭된 헤드라인 + claim → Batch API yes/no
+매칭: prediction_date+1일 ~ 오늘 범위에서 키워드 GIN 매칭 (MIN_OVERLAP=3, 불용어 필터)
+판정: 매칭된 헤드라인 → Haiku verdict+reason만 반환, source_url은 최고 overlap 헤드라인에서 자동 할당
+배치: scripts/ops/batch_verify.py create → status → apply (Batch API 50% 할인)
 ```
 
 | 항목 | 수치 |
@@ -142,6 +144,8 @@ web_search API로 예측을 1건씩 검증하면 건당 $0.035 (5,000건 = $175)
 | API + web_search 1건씩 (Haiku) | 80% | 1건 | $0.035 | 5,000건 = $175 |
 | **뉴스 DB + Batch API (설계)** | **TBD** | **TBD** | **$0.0003** | **5,000건 = ~$1.50** |
 | **claude.ai 수동 (Opus)** | **기준** | **0건** | **$0** | **구독 $20/월** |
+
+**실전 테스트 (과거 예측 2022-2024):** 100건 중 44건 매칭, 20건 Haiku 판정 → 10건 해결 (CORRECT 7, INCORRECT 3). **해결률 50%.** Batch API 1,211건 제출 완료, 처리 중.
 
 **근본 원인 — 비용:** web_search 결과가 input 토큰으로 과금 (건당 30K~100K 토큰). 뉴스 DB 방식은 헤드라인 텍스트(~100 토큰)만 넣으므로 비용이 99% 절감됩니다.
 
