@@ -217,7 +217,6 @@ async def test_get_active_collectors_unknown_type():
         {"source_type": "unknown", "name": "test", "config": "{}"},
     ])
 
-    from src.collect.factory import get_collector
     with patch("src.pipeline.event_dispatcher.get_collector", side_effect=ValueError("Unknown")):
         collectors = await d._get_active_collectors(mock_conn)
 
