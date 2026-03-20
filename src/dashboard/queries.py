@@ -74,10 +74,23 @@ def load_all_predictions():
         SELECT
             mp.prediction_date, mp.prediction_text, mp.predicted_direction,
             mp.target_asset, mp.is_correct, mp.actual_outcome, mp.source_url,
-            mp.verification_date, p.url AS post_url
+            mp.verification_date, p.url AS post_url,
+            COALESCE(s.name, 'mer_ranto28') AS source_name
         FROM mer_predictions mp
         LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
         LEFT JOIN mer_posts p ON p.id = mi.post_id
+        LEFT JOIN sources s ON s.id = mp.source_id
         WHERE mp.skipped_at IS NULL
         ORDER BY mp.prediction_date DESC
+    """)
+
+
+@st.cache_data(ttl=300)
+def load_sources():
+    """활성 소스 목록."""
+    return _fetchall("""
+        SELECT name, source_type, platform, url, is_active,
+            (SELECT COUNT(*) FROM mer_predictions WHERE source_id = sources.id) AS prediction_count
+        FROM sources
+        ORDER BY name
     """)

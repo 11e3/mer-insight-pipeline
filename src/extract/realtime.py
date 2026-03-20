@@ -12,7 +12,7 @@ import asyncpg
 from src.config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from src.embed import Embedder, vec_str
 from src.extract.parse_results import INSIGHT_TYPE_MAP, extract_content
-from src.config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE
+from src.config.prompts import INSIGHT_SYSTEM_PROMPT, INSIGHT_USER_TEMPLATE, get_extraction_prompt
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ async def extract_and_save(
     conn: asyncpg.Connection,
     embedder: Embedder,
     post: dict,
+    source_type: str = "blog",
 ) -> dict:
     """
     단건 포스트의 인사이트를 추출하여 mer_insights에 저장.
@@ -43,7 +44,7 @@ async def extract_and_save(
         resp = await client.messages.create(
             model=MODEL_HAIKU,
             max_tokens=4096,
-            system=INSIGHT_SYSTEM_PROMPT,
+            system=get_extraction_prompt(source_type),
             messages=[{
                 "role": "user",
                 "content": INSIGHT_USER_TEMPLATE.format(

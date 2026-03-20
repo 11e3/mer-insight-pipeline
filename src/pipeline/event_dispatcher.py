@@ -1,5 +1,5 @@
 """
-Event Dispatcher: 메르 글 수집 → 예측 추출 → 자동 검증
+Event Dispatcher: 다중 소스 수집 → 예측 추출 → 뉴스 수집 → 검증
 
 매일 01:00 단일 잡으로 전체 파이프라인 실행.
 
@@ -16,7 +16,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from src.config.settings import DATABASE_URL
 from src.embed import get_embedder
-from src.collect.mer_monitor import MerMonitor
+from src.collect.factory import get_collector
 from src.extract.realtime import extract_and_save
 from src.search.bm25_index import BM25Index
 from src.collect.news_collector import NewsCollector
@@ -77,27 +77,49 @@ class EventDispatcher:
     # --- 파이프라인 ---
 
     async def _run_pipeline(self):
-        """1. 메르 신규 글 → 2. 예측 검증 (매 실행마다 커넥션 acquire/release)"""
+        """1. 소스별 신규 글 수집 → 2. 뉴스 수집 → 3. 예측 검증"""
         log.info("=== 일일 파이프라인 시작 ===")
 
         async with self.pool.acquire() as conn:
-            # 1. 메르 신규 글 수집 + 예측 추출
+            # 1. 활성 소스별 신규 글 수집 + 예측 추출
+            any_new = False
             try:
-                monitor = MerMonitor(conn)
-                new_posts = await monitor.check_new()
-                if new_posts:
-                    for post in new_posts:
-                        extracted = await extract_and_save(conn, self.embedder, post)
-                        log.info(f"  인사이트 {extracted['count']}개 추출 ({post.get('title', '')[:40]})")
-                    log.info(f"메르 신규 글 {len(new_posts)}건 처리 완료")
-                    # BM25 인덱스 갱신
-                    await self.bm25_index.build(conn)
-                    self.bm25_index.save(BM25_CACHE)
-                    log.info("BM25 인덱스 갱신 완료")
-                else:
-                    log.info("메르 신규 글 없음")
+                collectors = await self._get_active_collectors(conn)
+                for collector in collectors:
+                    try:
+                        new_posts = await collector.check_new(conn)
+                        if new_posts:
+                            source_type = await conn.fetchval(
+                                "SELECT source_type FROM sources WHERE name = $1",
+                                collector.source_name,
+                            ) or "blog"
+                            for post in new_posts:
+                                post_dict = {
+                                    "log_no": post.external_id,
+                                    "title": post.title,
+                                    "date": post.published_at,
+                                    "url": post.url,
+                                    "content_text": post.content_text,
+                                }
+                                extracted = await extract_and_save(
+                                    conn, self.embedder, post_dict,
+                                    source_type=source_type,
+                                )
+                                log.info(
+                                    f"  [{collector.source_name}] "
+                                    f"인사이트 {extracted['count']}개 추출 ({post.title[:40]})"
+                                )
+                            log.info(f"[{collector.source_name}] 신규 {len(new_posts)}건 처리 완료")
+                            any_new = True
+                    except Exception as e:
+                        log.error(f"[{collector.source_name}] 수집 오류: {e}")
             except Exception as e:
-                log.error(f"메르 글 수집 오류: {e}")
+                log.error(f"소스 로딩 오류: {e}")
+
+            if any_new:
+                await self.bm25_index.build(conn)
+                self.bm25_index.save(BM25_CACHE)
+                log.info("BM25 인덱스 갱신 완료")
 
             # 2. 뉴스 헤드라인 수집
             try:
@@ -117,6 +139,22 @@ class EventDispatcher:
                 log.error(f"예측 검증 오류: {e}")
 
         log.info("=== 일일 파이프라인 완료 ===")
+
+    async def _get_active_collectors(self, conn: asyncpg.Connection):
+        """sources 테이블에서 active 소스의 Collector 인스턴스 목록 반환."""
+        rows = await conn.fetch(
+            "SELECT source_type, name, config FROM sources WHERE is_active = TRUE"
+        )
+        collectors = []
+        for row in rows:
+            try:
+                import json
+                config = row["config"] if isinstance(row["config"], dict) else json.loads(row["config"] or "{}")
+                collector = get_collector(row["source_type"], row["name"], config)
+                collectors.append(collector)
+            except ValueError as e:
+                log.warning(f"Collector 생성 실패 ({row['name']}): {e}")
+        return collectors
 
 
 if __name__ == "__main__":

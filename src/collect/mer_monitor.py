@@ -1,6 +1,8 @@
 """
 메르 블로그 신규 글 감지.
 네이버 RSS를 우선 사용, 실패 시 PostTitleListAsync API 폴백.
+
+SourceCollector 프로토콜 구현.
 """
 
 import asyncio
@@ -11,6 +13,7 @@ import asyncpg
 import requests
 from xml.etree import ElementTree as ET
 
+from src.collect.source_protocol import CollectedPost
 from src.config.settings import BLOG_ID, BLOG_RSS
 
 log = logging.getLogger(__name__)
@@ -23,11 +26,24 @@ HEADERS = {
 
 class MerMonitor:
 
-    def __init__(self, conn: asyncpg.Connection):
-        self.conn = conn
+    source_name: str = "mer_ranto28"
 
-    async def check_new(self) -> list[dict]:
-        """DB에 없는 신규 글만 반환 (본문 포함)."""
+    def __init__(self, conn: asyncpg.Connection | None = None, *,
+                 source_name: str = "mer_ranto28", config: dict | None = None):
+        # backward compat: 기존 MerMonitor(conn) 호출 지원
+        self._legacy_conn = conn
+        self.source_name = source_name
+        self._config = config or {}
+
+    async def check_new(self, conn: asyncpg.Connection | None = None) -> list[CollectedPost]:
+        """DB에 없는 신규 글만 반환 (본문 포함).
+
+        SourceCollector 프로토콜: check_new(conn) -> list[CollectedPost]
+        """
+        conn = conn or self._legacy_conn
+        if conn is None:
+            raise RuntimeError("conn이 필요합니다")
+
         log_nos = await asyncio.to_thread(self._get_recent_log_nos)
         if not log_nos:
             return []
@@ -35,7 +51,7 @@ class MerMonitor:
         # DB에 이미 있는 log_no 제외
         existing = {
             r["log_no"] for r in
-            await self.conn.fetch(
+            await conn.fetch(
                 "SELECT log_no FROM mer_posts WHERE log_no = ANY($1)",
                 log_nos
             )
@@ -47,10 +63,17 @@ class MerMonitor:
 
         posts = []
         for log_no in new_log_nos:
-            post = await asyncio.to_thread(self._scrape_post, log_no)
-            if post:
+            raw = await asyncio.to_thread(self._scrape_post, log_no)
+            if raw:
+                post = CollectedPost(
+                    external_id=raw["log_no"],
+                    title=raw["title"],
+                    content_text=raw["content_text"],
+                    url=raw["url"],
+                    published_at=raw["date"].isoformat() if raw.get("date") else None,
+                )
+                await self._save_post(conn, raw)
                 posts.append(post)
-                await self._save_post(post)
                 await asyncio.sleep(0.5)
 
         return posts
@@ -80,7 +103,7 @@ class MerMonitor:
                 f"&categoryNo=&parentCategoryNo=&countPerPage=30"
             )
             resp = requests.get(url, headers=HEADERS, timeout=10)
-            return re.findall(r'logNo[\"=:]+(\d{10,})', resp.text)
+            return re.findall(r'logNo["=:]+(\d{10,})', resp.text)
         except Exception as e:
             log.warning(f"PostTitleListAsync API 실패: {e}")
             return []
@@ -126,13 +149,18 @@ class MerMonitor:
             "content_text": content_text,
         }
 
-    async def _save_post(self, post: dict):
-        await self.conn.execute("""
-            INSERT INTO mer_posts (log_no, title, date, url, content_text, word_count)
-            VALUES ($1, $2, $3, $4, $5, $6)
+    async def _save_post(self, conn: asyncpg.Connection, post: dict):
+        # source_id 조회
+        source_id = await conn.fetchval(
+            "SELECT id FROM sources WHERE name = $1", self.source_name
+        )
+        await conn.execute("""
+            INSERT INTO mer_posts (log_no, title, date, url, content_text, word_count, source_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (log_no) DO NOTHING
         """,
             post["log_no"], post["title"], post.get("date"),
             post["url"], post["content_text"],
             len(post["content_text"].replace(" ", "").replace("\n", "")),
+            source_id,
         )

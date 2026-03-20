@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
     os.environ.setdefault(_var, "test")
 
+from src.collect.source_protocol import CollectedPost
+
 
 class FakePoolAcquire:
     """Fake pool.acquire() that acts as an async context manager."""
@@ -45,39 +47,52 @@ def _make_dispatcher():
     return d, mock_conn
 
 
+def _make_collector(source_name="mer_ranto28", posts=None):
+    """Mock SourceCollector."""
+    collector = MagicMock()
+    collector.source_name = source_name
+    collector.check_new = AsyncMock(return_value=posts or [])
+    return collector
+
+
 # ─── _run_pipeline ───────────────────────────────────────────────────────────
 
 async def test_run_pipeline_no_new_posts():
     d, mock_conn = _make_dispatcher()
 
-    mock_monitor = MagicMock()
-    mock_monitor.check_new = AsyncMock(return_value=[])
-
+    collector = _make_collector(posts=[])
     mock_verifier = MagicMock()
     mock_verifier.run = AsyncMock(return_value=0)
 
-    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+    with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
+         patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
          patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()
 
-    mock_monitor.check_new.assert_called_once()
+    collector.check_new.assert_called_once()
     mock_verifier.run.assert_called_once()
 
 
 async def test_run_pipeline_with_new_posts():
     d, mock_conn = _make_dispatcher()
 
-    posts = [{"log_no": "111", "title": "테스트", "content_text": "내용"}]
-    mock_monitor = MagicMock()
-    mock_monitor.check_new = AsyncMock(return_value=posts)
+    posts = [CollectedPost(
+        external_id="111", title="테스트", content_text="내용",
+        url="https://blog.naver.com/ranto28/111",
+    )]
+    collector = _make_collector(posts=posts)
+    mock_conn.fetchval = AsyncMock(return_value="blog")
 
     mock_verifier = MagicMock()
     mock_verifier.run = AsyncMock(return_value=0)
 
-    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+    with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
          patch("src.pipeline.event_dispatcher.extract_and_save",
                AsyncMock(return_value={"count": 3})) as mock_extract, \
+         patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
          patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()
 
     mock_extract.assert_called_once()
@@ -88,14 +103,16 @@ async def test_run_pipeline_with_new_posts():
 async def test_run_pipeline_monitor_error():
     d, mock_conn = _make_dispatcher()
 
-    mock_monitor = MagicMock()
-    mock_monitor.check_new = AsyncMock(side_effect=Exception("monitor error"))
+    collector = _make_collector()
+    collector.check_new = AsyncMock(side_effect=Exception("monitor error"))
 
     mock_verifier = MagicMock()
     mock_verifier.run = AsyncMock(return_value=2)
 
-    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+    with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
+         patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
          patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()
 
     mock_verifier.run.assert_called_once()
@@ -104,14 +121,15 @@ async def test_run_pipeline_monitor_error():
 async def test_run_pipeline_verifier_error():
     d, mock_conn = _make_dispatcher()
 
-    mock_monitor = MagicMock()
-    mock_monitor.check_new = AsyncMock(return_value=[])
+    collector = _make_collector(posts=[])
 
     mock_verifier = MagicMock()
     mock_verifier.run = AsyncMock(side_effect=Exception("verify error"))
 
-    with patch("src.pipeline.event_dispatcher.MerMonitor", return_value=mock_monitor), \
+    with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
+         patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \
          patch("src.pipeline.event_dispatcher.PredictionVerifier", return_value=mock_verifier):
+        MockNews.return_value.run_daily = AsyncMock(return_value=0)
         await d._run_pipeline()  # should not raise
 
 
@@ -175,3 +193,32 @@ async def test_init_builds_bm25_on_cache_miss():
 
     mock_bm25.build.assert_called_once()
     mock_bm25.save.assert_called_once()
+
+
+# ─── _get_active_collectors ──────────────────────────────────────────────────
+
+async def test_get_active_collectors():
+    d, mock_conn = _make_dispatcher()
+    mock_conn.fetch = AsyncMock(return_value=[
+        {"source_type": "blog", "name": "mer_ranto28", "config": "{}"},
+    ])
+
+    with patch("src.pipeline.event_dispatcher.get_collector") as mock_factory:
+        mock_factory.return_value = _make_collector()
+        collectors = await d._get_active_collectors(mock_conn)
+
+    assert len(collectors) == 1
+    mock_factory.assert_called_once_with("blog", "mer_ranto28", {})
+
+
+async def test_get_active_collectors_unknown_type():
+    d, mock_conn = _make_dispatcher()
+    mock_conn.fetch = AsyncMock(return_value=[
+        {"source_type": "unknown", "name": "test", "config": "{}"},
+    ])
+
+    from src.collect.factory import get_collector
+    with patch("src.pipeline.event_dispatcher.get_collector", side_effect=ValueError("Unknown")):
+        collectors = await d._get_active_collectors(mock_conn)
+
+    assert len(collectors) == 0

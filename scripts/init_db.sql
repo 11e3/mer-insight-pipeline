@@ -1,7 +1,24 @@
 -- mer-insight-pipeline DB 초기화
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- ─── 메르 포스트 원본 ─────────────────────────────────────────────────────────
+-- ─── 소스 관리 ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS sources (
+    id          SERIAL PRIMARY KEY,
+    source_type VARCHAR(20) NOT NULL,    -- 'blog', 'twitter', 'report'
+    name        VARCHAR(100) NOT NULL UNIQUE,  -- 'mer_ranto28', 'checkmatey'
+    platform    VARCHAR(50),             -- 'naver_blog', 'x_twitter', 'web'
+    url         TEXT,
+    config      JSONB DEFAULT '{}',
+    is_active   BOOLEAN DEFAULT TRUE,
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- 기본 소스: 메르 블로그
+INSERT INTO sources (source_type, name, platform, url)
+VALUES ('blog', 'mer_ranto28', 'naver_blog', 'https://blog.naver.com/ranto28')
+ON CONFLICT (name) DO NOTHING;
+
+-- ─── 포스트 원본 ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS mer_posts (
     id          SERIAL PRIMARY KEY,
     log_no      VARCHAR(20) UNIQUE NOT NULL,
@@ -12,6 +29,7 @@ CREATE TABLE IF NOT EXISTS mer_posts (
     image_urls  TEXT[],
     tags        TEXT[],
     word_count  INTEGER,
+    source_id   INTEGER REFERENCES sources(id),
     created_at  TIMESTAMP DEFAULT NOW()
 );
 
@@ -54,6 +72,7 @@ CREATE TABLE IF NOT EXISTS mer_predictions (
     verification_date   DATE,
     actual_outcome      TEXT,
     source_url          TEXT,             -- 검증 근거 링크
+    source_id           INTEGER REFERENCES sources(id),
     is_correct          BOOLEAN,
     skipped_at          DATE,
     expected_date       DATE,         -- 미래 예측의 예상 실현 시점 (해당 날짜까지 검증 건너뜀)

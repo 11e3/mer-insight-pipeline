@@ -1,5 +1,14 @@
 # ─── Batch API: 인사이트 추출 ────────────────────────────────────────────────
 
+# 소스 타입별 프롬프트 매핑
+PROMPTS_BY_SOURCE_TYPE: dict[str, str] = {}
+
+
+def get_extraction_prompt(source_type: str = "blog") -> str:
+    """소스 타입에 맞는 추출 프롬프트 반환."""
+    return PROMPTS_BY_SOURCE_TYPE.get(source_type, INSIGHT_SYSTEM_PROMPT)
+
+
 INSIGHT_SYSTEM_PROMPT = """\
 당신은 경제/금융 블로그 분석 전문가입니다.
 주어진 블로그 포스트에서 4가지 유형의 인사이트를 추출합니다.
@@ -120,3 +129,6 @@ ENTITY_EXTRACT_PROMPT = """\
 {title}
 {content_snippet}
 """
+
+# 기본 등록
+PROMPTS_BY_SOURCE_TYPE["blog"] = INSIGHT_SYSTEM_PROMPT
