@@ -261,12 +261,12 @@ if all_preds:
                 parts.append(f"검증일: {r['verification_date']}")
             st.markdown(" | ".join(parts))
 
-            source_url = r.get("source_url") or ""
             outcome = r.get("actual_outcome") or ""
+            source_url = r.get("source_url") or ""
+            if outcome:
+                st.markdown(f"**근거:** {outcome}")
             if source_url:
                 st.markdown(f"📎 [검증 근거]({source_url})")
-            elif outcome:
-                st.markdown(f"**근거:** {outcome}")
 else:
     st.info("예측 데이터가 없습니다.")
 
