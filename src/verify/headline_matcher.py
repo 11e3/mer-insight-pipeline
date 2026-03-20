@@ -43,14 +43,13 @@ async def find_matching_headlines(
         return []
 
     # 날짜 범위: 예측일 이후 ~ 오늘 (과거 데이터 혼입 방지)
-    from datetime import date as _date
-
     if prediction_date:
         date_start = prediction_date + timedelta(days=1)  # 예측 당일 뉴스 제외
     else:
         return []  # prediction_date NULL이면 매칭 건너뛰기
 
-    date_end = _date.today()
+    from datetime import datetime as _datetime
+    date_end = _datetime.now()  # date → datetime (date는 00:00:00으로 캐스트돼 오늘 헤드라인 제외됨)
 
     # GIN 인덱스 활용: keywords && ARRAY[...] (overlap 연산자)
     rows = await conn.fetch("""

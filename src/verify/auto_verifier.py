@@ -75,7 +75,7 @@ class AutoVerifier:
                             actual_outcome = $2,
                             source_url = $3,
                             verification_date = CURRENT_DATE
-                        WHERE id = $4
+                        WHERE id = $4 AND is_correct IS NULL
                     """, is_correct, reason, source_url, match["prediction_id"])
                     result["auto_resolved"] += 1
                 elif verdict in ("CORRECT", "INCORRECT") and not source_url:
@@ -153,13 +153,14 @@ class AutoVerifier:
         except json.JSONDecodeError:
             pass
 
-        # fallback: JSON 객체 찾기
-        for m in re.finditer(r"\{[^{}]+\}", text):
+        # fallback: greedy JSON 객체 찾기 (reason에 {}가 포함될 수 있음)
+        m = re.search(r"\{.*\}", text, re.DOTALL)
+        if m:
             try:
                 obj = json.loads(m.group())
                 if "verdict" in obj:
                     return obj
             except json.JSONDecodeError:
-                continue
+                pass
 
         return {"verdict": "PENDING", "reason": "JSON 파싱 실패", "source_url": ""}
