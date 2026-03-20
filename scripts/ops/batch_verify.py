@@ -10,6 +10,7 @@ Usage:
 import asyncio
 import json
 import os
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -28,6 +29,24 @@ from src.verify.prompt import AUTO_VERIFY_MODEL, AUTO_VERIFY_SYSTEM_PROMPT, AUTO
 from src.verify.auto_verifier import AutoVerifier
 
 BATCH_DIR = Path("data/batch_verify")
+
+
+def _linkify_headlines(reason: str, headlines: list[dict]) -> str:
+    """reason 텍스트의 '헤드라인N'을 [헤드라인 요약](URL) 마크다운 링크로 치환."""
+    if not headlines:
+        return reason
+
+    def _replace(m):
+        # "헤드라인1", "헤드라인 1", "헤드라인1번" 등에서 숫자 추출
+        idx = int(m.group(1)) - 1  # 1-based → 0-based
+        if 0 <= idx < len(headlines):
+            h = headlines[idx]
+            title = h["headline"][:30]
+            url = h["source_url"]
+            return f"[{title}]({url})"
+        return m.group(0)
+
+    return re.sub(r"헤드라인\s*(\d+)(?:번)?", _replace, reason)
 BATCH_DIR.mkdir(parents=True, exist_ok=True)
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -79,10 +98,14 @@ async def create():
             }
             f.write(json.dumps(request, ensure_ascii=False) + "\n")
 
-            # source_url 매핑 저장
+            # 헤드라인 매핑 저장 (후처리에서 reason 텍스트의 "헤드라인N"을 링크로 치환)
             match_map[custom_id] = {
                 "prediction_id": m["prediction_id"],
                 "source_url": m["headlines"][0]["source_url"] if m.get("headlines") else "",
+                "headlines": [
+                    {"headline": h["headline"], "source_url": h["source_url"]}
+                    for h in m.get("headlines", [])
+                ],
             }
 
     # match_map 저장
@@ -171,6 +194,10 @@ async def apply():
             verdict_data = AutoVerifier._parse_json(raw_text)
             verdict = verdict_data.get("verdict", "PENDING")
             reason = verdict_data.get("reason", "")
+
+            # "헤드라인N"을 실제 마크다운 링크로 치환
+            headlines = mapping.get("headlines", [])
+            reason = _linkify_headlines(reason, headlines)
 
             if verdict in ("CORRECT", "INCORRECT") and source_url:
                 is_correct = verdict == "CORRECT"

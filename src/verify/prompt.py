@@ -23,10 +23,11 @@ AUTO_VERIFY_SYSTEM_PROMPT = """\
 
 규칙:
 - 확실한 근거 없으면 반드시 PENDING
-- reason은 한 줄로 구체적 근거 (수치 포함 권장)
 - 제공된 헤드라인은 이미 예측일 이후 것만 필터링된 상태다. 모든 헤드라인을 검증 근거로 활용하라.
+- reason에 근거를 들 때 반드시 "헤드라인N" 형태로 인용하라 (N은 번호). URL은 넣지 마라.
+  예: "헤드라인3에서 BOJ 금리 0.75% 인상 확인, 헤드라인7에서 엔화 강세 전환"
 JSON만 출력:
-{"verdict": "CORRECT|INCORRECT|PENDING", "reason": "판단 근거"}
+{"verdict": "CORRECT|INCORRECT|PENDING", "reason": "판단 근거 (헤드라인N 인용 필수)"}
 """
 
 AUTO_VERIFY_USER_TEMPLATE = """\
