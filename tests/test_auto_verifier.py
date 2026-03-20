@@ -106,7 +106,11 @@ async def test_run_pending_skips_db():
 
     assert result["auto_resolved"] == 0
     assert result["pending"] == 1
-    conn.execute.assert_not_called()
+    # PENDING 시 skipped_at만 마킹 (is_correct는 변경 안 함)
+    conn.execute.assert_called_once_with(
+        "UPDATE mer_predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
+        MATCH_CORRECT["prediction_id"],
+    )
 
 
 async def test_run_always_uses_first_headline_url():

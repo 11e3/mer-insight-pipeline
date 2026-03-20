@@ -78,6 +78,11 @@ class AutoVerifier:
                         log.warning(f"  #{match['prediction_id']}: 이미 검증됨 — 스킵")
                         result["pending"] += 1
                 else:
+                    # PENDING → skipped_at 마킹 (7일간 재시도 방지)
+                    await self.conn.execute(
+                        "UPDATE mer_predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
+                        match["prediction_id"],
+                    )
                     result["pending"] += 1
 
             except Exception as e:

@@ -99,6 +99,7 @@ async def batch_match(
         FROM mer_predictions
         WHERE is_correct IS NULL
           AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
+          AND (skipped_at IS NULL OR skipped_at < CURRENT_DATE - INTERVAL '7 days')
         ORDER BY prediction_date DESC
         LIMIT $1
     """, prefetch)
