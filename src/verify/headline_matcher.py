@@ -91,7 +91,7 @@ async def batch_match(
                "headlines": [matched headlines]}]
     """
     rows = await conn.fetch("""
-        SELECT id, prediction_text, target_asset, prediction_date, expected_date
+        SELECT id, prediction_text, target_asset, predicted_direction, prediction_date, expected_date
         FROM mer_predictions
         WHERE is_correct IS NULL
           AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
@@ -114,6 +114,8 @@ async def batch_match(
                 "prediction_id": r["id"],
                 "prediction_text": r["prediction_text"],
                 "target_asset": r["target_asset"],
+                "predicted_direction": r["predicted_direction"],
+                "prediction_date": str(r["prediction_date"] or ""),
                 "headlines": headlines,
             })
 
