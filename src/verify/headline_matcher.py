@@ -1,7 +1,7 @@
 """예측 ↔ 헤드라인 매칭 — 키워드 기반.
 
 prediction의 키워드와 news_headlines의 키워드를 GIN 인덱스로 매칭.
-expected_date 전후 ±30일 범위 내 헤드라인만 대상.
+검색 범위: prediction_date ~ 오늘 (예측일 이후 뉴스만 검증 근거로 사용).
 """
 
 import logging
@@ -13,7 +13,6 @@ from src.collect.keyword_extractor import extract_keywords
 
 log = logging.getLogger(__name__)
 
-MATCH_WINDOW_DAYS = 30  # expected_date 전후 검색 범위
 MIN_KEYWORD_OVERLAP = 2  # 최소 키워드 겹침 수
 
 
@@ -120,6 +119,7 @@ async def batch_match(
                 "target_asset": r["target_asset"],
                 "predicted_direction": r["predicted_direction"],
                 "prediction_date": str(r["prediction_date"] or ""),
+                "expected_date": str(r["expected_date"] or "미지정"),
                 "headlines": headlines,
             })
 

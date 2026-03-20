@@ -80,7 +80,7 @@ async def test_run_single_incorrect():
     v, conn = _make_verifier()
 
     api_resp = _mock_api_response(
-        '{"verdict": "INCORRECT", "reason": "BOJ kept rate", "source_url": "https://example.com/2"}'
+        '{"verdict": "INCORRECT", "reason": "BOJ kept rate", "source_url": "https://example.com/1"}'
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
@@ -204,6 +204,23 @@ async def test_cost_tracking():
 
     # Haiku: 1000 * 1.0/1M + 100 * 5.0/1M = 0.001 + 0.0005 = 0.0015
     assert abs(result["cost_usd"] - 0.0015) < 0.0001
+
+
+async def test_run_hallucinated_url_skips():
+    """Haiku가 헤드라인에 없는 URL을 반환하면 스킵."""
+    v, conn = _make_verifier()
+
+    api_resp = _mock_api_response(
+        '{"verdict": "CORRECT", "reason": "ok", "source_url": "https://hallucinated.com/fake"}'
+    )
+    v.client.messages.create = AsyncMock(return_value=api_resp)
+
+    with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=[MATCH_CORRECT])):
+        result = await v.run()
+
+    assert result["auto_resolved"] == 0
+    assert result["pending"] == 1
+    conn.execute.assert_not_called()
 
 
 def test_parse_json_clean():

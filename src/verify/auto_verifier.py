@@ -60,6 +60,13 @@ class AutoVerifier:
                 source_url = verdict_data.get("source_url", "")
                 reason = verdict_data.get("reason", "")
 
+                # source_url 검증: 헤드라인 URL 목록에 있는지 확인
+                if source_url and hasattr(self, "_valid_urls") and source_url not in self._valid_urls:
+                    log.warning(
+                        f"  #{match['prediction_id']}: source_url 환각 감지 — {source_url[:60]}"
+                    )
+                    source_url = ""  # 환각 URL은 비움 → PENDING 처리됨
+
                 if verdict in ("CORRECT", "INCORRECT") and source_url:
                     is_correct = verdict == "CORRECT"
                     await self.conn.execute("""
@@ -100,16 +107,23 @@ class AutoVerifier:
 
     async def _verify_single(self, match: dict) -> dict:
         """단일 예측에 대해 Haiku 호출 → verdict 반환."""
+        from datetime import date as _date
+
         headlines_text = "\n".join(
             f"{i+1}. {h['headline']} ({h['published_at']}, {h['source_url']})"
             for i, h in enumerate(match["headlines"])
         )
 
+        # 유효한 source_url 목록 (검증용)
+        self._valid_urls = {h["source_url"] for h in match["headlines"] if h.get("source_url")}
+
         user_msg = AUTO_VERIFY_USER_TEMPLATE.format(
+            today=_date.today().isoformat(),
             prediction_text=match["prediction_text"],
             target_asset=match.get("target_asset", "") or "",
             predicted_direction=match.get("predicted_direction", "neutral"),
             prediction_date=match.get("prediction_date", ""),
+            expected_date=match.get("expected_date", "미지정"),
             headlines_text=headlines_text,
         )
 

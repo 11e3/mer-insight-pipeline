@@ -23,17 +23,21 @@ AUTO_VERIFY_SYSTEM_PROMPT = """\
 
 규칙:
 - 확실한 근거 없으면 반드시 PENDING
-- source_url은 판정 근거가 되는 헤드라인의 URL을 그대로 사용
+- source_url은 반드시 [매칭된 뉴스 헤드라인]에 있는 URL 중 하나를 그대로 복사. 절대 다른 URL을 만들지 마라.
 - reason은 한 줄로 구체적 근거 (수치 포함 권장)
+- 예측일 이전 헤드라인은 무시하라 — 예측일 이후 사건만이 검증 근거다
 
 JSON만 출력:
 {"verdict": "CORRECT|INCORRECT|PENDING", "reason": "판단 근거", "source_url": "URL (PENDING이면 빈 문자열)"}
 """
 
 AUTO_VERIFY_USER_TEMPLATE = """\
+오늘 날짜: {today}
+
 [예측]
 {prediction_text}
 대상: {target_asset}, 방향: {predicted_direction}, 예측일: {prediction_date}
+검증 기한: {expected_date}
 
 [매칭된 뉴스 헤드라인]
 {headlines_text}
