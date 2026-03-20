@@ -23,6 +23,11 @@ scraped_posts/
 *.sql
 *.sql.gz
 !scripts/init_db.sql
+!scripts/migrations/*.sql
+!scripts/migrate_vector_dim.sql
+
+# Eval/experiment results (generated)
+results/
 
 # Batch results
 eval_data/gold_review.txt
@@ -32,6 +37,7 @@ eval_data/gold_review.txt
 coverage.xml
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 htmlcov/
 
 # OS
