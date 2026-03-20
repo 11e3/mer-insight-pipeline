@@ -262,13 +262,8 @@ if all_preds:
             st.markdown(" | ".join(parts))
 
             outcome = r.get("actual_outcome") or ""
-            source_url = r.get("source_url") or ""
-            if outcome and source_url:
-                st.markdown(f"**근거:** {outcome}\n\n📎 [근거 기사 보기]({source_url})")
-            elif outcome:
+            if outcome:
                 st.markdown(f"**근거:** {outcome}")
-            elif source_url:
-                st.markdown(f"📎 [근거 기사 보기]({source_url})")
 else:
     st.info("예측 데이터가 없습니다.")
 
