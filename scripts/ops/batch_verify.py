@@ -211,6 +211,11 @@ async def apply():
                 else:
                     pending += 1
             else:
+                # PENDING → skipped_at 마킹 (7일간 재시도 방지)
+                await conn.execute(
+                    "UPDATE mer_predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
+                    prediction_id,
+                )
                 pending += 1
 
     await conn.close()
