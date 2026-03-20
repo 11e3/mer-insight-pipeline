@@ -161,7 +161,7 @@ async def apply():
                 past += 1
 
     await conn.close()
-    print(f"=== 결과 ===")
+    print("=== 결과 ===")
     print(f"  채워진 건: {filled} (미래: {future}, 과거: {past})")
     print(f"  에러: {errors}")
 

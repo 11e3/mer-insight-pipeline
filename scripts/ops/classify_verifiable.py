@@ -157,7 +157,7 @@ async def apply():
                 unverifiable += 1
 
     await conn.close()
-    print(f"=== 분류 결과 ===")
+    print("=== 분류 결과 ===")
     print(f"  검증 가능: {verifiable}건")
     print(f"  검증 불가: {unverifiable}건")
     print(f"  에러: {errors}건")

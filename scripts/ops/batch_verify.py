@@ -9,7 +9,6 @@ Usage:
 
 import asyncio
 import json
-import os
 import re
 import sys
 from datetime import date
@@ -220,7 +219,7 @@ async def apply():
 
     await conn.close()
 
-    print(f"=== 배치 검증 결과 ===")
+    print("=== 배치 검증 결과 ===")
     print(f"  반영: {resolved}건")
     print(f"  보류(PENDING): {pending}건")
     print(f"  에러: {errors}건")
