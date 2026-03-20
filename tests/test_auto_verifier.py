@@ -179,7 +179,7 @@ async def test_verify_single_prompt_format():
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
-    await v._verify_single(MATCH_CORRECT)
+    result, valid_urls = await v._verify_single(MATCH_CORRECT)
 
     call_args = v.client.messages.create.call_args
     user_msg = call_args[1]["messages"][0]["content"]

@@ -49,7 +49,7 @@ class AutoVerifier:
 
         for i, match in enumerate(matches[:daily_limit]):
             try:
-                verdict_data = await self._verify_single(match)
+                verdict_data, valid_urls = await self._verify_single(match)
 
                 input_t = verdict_data.pop("_input_tokens", 0)
                 output_t = verdict_data.pop("_output_tokens", 0)
@@ -61,7 +61,7 @@ class AutoVerifier:
                 reason = verdict_data.get("reason", "")
 
                 # source_url 검증: 헤드라인 URL 목록에 있는지 확인
-                if source_url and hasattr(self, "_valid_urls") and source_url not in self._valid_urls:
+                if source_url and valid_urls and source_url not in valid_urls:
                     log.warning(
                         f"  #{match['prediction_id']}: source_url 환각 감지 — {source_url[:60]}"
                     )
@@ -105,8 +105,8 @@ class AutoVerifier:
         )
         return result
 
-    async def _verify_single(self, match: dict) -> dict:
-        """단일 예측에 대해 Haiku 호출 → verdict 반환."""
+    async def _verify_single(self, match: dict) -> tuple[dict, set]:
+        """단일 예측에 대해 Haiku 호출 → (verdict_data, valid_urls) 반환."""
         from datetime import date as _date
 
         headlines_text = "\n".join(
@@ -114,8 +114,8 @@ class AutoVerifier:
             for i, h in enumerate(match["headlines"])
         )
 
-        # 유효한 source_url 목록 (검증용)
-        self._valid_urls = {h["source_url"] for h in match["headlines"] if h.get("source_url")}
+        # 유효한 source_url 목록 (검증용, 로컬 변수)
+        valid_urls = {h["source_url"] for h in match["headlines"] if h.get("source_url")}
 
         user_msg = AUTO_VERIFY_USER_TEMPLATE.format(
             today=_date.today().isoformat(),
@@ -139,7 +139,7 @@ class AutoVerifier:
         data = self._parse_json(raw)
         data["_input_tokens"] = resp.usage.input_tokens
         data["_output_tokens"] = resp.usage.output_tokens
-        return data
+        return data, valid_urls
 
     @staticmethod
     def _parse_json(text: str) -> dict:

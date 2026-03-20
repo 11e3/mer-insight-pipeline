@@ -13,7 +13,7 @@ from src.collect.keyword_extractor import extract_keywords
 
 log = logging.getLogger(__name__)
 
-MIN_KEYWORD_OVERLAP = 2  # 최소 키워드 겹침 수
+MIN_KEYWORD_OVERLAP = 3  # 최소 키워드 겹침 수 (2는 false positive 많음)
 
 
 async def find_matching_headlines(
@@ -46,11 +46,9 @@ async def find_matching_headlines(
     from datetime import date as _date
 
     if prediction_date:
-        date_start = prediction_date
-    elif expected_date:
-        date_start = expected_date - timedelta(days=365)
+        date_start = prediction_date + timedelta(days=1)  # 예측 당일 뉴스 제외
     else:
-        return []
+        return []  # prediction_date NULL이면 매칭 건너뛰기
 
     date_end = _date.today()
 
