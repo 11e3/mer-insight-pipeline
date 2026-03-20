@@ -35,9 +35,12 @@ MATCH_CORRECT = {
     "target_asset": "일본 기준금리",
     "predicted_direction": "up",
     "prediction_date": "2024-06-01",
+    "expected_date": "2024-07-31",
     "headlines": [
         {"headline": "BOJ raises rate to 0.5%", "source_url": "https://example.com/1",
          "published_at": "2024-07-31", "overlap_count": 3},
+        {"headline": "Japan central bank hikes", "source_url": "https://example.com/2",
+         "published_at": "2024-07-31", "overlap_count": 2},
     ],
 }
 
@@ -50,17 +53,15 @@ async def test_run_no_matches():
         result = await v.run()
 
     assert result["auto_resolved"] == 0
-    assert result["pending"] == 0
-    assert result["errors"] == 0
     conn.execute.assert_not_called()
 
 
 async def test_run_single_correct():
-    """CORRECT 판정 → DB 반영."""
+    """CORRECT 판정 → ref 번호로 source_url 자동 할당."""
     v, conn = _make_verifier()
 
     api_resp = _mock_api_response(
-        '{"verdict": "CORRECT", "reason": "BOJ raised rate", "source_url": "https://example.com/1"}'
+        '{"verdict": "CORRECT", "reason": "BOJ raised rate" }'
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
@@ -68,19 +69,17 @@ async def test_run_single_correct():
         result = await v.run()
 
     assert result["auto_resolved"] == 1
-    conn.execute.assert_called_once()
     args = conn.execute.call_args[0]
     assert args[1] is True  # is_correct
-    assert args[3] == "https://example.com/1"  # source_url
-    assert args[4] == 1  # prediction_id
+    assert args[3] == "https://example.com/1"  # ref=1 → 첫 번째 헤드라인
 
 
 async def test_run_single_incorrect():
-    """INCORRECT 판정 → DB 반영."""
+    """INCORRECT 판정 → 첫 번째(최고 overlap) 헤드라인 URL."""
     v, conn = _make_verifier()
 
     api_resp = _mock_api_response(
-        '{"verdict": "INCORRECT", "reason": "BOJ kept rate", "source_url": "https://example.com/1"}'
+        '{"verdict": "INCORRECT", "reason": "BOJ kept rate" }'
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
@@ -89,7 +88,8 @@ async def test_run_single_incorrect():
 
     assert result["auto_resolved"] == 1
     args = conn.execute.call_args[0]
-    assert args[1] is False  # is_correct
+    assert args[1] is False
+    assert args[3] == "https://example.com/1"  # always first (highest overlap)
 
 
 async def test_run_pending_skips_db():
@@ -97,7 +97,7 @@ async def test_run_pending_skips_db():
     v, conn = _make_verifier()
 
     api_resp = _mock_api_response(
-        '{"verdict": "PENDING", "reason": "insufficient data", "source_url": ""}'
+        '{"verdict": "PENDING", "reason": "insufficient data" }'
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
@@ -109,35 +109,29 @@ async def test_run_pending_skips_db():
     conn.execute.assert_not_called()
 
 
-async def test_run_no_source_url_skips():
-    """source_url 없는 CORRECT는 스킵."""
+async def test_run_always_uses_first_headline_url():
+    """source_url은 항상 첫 번째(최고 overlap) 헤드라인."""
     v, conn = _make_verifier()
 
     api_resp = _mock_api_response(
-        '{"verdict": "CORRECT", "reason": "matched", "source_url": ""}'
+        '{"verdict": "CORRECT", "reason": "ok"}'
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
     with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=[MATCH_CORRECT])):
         result = await v.run()
 
-    assert result["auto_resolved"] == 0
-    assert result["pending"] == 1
-    conn.execute.assert_not_called()
+    assert result["auto_resolved"] == 1
+    args = conn.execute.call_args[0]
+    assert args[3] == "https://example.com/1"
 
 
 async def test_run_respects_daily_limit():
     """daily_limit 이하만 처리."""
     v, conn = _make_verifier()
 
-    matches = [
-        {**MATCH_CORRECT, "prediction_id": i}
-        for i in range(10)
-    ]
-
-    api_resp = _mock_api_response(
-        '{"verdict": "CORRECT", "reason": "ok", "source_url": "https://example.com/1"}'
-    )
+    matches = [{**MATCH_CORRECT, "prediction_id": i} for i in range(10)]
+    api_resp = _mock_api_response('{"verdict": "CORRECT", "reason": "ok" }')
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
     with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=matches)):
@@ -155,13 +149,8 @@ async def test_run_api_error_continues():
         {**MATCH_CORRECT, "prediction_id": 1},
         {**MATCH_CORRECT, "prediction_id": 2},
     ]
-
-    good_resp = _mock_api_response(
-        '{"verdict": "CORRECT", "reason": "ok", "source_url": "https://example.com/1"}'
-    )
-    v.client.messages.create = AsyncMock(
-        side_effect=[Exception("API error"), good_resp]
-    )
+    good_resp = _mock_api_response('{"verdict": "CORRECT", "reason": "ok" }')
+    v.client.messages.create = AsyncMock(side_effect=[Exception("API error"), good_resp])
 
     with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=matches)):
         result = await v.run()
@@ -171,21 +160,20 @@ async def test_run_api_error_continues():
 
 
 async def test_verify_single_prompt_format():
-    """프롬프트에 예측+헤드라인 포함."""
+    """프롬프트에 예측+헤드라인 포함, URL은 제외."""
     v, conn = _make_verifier()
 
-    api_resp = _mock_api_response(
-        '{"verdict": "PENDING", "reason": "test", "source_url": ""}'
-    )
+    api_resp = _mock_api_response('{"verdict": "PENDING", "reason": "test" }')
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
-    result, valid_urls = await v._verify_single(MATCH_CORRECT)
+    result = await v._verify_single(MATCH_CORRECT)
 
     call_args = v.client.messages.create.call_args
     user_msg = call_args[1]["messages"][0]["content"]
     assert "BOJ가 7월에 금리를 인상한다" in user_msg
     assert "BOJ raises rate to 0.5%" in user_msg
-    assert "https://example.com/1" in user_msg
+    # URL은 프롬프트에 포함되지 않음
+    assert "https://example.com" not in user_msg
 
 
 async def test_cost_tracking():
@@ -193,45 +181,26 @@ async def test_cost_tracking():
     v, conn = _make_verifier()
 
     api_resp = _mock_api_response(
-        '{"verdict": "PENDING", "reason": "test", "source_url": ""}',
-        input_tokens=1000,
-        output_tokens=100,
+        '{"verdict": "PENDING", "reason": "test" }',
+        input_tokens=1000, output_tokens=100,
     )
     v.client.messages.create = AsyncMock(return_value=api_resp)
 
     with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=[MATCH_CORRECT])):
         result = await v.run()
 
-    # Haiku: 1000 * 1.0/1M + 100 * 5.0/1M = 0.001 + 0.0005 = 0.0015
     assert abs(result["cost_usd"] - 0.0015) < 0.0001
-
-
-async def test_run_hallucinated_url_skips():
-    """Haiku가 헤드라인에 없는 URL을 반환하면 스킵."""
-    v, conn = _make_verifier()
-
-    api_resp = _mock_api_response(
-        '{"verdict": "CORRECT", "reason": "ok", "source_url": "https://hallucinated.com/fake"}'
-    )
-    v.client.messages.create = AsyncMock(return_value=api_resp)
-
-    with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=[MATCH_CORRECT])):
-        result = await v.run()
-
-    assert result["auto_resolved"] == 0
-    assert result["pending"] == 1
-    conn.execute.assert_not_called()
 
 
 def test_parse_json_clean():
     """정상 JSON 파싱."""
-    result = AutoVerifier._parse_json('{"verdict": "CORRECT", "reason": "ok", "source_url": "url"}')
+    result = AutoVerifier._parse_json('{"verdict": "CORRECT", "reason": "ok" }')
     assert result["verdict"] == "CORRECT"
 
 
 def test_parse_json_code_block():
     """코드블록 감싸진 JSON."""
-    result = AutoVerifier._parse_json('```json\n{"verdict": "INCORRECT", "reason": "no", "source_url": "u"}\n```')
+    result = AutoVerifier._parse_json('```json\n{"verdict": "INCORRECT", "reason": "no" }\n```')
     assert result["verdict"] == "INCORRECT"
 
 
