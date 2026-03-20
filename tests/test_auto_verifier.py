@@ -15,7 +15,7 @@ from src.verify.auto_verifier import AutoVerifier
 
 def _make_verifier():
     conn = AsyncMock()
-    conn.execute = AsyncMock()
+    conn.execute = AsyncMock(return_value="UPDATE 1")
     with patch("src.verify.auto_verifier.anthropic.AsyncAnthropic"):
         v = AutoVerifier(conn)
     v.client = MagicMock()

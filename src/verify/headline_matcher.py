@@ -90,6 +90,9 @@ async def batch_match(
     Returns: [{"prediction_id": int, "prediction_text": str,
                "headlines": [matched headlines]}]
     """
+    # limit * 5로 넉넉히 가져와서 매칭 후 limit 적용
+    # (SQL LIMIT이 매칭 전 적용되면 매칭 가능한 예측이 스킵됨)
+    prefetch = limit * 5
     rows = await conn.fetch("""
         SELECT id, prediction_text, target_asset, predicted_direction, prediction_date, expected_date
         FROM mer_predictions
@@ -97,7 +100,7 @@ async def batch_match(
           AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
         ORDER BY prediction_date DESC
         LIMIT $1
-    """, limit)
+    """, prefetch)
 
     results = []
     for r in rows:
@@ -120,5 +123,6 @@ async def batch_match(
                 "headlines": headlines,
             })
 
-    log.info(f"매칭 완료: {len(rows)}건 중 {len(results)}건에 헤드라인 매칭됨")
+    results = results[:limit]  # 최종 limit 적용
+    log.info(f"매칭 완료: {len(rows)}건 조회 → {len(results)}건 헤드라인 매칭")
     return results

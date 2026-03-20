@@ -69,7 +69,7 @@ class AutoVerifier:
 
                 if verdict in ("CORRECT", "INCORRECT") and source_url:
                     is_correct = verdict == "CORRECT"
-                    await self.conn.execute("""
+                    status = await self.conn.execute("""
                         UPDATE mer_predictions
                         SET is_correct = $1,
                             actual_outcome = $2,
@@ -77,7 +77,11 @@ class AutoVerifier:
                             verification_date = CURRENT_DATE
                         WHERE id = $4 AND is_correct IS NULL
                     """, is_correct, reason, source_url, match["prediction_id"])
-                    result["auto_resolved"] += 1
+                    if status == "UPDATE 1":
+                        result["auto_resolved"] += 1
+                    else:
+                        log.warning(f"  #{match['prediction_id']}: 이미 검증됨 — 스킵")
+                        result["pending"] += 1
                 elif verdict in ("CORRECT", "INCORRECT") and not source_url:
                     log.warning(
                         f"  #{match['prediction_id']}: {verdict} but no source_url — skipped"
