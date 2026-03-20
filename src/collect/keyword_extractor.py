@@ -4,7 +4,10 @@
 영어: regex 분리 + 금융 도메인 불용어 제거
 """
 
+import logging
 import re
+
+log = logging.getLogger(__name__)
 
 _EN_STOPWORDS = {
     "the", "a", "an", "in", "on", "of", "to", "for", "is", "are", "was",
@@ -34,7 +37,10 @@ def extract_keywords(text: str, language: str = "ko", max_kw: int = 20) -> list[
     """헤드라인에서 키워드 추출. LLM 없이 형태소/regex 기반."""
     if not text:
         return []
-    if language == "ko" and _KIWI_AVAILABLE:
+    if language == "ko":
+        if not _KIWI_AVAILABLE:
+            log.warning("kiwipiepy 미설치 — 한국어 키워드 추출 불가")
+            return []
         return _extract_ko(text, max_kw)
     return _extract_en(text, max_kw)
 
