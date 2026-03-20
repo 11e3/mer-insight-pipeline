@@ -38,8 +38,10 @@ def load_prediction_summary():
             COUNT(*) AS total,
             COUNT(*) FILTER (WHERE is_correct = TRUE) AS correct,
             COUNT(*) FILTER (WHERE is_correct = FALSE) AS incorrect,
-            COUNT(*) FILTER (WHERE is_correct IS NULL AND skipped_at IS NULL) AS pending,
-            COUNT(*) FILTER (WHERE skipped_at IS NOT NULL) AS skipped
+            COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable = true) AS verifiable_pending,
+            COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable = false) AS unverifiable,
+            COUNT(*) FILTER (WHERE is_correct IS NULL AND expected_date > CURRENT_DATE) AS future,
+            COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable IS NULL AND expected_date IS NULL) AS unclassified
         FROM mer_predictions
     """)
 
@@ -49,7 +51,7 @@ def load_predictions_for_topics():
     return _fetchall("""
         SELECT prediction_text, is_correct
         FROM mer_predictions
-        WHERE skipped_at IS NULL
+        WHERE is_verifiable IS NOT FALSE
     """)
 
 
@@ -74,13 +76,13 @@ def load_all_predictions():
         SELECT
             mp.prediction_date, mp.prediction_text, mp.predicted_direction,
             mp.target_asset, mp.is_correct, mp.actual_outcome, mp.source_url,
-            mp.verification_date, p.url AS post_url,
+            mp.verification_date, mp.is_verifiable, mp.expected_date,
+            p.url AS post_url,
             COALESCE(s.name, 'mer_ranto28') AS source_name
         FROM mer_predictions mp
         LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
         LEFT JOIN mer_posts p ON p.id = mi.post_id
         LEFT JOIN sources s ON s.id = mp.source_id
-        WHERE mp.skipped_at IS NULL
         ORDER BY mp.prediction_date DESC
     """)
 

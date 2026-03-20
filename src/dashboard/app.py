@@ -1,5 +1,5 @@
 """
-Prediction Accuracy Dashboard: 예측 적중률 Streamlit 대시보드
+Prediction Accuracy Dashboard
 
 Usage:
     streamlit run src/dashboard/app.py
@@ -8,7 +8,6 @@ Usage:
 import sys
 from pathlib import Path
 
-# 프로젝트 루트를 sys.path에 추가 (streamlit run 시 cwd가 달라질 수 있음)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import pandas as pd
@@ -19,7 +18,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Streamlit Cloud: secrets → 환경변수
 import os
 if not os.environ.get("DATABASE_URL") and hasattr(st, "secrets"):
     try:
@@ -40,41 +38,51 @@ st.set_page_config(page_title="Mer Pipeline — Prediction Accuracy", layout="wi
 # ─── 1. 전체 요약 ────────────────────────────────────────────────────────────
 
 st.title("예측 검증 대시보드")
-st.caption("메르 블로그 예측 → 수동 검증 결과")
-
-st.subheader("전체 요약")
+st.caption("메르 블로그 예측 자동 검증 (뉴스 헤드라인 DB + Haiku)")
 
 summary = load_prediction_summary()
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("총 예측 수", f"{summary['total']:,}건")
-col2.metric("CORRECT", f"{summary['correct']:,}건")
-col3.metric("INCORRECT", f"{summary['incorrect']:,}건")
-col4.metric("PENDING", f"{summary['pending']:,}건")
-
+# 상단 메트릭
+col1, col2, col3 = st.columns(3)
 verified = summary["correct"] + summary["incorrect"]
-if verified > 0:
-    accuracy = summary["correct"] / verified * 100
-    st.metric("검증 완료 적중률",
-              f"{accuracy:.1f}% ({verified:,}건)",
-              help=f"전체 {summary['total']:,}건 중 검증 완료 {verified:,}건의 CORRECT 비율")
+accuracy = summary["correct"] / verified * 100 if verified > 0 else 0
 
-# 파이 차트
+col1.metric("적중률", f"{accuracy:.1f}%", help=f"검증 완료 {verified:,}건 기준")
+col2.metric("검증 완료", f"{verified:,}건", help=f"CORRECT {summary['correct']:,} + INCORRECT {summary['incorrect']:,}")
+col3.metric("총 예측", f"{summary['total']:,}건")
+
+# 세부 현황
+col4, col5, col6, col7 = st.columns(4)
+col4.metric("CORRECT", f"{summary['correct']:,}")
+col5.metric("INCORRECT", f"{summary['incorrect']:,}")
+col6.metric("검증 대기", f"{summary.get('verifiable_pending', 0):,}", help="검증 가능하지만 아직 미판정")
+col7.metric("미래 대기", f"{summary.get('future', 0):,}", help="expected_date가 아직 안 온 예측")
+
+# 판정 분포 차트
 pie_data = pd.DataFrame({
-    "verdict": ["CORRECT", "INCORRECT", "PENDING"],
-    "count": [summary["correct"], summary["incorrect"], summary["pending"]],
+    "status": ["CORRECT", "INCORRECT", "검증 대기", "검증 불가", "미래 대기"],
+    "count": [
+        summary["correct"],
+        summary["incorrect"],
+        summary.get("verifiable_pending", 0),
+        summary.get("unverifiable", 0),
+        summary.get("future", 0),
+    ],
 })
 pie_data = pie_data[pie_data["count"] > 0]
 
 if not pie_data.empty:
     fig_pie = px.pie(
-        pie_data, values="count", names="verdict",
-        color="verdict",
-        color_discrete_map={"CORRECT": "#2ecc71", "INCORRECT": "#e74c3c", "PENDING": "#95a5a6"},
-        title="판정 분포",
+        pie_data, values="count", names="status",
+        color="status",
+        color_discrete_map={
+            "CORRECT": "#2ecc71", "INCORRECT": "#e74c3c",
+            "검증 대기": "#3498db", "검증 불가": "#95a5a6", "미래 대기": "#f39c12",
+        },
+        title="예측 현황 분포",
     )
     fig_pie.update_traces(textinfo="percent+value")
-    st.plotly_chart(fig_pie, width="stretch")
+    st.plotly_chart(fig_pie, use_container_width=True)
 
 st.divider()
 
@@ -97,7 +105,6 @@ if preds:
 
     df_topic = pd.DataFrame(preds)
 
-    # 주제별 집계 (검증 완료만)
     df_verified = df_topic[df_topic["verdict"] != "PENDING"]
     if not df_verified.empty:
         topic_stats = df_verified.groupby(["topic", "verdict"]).size().reset_index(name="count")
@@ -108,19 +115,18 @@ if preds:
             title="주제별 검증 결과",
             labels={"topic": "주제", "count": "건수", "verdict": "판정"},
         )
-        st.plotly_chart(fig_bar, width="stretch")
+        st.plotly_chart(fig_bar, use_container_width=True)
 
-        # 주제별 정확도 테이블
         topic_acc = df_verified.groupby("topic").apply(
             lambda g: pd.Series({
-                "total": len(g),
-                "correct": (g["verdict"] == "CORRECT").sum(),
-                "accuracy": f"{(g['verdict'] == 'CORRECT').mean() * 100:.1f}%",
+                "검증 완료": len(g),
+                "CORRECT": (g["verdict"] == "CORRECT").sum(),
+                "적중률": f"{(g['verdict'] == 'CORRECT').mean() * 100:.1f}%",
             }),
             include_groups=False,
         ).reset_index()
-        topic_acc = topic_acc.sort_values("correct", ascending=False)
-        st.dataframe(topic_acc, width="stretch", hide_index=True)
+        topic_acc = topic_acc.sort_values("CORRECT", ascending=False)
+        st.dataframe(topic_acc, use_container_width=True, hide_index=True)
     else:
         st.info("검증 완료된 예측이 없습니다.")
 else:
@@ -128,7 +134,7 @@ else:
 
 st.divider()
 
-# ─── 3. 시간별 추이 ──────────────────────────────────────────────────────────
+# ─── 3. 월별 추이 ──────────────────────────────────────────────────────────
 
 st.subheader("월별 추이")
 
@@ -163,7 +169,7 @@ if monthly:
         legend=dict(x=0.01, y=0.99),
     )
 
-    st.plotly_chart(fig_trend, width="stretch")
+    st.plotly_chart(fig_trend, use_container_width=True)
 else:
     st.info("월별 데이터가 없습니다.")
 
@@ -179,25 +185,33 @@ if all_preds:
     for p in all_preds:
         if not p.get("topic"):
             p["topic"] = classify_topic(p["prediction_text"])
+
     # 필터
-    col_f1, col_f2, col_f3 = st.columns(3)
-    verdict_filter = col_f1.selectbox("판정", ["전체", "CORRECT", "INCORRECT", "PENDING"])
+    col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+    verdict_options = ["전체", "CORRECT", "INCORRECT", "PENDING", "검증 불가"]
+    verdict_filter = col_f1.selectbox("판정", verdict_options)
     topics = sorted({p.get("topic", "기타") for p in all_preds})
     topic_filter = col_f2.selectbox("주제", ["전체"] + topics)
     direction_filter = col_f3.selectbox("방향", ["전체", "up", "down", "neutral"])
+    search_query = col_f4.text_input("검색", placeholder="키워드 검색")
 
     filtered = all_preds
-    if verdict_filter != "전체":
-        if verdict_filter == "PENDING":
-            filtered = [p for p in filtered if p["is_correct"] is None]
-        elif verdict_filter == "CORRECT":
-            filtered = [p for p in filtered if p["is_correct"] is True]
-        else:
-            filtered = [p for p in filtered if p["is_correct"] is False]
+    if verdict_filter == "CORRECT":
+        filtered = [p for p in filtered if p["is_correct"] is True]
+    elif verdict_filter == "INCORRECT":
+        filtered = [p for p in filtered if p["is_correct"] is False]
+    elif verdict_filter == "PENDING":
+        filtered = [p for p in filtered if p["is_correct"] is None and p.get("is_verifiable") is not False]
+    elif verdict_filter == "검증 불가":
+        filtered = [p for p in filtered if p.get("is_verifiable") is False]
     if topic_filter != "전체":
         filtered = [p for p in filtered if p.get("topic", "기타") == topic_filter]
     if direction_filter != "전체":
         filtered = [p for p in filtered if p["predicted_direction"] == direction_filter]
+    if search_query:
+        q = search_query.lower()
+        filtered = [p for p in filtered if q in (p["prediction_text"] or "").lower()
+                    or q in (p["target_asset"] or "").lower()]
 
     # 페이지네이션
     PAGE_SIZE = 20
@@ -205,7 +219,6 @@ if all_preds:
 
     if "pred_page" not in st.session_state:
         st.session_state.pred_page = 1
-    # 필터 변경 시 페이지 리셋
     if st.session_state.pred_page > total_pages:
         st.session_state.pred_page = 1
 
@@ -213,18 +226,17 @@ if all_preds:
 
     st.caption(f"{len(filtered):,}건 표시 (전체 {len(all_preds):,}건) — 페이지 {page}/{total_pages}")
 
-    # 상단 페이지 네비게이션
     nav_cols = st.columns([1, 1, 1, 1, 1, 3])
-    if nav_cols[0].button("⏮ 처음", disabled=page <= 1):
+    if nav_cols[0].button("처음", disabled=page <= 1):
         st.session_state.pred_page = 1
         st.rerun()
-    if nav_cols[1].button("◀ 이전", disabled=page <= 1):
+    if nav_cols[1].button("이전", disabled=page <= 1):
         st.session_state.pred_page = page - 1
         st.rerun()
-    if nav_cols[2].button("다음 ▶", disabled=page >= total_pages):
+    if nav_cols[2].button("다음", disabled=page >= total_pages):
         st.session_state.pred_page = page + 1
         st.rerun()
-    if nav_cols[3].button("마지막 ⏭", disabled=page >= total_pages):
+    if nav_cols[3].button("마지막", disabled=page >= total_pages):
         st.session_state.pred_page = total_pages
         st.rerun()
     jump = nav_cols[4].selectbox(
@@ -238,11 +250,13 @@ if all_preds:
 
     for r in page_items:
         if r["is_correct"] is True:
-            icon, verdict = "✅", "CORRECT"
+            icon, verdict = "O", "CORRECT"
         elif r["is_correct"] is False:
-            icon, verdict = "❌", "INCORRECT"
+            icon, verdict = "X", "INCORRECT"
+        elif r.get("is_verifiable") is False:
+            icon, verdict = "-", "UNVERIFIABLE"
         else:
-            icon, verdict = "⏳", "PENDING"
+            icon, verdict = "?", "PENDING"
 
         pred_date = r["prediction_date"].strftime("%Y-%m-%d") if r["prediction_date"] else ""
         asset = r["target_asset"] or ""
@@ -252,13 +266,15 @@ if all_preds:
         with st.expander(label):
             pred_text = r["prediction_text"] or ""
             if r.get("post_url"):
-                st.markdown(f"{pred_text}\n\n🔗 [원글 보기]({r['post_url']})")
+                st.markdown(f"{pred_text}\n\n[원글 보기]({r['post_url']})")
             else:
                 st.write(pred_text)
 
             parts = [f"**판정: {verdict}**", f"방향: `{r['predicted_direction']}`"]
             if r.get("verification_date"):
                 parts.append(f"검증일: {r['verification_date']}")
+            if r.get("expected_date"):
+                parts.append(f"검증기한: {r['expected_date']}")
             st.markdown(" | ".join(parts))
 
             outcome = r.get("actual_outcome") or ""
@@ -271,8 +287,8 @@ else:
 
 st.divider()
 st.caption(
-    "이 대시보드는 메르(ranto28) 블로그 포스트에서 AI(Claude)가 자동 추출한 예측을 "
-    "수동 검증(claude.ai)한 결과를 보여줍니다. "
-    "메르 본인의 공식 입장이 아니며, AI 추출·판정 과정에서 오류가 있을 수 있습니다. "
+    "이 대시보드는 메르(ranto28) 블로그에서 AI(Claude)가 자동 추출한 예측을 "
+    "뉴스 헤드라인 DB 기반으로 자동 검증(Haiku)한 결과입니다. "
+    "메르 본인의 공식 입장이 아니며, AI 추출 및 판정 과정에서 오류가 있을 수 있습니다. "
     "투자 판단의 근거로 사용하지 마세요."
 )
