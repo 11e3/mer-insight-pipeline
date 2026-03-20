@@ -77,6 +77,12 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - 백필: `scripts/ops/backfill_news.py --start 2022-01 --end 2025-12`
 - event_dispatcher에서 매일 자동 수집 (파이프라인 step 2)
 
+### 자동 검증 (AutoVerifier)
+- `src/verify/auto_verifier.py`: headline match → Haiku 1건씩 판정 → DB 반영
+- source_url 없는 CORRECT/INCORRECT는 DB 반영 안 함
+- daily_limit=200, CALL_DELAY=0.5
+- event_dispatcher step 3a에서 자동 실행, 3b에서 나머지 수동 내보내기
+
 ### 예측 추출 형식 (신규)
 - `claim`: yes/no로 답할 수 있는 검증 가능한 명제
 - `search_keywords`: 뉴스 검색용 키워드 3-5개
@@ -92,8 +98,16 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - `src/db/connection.py`의 `connect()`, `get_pool()` async context manager 사용
 - 수동 `conn.close()` 대신 `async with connect() as conn:` 패턴
 
+### Source Abstraction Layer
+- `sources` 테이블: source_type, name, platform, config
+- `mer_posts`, `mer_predictions`에 `source_id` FK 추가
+- `SourceCollector` 프로토콜 (`src/collect/source_protocol.py`)
+- `get_collector()` 팩토리 (`src/collect/factory.py`)
+- `MerMonitor`가 `SourceCollector` 구현체
+- `event_dispatcher`가 `sources` 테이블에서 active collectors 로드
+
 ### 삭제된 모듈
-과거 존재했으나 제거된 모듈: `src/agent/`, `src/guard/`, `src/observability/`, `src/ingest/`, `src/collect/dart.py`, `src/collect/news.py`, `src/collect/macro.py`, `src/verify/context.py`, `src/verify/search.py`. import 참조 발견 시 삭제된 것으로 간주.
+과거 존재했으나 제거된 모듈: `src/agent/`, `src/guard/`, `src/observability/`, `src/ingest/`, `src/collect/dart.py`, `src/collect/macro.py`, `src/verify/context.py`, `src/verify/search.py`. import 참조 발견 시 삭제된 것으로 간주.
 
 ## 아키텍처 요약
 
@@ -112,7 +126,9 @@ src/
 │   ├── parse_results.py # JSONL → DB (INSIGHT_TYPE_MAP, extract_content)
 │   └── realtime.py      # 실시간 인사이트 추출
 ├── collect/        # 데이터 수집
-│   ├── mer_monitor.py       # 블로그 RSS 감시
+│   ├── source_protocol.py   # SourceCollector 프로토콜
+│   ├── factory.py            # get_collector() 팩토리
+│   ├── mer_monitor.py       # 블로그 RSS 감시 (SourceCollector 구현)
 │   ├── posts.py             # JSON → mer_posts 적재
 │   ├── date_parser.py       # 메르 블로그 날짜 파싱
 │   ├── news_collector.py    # 뉴스 헤드라인 RSS 수집 (15개 피드)
@@ -120,6 +136,7 @@ src/
 │   └── keyword_extractor.py # 키워드 추출 (kiwipiepy + regex)
 ├── verify/         # 예측 검증
 │   ├── verifier.py          # PredictionVerifier (내보내기 + 텔레그램)
+│   ├── auto_verifier.py     # AutoVerifier (Haiku 1건씩 자동 판정)
 │   ├── headline_matcher.py  # 예측 ↔ 헤드라인 키워드 매칭
 │   └── prompt.py            # 상수 (배치 크기)
 ├── search/         # 하이브리드 검색
