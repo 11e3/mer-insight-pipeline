@@ -1,6 +1,7 @@
-"""예측 ↔ 헤드라인 매칭 — 키워드 기반.
+"""예측 ↔ 헤드라인 매칭 — 키워드 + 벡터 하이브리드.
 
-prediction의 키워드와 news_headlines의 키워드를 GIN 인덱스로 매칭.
+1차: GIN 키워드 매칭 (빠름, precision 높음)
+2차: 벡터 유사도 매칭 (느리지만 recall 높음) — 키워드 매칭 실패 시 fallback
 검색 범위: prediction_date ~ 오늘 (예측일 이후 뉴스만 검증 근거로 사용).
 """
 
@@ -10,6 +11,7 @@ from datetime import timedelta
 import asyncpg
 
 from src.collect.keyword_extractor import extract_keywords
+from src.embed import get_embedder, vec_str
 
 log = logging.getLogger(__name__)
 
@@ -81,6 +83,67 @@ async def find_matching_headlines(
     return results
 
 
+# ─── 벡터 유사도 매칭 (fallback) ─────────────────────────────────────────────
+
+VECTOR_SIMILARITY_THRESHOLD = 0.45  # cosine similarity 최소값
+
+_embedder = None
+
+
+def _get_embedder():
+    global _embedder
+    if _embedder is None:
+        _embedder = get_embedder()
+    return _embedder
+
+
+async def find_matching_headlines_vector(
+    conn: asyncpg.Connection,
+    prediction_text: str,
+    target_asset: str,
+    prediction_date,
+    *,
+    max_results: int = 10,
+) -> list[dict]:
+    """벡터 유사도로 헤드라인 매칭 (키워드 매칭 실패 시 fallback)."""
+    from datetime import datetime as _datetime
+
+    if not prediction_date:
+        return []
+
+    date_start = _datetime.combine(prediction_date + timedelta(days=1), _datetime.min.time())
+    date_end = _datetime.now()
+
+    embedder = _get_embedder()
+    query_text = f"{target_asset} {prediction_text}"
+    query_vec = embedder.embed_query_sync(query_text)
+    query_str = vec_str(query_vec)
+
+    rows = await conn.fetch("""
+        SELECT id, headline, source_url, published_at,
+               1 - (embedding <=> $1::vector) AS similarity
+        FROM news_headlines
+        WHERE embedding IS NOT NULL
+          AND published_at BETWEEN $2 AND $3
+        ORDER BY embedding <=> $1::vector
+        LIMIT $4
+    """, query_str, date_start, date_end, max_results)
+
+    results = []
+    for r in rows:
+        sim = r["similarity"] or 0
+        if sim >= VECTOR_SIMILARITY_THRESHOLD:
+            results.append({
+                "headline_id": r["id"],
+                "headline": r["headline"],
+                "source_url": r["source_url"],
+                "published_at": r["published_at"],
+                "overlap_count": int(sim * 10),  # 호환용 (0-10 스케일)
+            })
+
+    return results
+
+
 async def batch_match(
     conn: asyncpg.Connection,
     *,
@@ -106,6 +169,7 @@ async def batch_match(
 
     results = []
     for r in rows:
+        # 1차: 키워드 매칭
         headlines = await find_matching_headlines(
             conn,
             prediction_id=r["id"],
@@ -114,6 +178,16 @@ async def batch_match(
             expected_date=r["expected_date"],
             prediction_date=r["prediction_date"],
         )
+
+        # 2차: 벡터 매칭 (키워드 매칭 실패 시 fallback)
+        if not headlines:
+            headlines = await find_matching_headlines_vector(
+                conn,
+                prediction_text=r["prediction_text"],
+                target_asset=r["target_asset"] or "",
+                prediction_date=r["prediction_date"],
+            )
+
         if headlines:
             results.append({
                 "prediction_id": r["id"],
