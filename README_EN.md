@@ -21,7 +21,7 @@ Automated verification is even harder. Using API web_search costs $0.035/predict
 
 | | Value |
 |---|---|
-| Predictions tracked | 5,010 |
+| Predictions tracked | 5,100 (3 sources) |
 | Auto-verified | 1,047 (69.1% accuracy) |
 | News headline DB | 54,461 |
 | Verification cost | ~$5 (total) |
