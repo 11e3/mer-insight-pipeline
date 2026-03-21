@@ -103,8 +103,8 @@ async def test_extract_and_save_success():
 async def test_extract_and_save_prediction_with_verifiable():
     """verifiable prediction이면 mer_predictions에도 삽입."""
     conn = AsyncMock()
-    # First fetchval = post_id, second = insight_id
-    conn.fetchval.side_effect = [42, 100]
+    # First fetchval = post_id, second = insight_id, third = source_id
+    conn.fetchval.side_effect = [42, 100, 1]
 
     data = {
         "primary_topic": "금융시장",

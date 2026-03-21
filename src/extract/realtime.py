@@ -132,11 +132,16 @@ async def extract_and_save(
                 raw_dir = (item.get("direction") or "neutral").lower().strip()
                 direction = _dir_map.get(raw_dir, "neutral") if raw_dir not in ("up", "down", "neutral") else raw_dir
 
+                # source_id 조회
+                source_id = await conn.fetchval(
+                    "SELECT source_id FROM mer_posts WHERE id = $1", post_id
+                )
+
                 await conn.execute("""
                     INSERT INTO mer_predictions
                         (insight_id, prediction_text, predicted_direction,
-                         target_asset, prediction_date, expected_date)
-                    VALUES ($1, $2, $3, $4, $5, $6)
+                         target_asset, prediction_date, expected_date, source_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)
                     ON CONFLICT DO NOTHING
                 """,
                     insight_id,
@@ -145,6 +150,7 @@ async def extract_and_save(
                     item.get("target_asset", ""),
                     pred_date,
                     exp_date,
+                    source_id,
                 )
             count += 1
 
