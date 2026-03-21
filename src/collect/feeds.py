@@ -60,4 +60,11 @@ FEEDS: list[FeedSpec] = [
     FeedSpec("gn_en_tesla",     _GN_EN + "Tesla+TSLA+Elon+Musk",          "en", "주식_금융"),
     FeedSpec("gn_en_china",     _GN_EN + "China+GDP+economy+growth",       "en", "금리_매크로"),
     FeedSpec("gn_en_defense",   _GN_EN + "defense+Korea+Hanwha+KAI",       "en", "방산"),
+    # 크립토
+    FeedSpec("gn_en_btc",       _GN_EN + "Bitcoin+BTC+price",              "en", "crypto"),
+    FeedSpec("gn_en_eth",       _GN_EN + "Ethereum+ETH+price",             "en", "crypto"),
+    FeedSpec("gn_en_defi",      _GN_EN + "DeFi+stablecoin+USDT+USDC",     "en", "crypto"),
+    FeedSpec("gn_en_crypto",    _GN_EN + "crypto+market+altcoin",          "en", "crypto"),
+    FeedSpec("gn_en_onchain",   _GN_EN + "on-chain+whale+exchange+flow",   "en", "crypto"),
+    FeedSpec("gn_ko_비트코인",  _GN_KR + "비트코인+BTC+암호화폐",         "ko", "crypto"),
 ]
