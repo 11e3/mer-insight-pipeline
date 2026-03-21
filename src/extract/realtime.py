@@ -112,6 +112,14 @@ async def extract_and_save(
                     except (ValueError, TypeError):
                         pass
 
+                pred_date = post.get("date")
+                if isinstance(pred_date, str):
+                    try:
+                        from datetime import date as _d
+                        pred_date = _d.fromisoformat(pred_date)
+                    except (ValueError, TypeError):
+                        pred_date = None
+
                 await conn.execute("""
                     INSERT INTO mer_predictions
                         (insight_id, prediction_text, predicted_direction,
@@ -123,7 +131,7 @@ async def extract_and_save(
                     item.get("prediction", content),
                     item.get("direction", "neutral"),
                     item.get("target_asset", ""),
-                    post.get("date"),
+                    pred_date,
                     exp_date,
                 )
             count += 1
