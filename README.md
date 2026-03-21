@@ -7,7 +7,7 @@
 
 Automatically extract predictions from financial influencers, then verify them against a news headline database.
 
-**[Live Dashboard](https://insight-verify.streamlit.app/)** · [한국어](README.md) · [Experiment Log](docs/verification-experiments.md)
+**[Live Dashboard](https://insight-verify.streamlit.app/)** · [한국어](README_KR.md) · [Experiment Log](docs/verification-experiments.md)
 
 ---
 
