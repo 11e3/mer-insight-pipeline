@@ -93,7 +93,30 @@ class EventDispatcher:
                                 "SELECT platform FROM sources WHERE name = $1",
                                 collector.source_name,
                             ) or "blog"
+                            source_id = await conn.fetchval(
+                                "SELECT id FROM sources WHERE name = $1",
+                                collector.source_name,
+                            )
                             for post in new_posts:
+                                # mer_posts에 저장
+                                from datetime import date as _date
+                                pub_date = None
+                                if post.published_at:
+                                    try:
+                                        pub_date = _date.fromisoformat(post.published_at)
+                                    except (ValueError, TypeError):
+                                        pub_date = None
+                                post_id = await conn.fetchval("""
+                                    INSERT INTO mer_posts (log_no, title, date, url, content_text, source_id)
+                                    VALUES ($1, $2, $3, $4, $5, $6)
+                                    ON CONFLICT (log_no) DO NOTHING
+                                    RETURNING id
+                                """, post.external_id, post.title,
+                                    pub_date, post.url,
+                                    post.content_text, source_id)
+                                if not post_id:
+                                    continue  # 이미 존재
+
                                 post_dict = {
                                     "log_no": post.external_id,
                                     "title": post.title,
