@@ -1,7 +1,7 @@
-# mer-insight-pipeline
+# insight-verify
 
-[![CI](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml/badge.svg)](https://github.com/11e3/mer-insight-pipeline/actions/workflows/update-readme.yml)
-[![codecov](https://codecov.io/gh/11e3/mer-insight-pipeline/graph/badge.svg)](https://codecov.io/gh/11e3/mer-insight-pipeline)
+[![CI](https://github.com/11e3/insight-verify/actions/workflows/update-readme.yml/badge.svg)](https://github.com/11e3/insight-verify/actions/workflows/update-readme.yml)
+[![codecov](https://codecov.io/gh/11e3/insight-verify/graph/badge.svg)](https://codecov.io/gh/11e3/insight-verify)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -136,8 +136,8 @@ Hybrid BM25 + pgvector search retrieves relevant context from 25,090 indexed ins
 ## Quick Start
 
 ```bash
-git clone https://github.com/11e3/mer-insight-pipeline.git
-cd mer-insight-pipeline
+git clone https://github.com/11e3/insight-verify.git
+cd insight-verify
 cp .env.example .env  # set API keys
 
 docker compose up -d db

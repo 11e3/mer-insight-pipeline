@@ -1,4 +1,4 @@
--- mer-insight-pipeline DB 초기화
+-- insight-verify DB 초기화
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ─── 소스 관리 ────────────────────────────────────────────────────────────────

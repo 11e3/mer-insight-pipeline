@@ -1,4 +1,4 @@
-# CLAUDE.md — mer-insight-pipeline
+# CLAUDE.md — insight-verify
 
 ## 프로젝트 개요
 
@@ -54,7 +54,7 @@ python -m scripts.ops.batch_verify apply    # 결과 DB 반영
 ### scripts 실행 경로
 `scripts/` 하위 모듈은 **프로젝트 루트에서** 실행해야 함:
 ```bash
-cd /path/to/mer-insight-pipeline
+cd /path/to/insight-verify
 python scripts/eval/expand_eval_dataset.py  # ✓
 ```
 
