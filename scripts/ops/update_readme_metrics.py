@@ -8,11 +8,11 @@ import os
 import re
 import sys
 
-import psycopg2
-import psycopg2.extras
-
 
 def fetch_metrics(dsn: str) -> dict:
+    import psycopg2
+    import psycopg2.extras
+
     conn = psycopg2.connect(dsn)
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
