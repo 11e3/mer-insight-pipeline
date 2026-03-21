@@ -121,8 +121,7 @@ async def test_run_experiment(tmp_path):
          patch("src.eval.experiment._vector_search_by_vec", AsyncMock(return_value=vector_results)), \
          patch("src.eval.experiment._avg_embedding", AsyncMock(return_value="[0.1,0.2]")):
         # Also patch the output path
-        with patch("src.eval.experiment.Path") as mock_path_cls:
-            # Need special handling for Path usage
+        with patch("src.eval.experiment.Path"):
             pass
 
     # Simpler approach: directly call with mocked internals

@@ -31,7 +31,7 @@ async def test_connect_uses_default_url():
     mock_conn.close = AsyncMock()
 
     with patch("src.db.connection.asyncpg.connect", AsyncMock(return_value=mock_conn)) as mock_connect_fn:
-        async with connect() as conn:
+        async with connect():
             pass
 
     # Should use DATABASE_URL default
@@ -46,7 +46,7 @@ async def test_connect_closes_on_error():
 
     with patch("src.db.connection.asyncpg.connect", AsyncMock(return_value=mock_conn)):
         try:
-            async with connect("postgresql://test") as conn:
+            async with connect("postgresql://test"):
                 raise ValueError("test error")
         except ValueError:
             pass
@@ -72,7 +72,7 @@ async def test_get_pool_custom_sizes():
     mock_pool.close = AsyncMock()
 
     with patch("src.db.connection.asyncpg.create_pool", AsyncMock(return_value=mock_pool)) as mock_create:
-        async with get_pool("postgresql://test", min_size=1, max_size=5) as pool:
+        async with get_pool("postgresql://test", min_size=1, max_size=5):
             pass
 
     mock_create.assert_called_once_with("postgresql://test", min_size=1, max_size=5)
@@ -84,7 +84,7 @@ async def test_get_pool_closes_on_error():
 
     with patch("src.db.connection.asyncpg.create_pool", AsyncMock(return_value=mock_pool)):
         try:
-            async with get_pool("postgresql://test") as pool:
+            async with get_pool("postgresql://test"):
                 raise RuntimeError("pool error")
         except RuntimeError:
             pass

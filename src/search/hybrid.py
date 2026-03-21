@@ -90,7 +90,6 @@ class HybridSearcher:
 
         # DB에서 content 일괄 조회
         ids = [doc_id for doc_id, _ in fused]
-        score_map = {doc_id: score for doc_id, score in fused}
 
         rows = await self._conn.fetch("""
             SELECT mi.id, mi.content, mi.structured_data, mi.insight_type, mp.date

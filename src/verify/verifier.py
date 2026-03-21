@@ -65,7 +65,6 @@ class PredictionVerifier:
 ---
 
 """
-        total_parts = (len(preds) + BATCH_SIZE - 1) // BATCH_SIZE
         for i in range(0, len(preds), BATCH_SIZE):
             batch = preds[i:i + BATCH_SIZE]
             part = i // BATCH_SIZE + 1
