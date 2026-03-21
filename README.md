@@ -5,31 +5,43 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Automatically extract predictions from financial influencers, then verify them against a news headline database.
+**How accurate are financial influencers' predictions, really?**
+
+This system automatically extracts predictions from Korean financial blogs, then verifies them against an 88K+ news headline database. No manual labeling — fully automated extraction, matching, and verdict.
 
 **[Live Dashboard](https://insight-verify.streamlit.app/)** · [한국어](README_KR.md) · [Experiment Log](docs/verification-experiments.md)
 
 ---
 
-### Why is this hard?
+## Key Findings
 
-Korean financial blog posts contain no tickers, dates, or confidence levels. Figuring out **what counts as a prediction, when it should be verified, and what criteria determine correct vs. incorrect** — that structuring problem alone isn't solved by any off-the-shelf tool.
+| Metric | Value |
+|--------|-------|
+| Overall accuracy | **69.3%** (729 correct / 1,052 verified) |
+| vs. headline sentiment baseline | **+14.9pp** (baseline: 54.2%) |
+| Predictions tracked | 5,100 across 3 sources |
+| News headline DB | 88,713 articles (2022–2026) |
+| Verification cost | **$0.0045/prediction** — 87% reduction from $0.035 |
+| Monthly operating cost | ~$0.50 |
 
-Automated verification is even harder. Using API web_search costs $0.035/prediction (5,000 = $175). After testing 6 different approaches, we settled on **news headline DB + keyword/vector hybrid matching + Batch API**, cutting costs to **$3 (87% reduction)**.
+We measured a **headline-sentiment baseline** on the same dataset: using keyword-matched headlines' bullish/bearish word counts to predict direction yields **54.2% accuracy** (n=1,041). The blogger beats this by **+14.9pp**, with the gap widest on bullish calls (77.8% vs 59.9%). This suggests the predictions carry genuine signal beyond what's already priced into the news cycle.
 
-### Metrics
+<details>
+<summary><strong>Data integrity note</strong></summary>
 
-| | Value |
-|---|---|
-| Predictions tracked | 5,100 (3 sources) |
-| Auto-verified | 1,047 (69.1% accuracy) |
-| News headline DB | 54,461 |
-| Verification cost | ~$5 (total) |
-| Tests | 248, 90%+ coverage |
+During early batch verification, a 50-case blind audit revealed 36% contamination rate (false CORRECT verdicts from insufficient matching). All 1,047 verdicts were reset and re-verified 1-by-1 with stricter matching criteria (MIN_KEYWORD_OVERLAP=3, source_url required). Current results reflect the post-reset verified dataset.
+
+</details>
 
 ---
 
-## Architecture
+## How it Works
+
+```
+Blog post → Claude extraction → structured predictions (claim, keywords, expected_date)
+    → keyword GIN matching against 88K headlines → vector cosine fallback on miss
+    → matched headlines + prediction → Haiku verdict → CORRECT / INCORRECT / PENDING
+```
 
 ```mermaid
 flowchart TD
@@ -38,7 +50,7 @@ flowchart TD
         MON -->|Claude extraction| DB[(PostgreSQL + pgvector)]
         NEWS_RSS[Google News 33 feeds] --> NC[news_collector]
         NEWS_NAVER[Naver API 14 queries] --> NC
-        NC --> NHL[(news_headlines 54K)]
+        NC --> NHL[(news_headlines 88K)]
     end
 
     subgraph Verification
@@ -59,25 +71,14 @@ flowchart TD
 
 ---
 
-## Verification
+## Why is this Hard?
 
-The system finds relevant news articles for each prediction using a headline database, then has Haiku judge whether the prediction was correct.
+Korean financial blog posts contain no tickers, dates, or confidence levels. Figuring out **what counts as a prediction, when it should be verified, and what criteria determine correct vs. incorrect** — that structuring problem alone isn't solved by any off-the-shelf tool.
 
-```
-Prediction → keyword extraction (kiwipiepy) → GIN matching → vector cosine fallback on miss
-    → matched headlines + prediction → Haiku → CORRECT / INCORRECT / PENDING
-```
-
-| Item | Value |
-|------|-------|
-| Matching | Keyword GIN + vector cosine fallback |
-| News sources | Google News RSS 33 feeds + Naver API 14 queries |
-| Headlines | 54,461 (2022–2026) |
-| Verdict model | Haiku 4.5 (Batch API, 50% discount) |
-| Cost per prediction | $0.0045 |
+Automated verification is even harder. Using API web_search costs $0.035/prediction (5,000 = $175). After testing 6 different approaches, we settled on **news headline DB + keyword/vector hybrid matching + Batch API**.
 
 <details>
-<summary><strong>6 approaches compared → 87% cost reduction</strong> (click to expand)</summary>
+<summary><strong>6 approaches compared → 87% cost reduction</strong></summary>
 
 | Approach | Match rate | Cost/pred | Notes |
 |----------|-----------|-----------|-------|
@@ -88,26 +89,25 @@ Prediction → keyword extraction (kiwipiepy) → GIN matching → vector cosine
 | API + web_search 1-by-1 (Haiku) | 80% | $0.035 | 5,000 preds = $175 |
 | **News DB + Batch API** ★ | **prod** | **$0.0045** | **5,000 preds = ~$3** |
 
-Tested on 77 cases + 50-case blind audit → found data contamination → full reset, re-verified 1-by-1.
 Details: [Experiment Log](docs/verification-experiments.md)
 
 </details>
 
-### Current Status
+### Current Verification Status
 
 | Status | Count |
 |--------|-------|
-| CORRECT | 724 |
+| CORRECT | 729 |
 | INCORRECT | 323 |
-| Verifiable PENDING | 150 |
-| Unverifiable (vague/conditional) | 2,778 |
-| Future (awaiting expected_date) | 1,118 |
+| Verifiable PENDING | 225 |
+| Unverifiable (vague/conditional) | 2,793 |
+| Future (awaiting expected_date) | 1,190 |
 
 ---
 
 ## Search Infrastructure
 
-Hybrid BM25 + pgvector search retrieves relevant context from 25,090 indexed insights.
+Hybrid BM25 + pgvector search retrieves relevant context from 23,963 indexed insights.
 
 | α (BM25 weight) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
