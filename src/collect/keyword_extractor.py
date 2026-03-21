@@ -82,15 +82,37 @@ def _extract_ko(text: str, max_kw: int) -> list[str]:
 
 
 def _extract_en(text: str, max_kw: int) -> list[str]:
+    # 1. 대문자 약어/티커 보존 (BTC, ETH, DeFi, S&P 등)
+    tickers = re.findall(r"\b[A-Z][A-Z0-9&]{1,9}\b", text)
+
+    # 2. 일반 단어 추출
     tokens = re.findall(r"[A-Za-z][A-Za-z\-']{1,}", text)
+
+    # 3. 숫자+단위 (100K, $50K, 3.5% 등)
+    numbers = re.findall(r"\$?[\d,]+\.?\d*[KkMmBb%]?\b", text)
+
     seen: set[str] = set()
     result: list[str] = []
+
+    # 티커 우선 (원형 유지)
+    for t in tickers:
+        kw = t.upper()
+        if kw not in seen and len(kw) >= 2:
+            seen.add(kw)
+            result.append(kw)
+
+    # 일반 단어
     for t in tokens:
         kw = t.lower()
         if kw not in _EN_STOPWORDS and len(kw) >= 2:
-            if kw not in seen:
+            if kw not in seen and kw.upper() not in seen:
                 seen.add(kw)
                 result.append(kw)
-                if len(result) >= max_kw:
-                    break
-    return result
+
+    # 숫자 (가격, 비율)
+    for n in numbers:
+        if n not in seen and len(n) >= 2:
+            seen.add(n)
+            result.append(n)
+
+    return result[:max_kw]
