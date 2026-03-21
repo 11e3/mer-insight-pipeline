@@ -30,6 +30,7 @@ from src.dashboard.queries import (
     load_predictions_for_topics,
     load_monthly_trends,
     load_all_predictions,
+    load_leaderboard,
 )
 from src.dashboard.topics import classify_topic
 
@@ -83,7 +84,40 @@ if not pie_data.empty:
 
 st.divider()
 
-# ─── 2. Accuracy by Topic ───────────────────────────────────────────────────
+# ─── 2. Source Leaderboard ───────────────────────────────────────────────────
+
+st.subheader("Source Leaderboard")
+
+leaderboard = load_leaderboard()
+
+if leaderboard:
+    df_lb = pd.DataFrame(leaderboard)
+    df_lb["accuracy"] = df_lb.apply(
+        lambda r: f"{r['correct'] / r['verified'] * 100:.1f}%" if r["verified"] > 0 else "—", axis=1
+    )
+    df_lb = df_lb.rename(columns={
+        "source": "Source", "total": "Total", "verified": "Verified",
+        "correct": "Correct", "incorrect": "Incorrect",
+        "pending": "Pending", "future": "Future", "accuracy": "Accuracy",
+    })
+    st.dataframe(
+        df_lb[["Source", "Total", "Verified", "Correct", "Incorrect", "Accuracy", "Pending", "Future"]],
+        use_container_width=True, hide_index=True,
+    )
+
+    # 바 차트
+    if len(df_lb) > 1:
+        fig_lb = px.bar(
+            df_lb, x="Source", y=["Correct", "Incorrect"],
+            barmode="group",
+            color_discrete_map={"Correct": "#2ecc71", "Incorrect": "#e74c3c"},
+            title="Verified Predictions by Source",
+        )
+        st.plotly_chart(fig_lb, use_container_width=True)
+
+st.divider()
+
+# ─── 3. Accuracy by Topic ───────────────────────────────────────────────────
 
 st.subheader("Accuracy by Topic")
 

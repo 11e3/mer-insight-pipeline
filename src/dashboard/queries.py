@@ -89,10 +89,27 @@ def load_all_predictions():
 
 @st.cache_data(ttl=300)
 def load_sources():
-    """활성 소스 목록."""
     return _fetchall("""
         SELECT name, source_type, platform, url, is_active,
             (SELECT COUNT(*) FROM mer_predictions WHERE source_id = sources.id) AS prediction_count
         FROM sources
         ORDER BY name
+    """)
+
+
+@st.cache_data(ttl=60)
+def load_leaderboard():
+    return _fetchall("""
+        SELECT
+            COALESCE(s.name, 'mer_ranto28') AS source,
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE mp.is_correct IS NOT NULL) AS verified,
+            COUNT(*) FILTER (WHERE mp.is_correct = TRUE) AS correct,
+            COUNT(*) FILTER (WHERE mp.is_correct = FALSE) AS incorrect,
+            COUNT(*) FILTER (WHERE mp.is_correct IS NULL AND mp.is_verifiable = true) AS pending,
+            COUNT(*) FILTER (WHERE mp.is_correct IS NULL AND mp.expected_date > CURRENT_DATE) AS future
+        FROM mer_predictions mp
+        LEFT JOIN sources s ON s.id = mp.source_id
+        GROUP BY s.name
+        ORDER BY correct DESC
     """)
