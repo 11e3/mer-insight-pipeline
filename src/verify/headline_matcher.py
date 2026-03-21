@@ -5,6 +5,7 @@
 검색 범위: prediction_date ~ 오늘 (예측일 이후 뉴스만 검증 근거로 사용).
 """
 
+import functools
 import logging
 from datetime import timedelta
 
@@ -87,14 +88,9 @@ async def find_matching_headlines(
 
 VECTOR_SIMILARITY_THRESHOLD = 0.45  # cosine similarity 최소값
 
-_embedder_cache = None
-
-
+@functools.lru_cache(maxsize=1)
 def _get_embedder():
-    global _embedder_cache
-    if _embedder_cache is None:
-        _embedder_cache = get_embedder()
-    return _embedder_cache
+    return get_embedder()
 
 
 async def find_matching_headlines_vector(
@@ -162,6 +158,7 @@ async def batch_match(
         SELECT id, prediction_text, target_asset, predicted_direction, prediction_date, expected_date
         FROM mer_predictions
         WHERE is_correct IS NULL
+          AND is_verifiable IS NOT FALSE
           AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
           AND (skipped_at IS NULL OR skipped_at < CURRENT_DATE - INTERVAL '7 days')
         ORDER BY prediction_date DESC

@@ -76,7 +76,22 @@ Prediction → keyword extraction (kiwipiepy) → GIN matching → vector cosine
 | Verdict model | Haiku 4.5 (Batch API, 50% discount) |
 | Cost per prediction | $0.0045 |
 
-Details on how we chose this approach: [Experiment Log](docs/verification-experiments.md)
+<details>
+<summary><strong>6 approaches compared → 87% cost reduction</strong> (click to expand)</summary>
+
+| Approach | Match rate | Cost/pred | Notes |
+|----------|-----------|-----------|-------|
+| API only (no search) | 16.9% | $0.01 | 80% PENDING — knowledge cutoff |
+| API + Brave one-shot | 37.7% | $0.02 | Insufficient snippets |
+| API + web_search (Sonnet) | 30% | $0.05 | Unstable |
+| API + agentic tool_use (Opus) | 40% | $0.26 | Token cost explosion |
+| API + web_search 1-by-1 (Haiku) | 80% | $0.035 | 5,000 preds = $175 |
+| **News DB + Batch API** ★ | **prod** | **$0.0045** | **5,000 preds = ~$3** |
+
+Tested on 77 cases + 50-case blind audit → found data contamination → full reset, re-verified 1-by-1.
+Details: [Experiment Log](docs/verification-experiments.md)
+
+</details>
 
 ### Current Status
 

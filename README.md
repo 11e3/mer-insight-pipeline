@@ -78,7 +78,22 @@ flowchart TD
 | 판정 모델 | Haiku 4.5 (Batch API, 50% 할인) |
 | 검증 비용 | 건당 $0.0045 |
 
-자동 검증 방식 선정 과정과 실험 결과는 [실험 기록](docs/verification-experiments.md)에 정리되어 있습니다.
+<details>
+<summary><strong>6가지 방식 비교 → 87% 비용 절감</strong> (클릭해서 펼치기)</summary>
+
+| 방식 | 일치율 | 비용/건 | 비고 |
+|------|--------|---------|------|
+| API만 (검색 없음) | 16.9% | $0.01 | 80% PENDING — knowledge cutoff |
+| API + Brave 원샷 검색 | 37.7% | $0.02 | snippet 불충분 |
+| API + web_search (Sonnet) | 30% | $0.05 | 불안정 |
+| API + 에이전틱 tool_use (Opus) | 40% | $0.26 | 토큰 누적 비용 폭발 |
+| API + web_search 1건씩 (Haiku) | 80% | $0.035 | 5,000건 = $175 |
+| **뉴스 DB + Batch API** ★ | **실전** | **$0.0045** | **5,000건 = ~$3** |
+
+77건 대상 실험 + 50건 블라인드 감사 → 데이터 오염 발견 → 전체 리셋 후 1건씩 재검증.
+자세한 내용: [실험 기록](docs/verification-experiments.md)
+
+</details>
 
 ### 현재 현황
 
