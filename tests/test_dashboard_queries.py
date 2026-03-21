@@ -13,16 +13,20 @@ for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
 # Mock psycopg2 and streamlit before import of queries module
 _mock_st = MagicMock()
 _mock_st.cache_data = lambda **kwargs: (lambda fn: fn)
+_mock_st.cache_resource = lambda fn=None: fn if fn is not None else (lambda f: f)
 
 _mock_psycopg2 = MagicMock()
 _mock_psycopg2_extras = MagicMock()
+_mock_psycopg2_pool = MagicMock()
 # Need RealDictCursor to be accessible
 _mock_psycopg2.extras = _mock_psycopg2_extras
+_mock_psycopg2.pool = _mock_psycopg2_pool
 
 # Install mocks in sys.modules
 sys.modules.setdefault("streamlit", _mock_st)
 sys.modules.setdefault("psycopg2", _mock_psycopg2)
 sys.modules.setdefault("psycopg2.extras", _mock_psycopg2_extras)
+sys.modules.setdefault("psycopg2.pool", _mock_psycopg2_pool)
 
 # Force fresh import
 for mod_name in list(sys.modules):
@@ -39,7 +43,7 @@ from src.dashboard.queries import (
 )
 
 
-def _mock_conn_and_cursor(rows, fetchone=False):
+def _mock_pool_and_cursor(rows, fetchone=False):
     mock_cursor = MagicMock()
     if fetchone:
         mock_cursor.fetchone.return_value = rows
@@ -50,36 +54,39 @@ def _mock_conn_and_cursor(rows, fetchone=False):
 
     mock_conn = MagicMock()
     mock_conn.cursor.return_value = mock_cursor
-    return mock_conn
+
+    mock_pool = MagicMock()
+    mock_pool.getconn.return_value = mock_conn
+    return mock_pool, mock_conn
 
 
 def test_fetchone():
     row = {"total": 100, "correct": 50}
-    mock_conn = _mock_conn_and_cursor(row, fetchone=True)
+    mock_pool, mock_conn = _mock_pool_and_cursor(row, fetchone=True)
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         result = _fetchone("SELECT COUNT(*) FROM test")
 
     assert result == row
-    mock_conn.close.assert_called_once()
+    mock_pool.putconn.assert_called_once_with(mock_conn)
 
 
 def test_fetchall():
     rows = [{"id": 1}, {"id": 2}]
-    mock_conn = _mock_conn_and_cursor(rows)
+    mock_pool, mock_conn = _mock_pool_and_cursor(rows)
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         result = _fetchall("SELECT * FROM test")
 
     assert len(result) == 2
-    mock_conn.close.assert_called_once()
+    mock_pool.putconn.assert_called_once_with(mock_conn)
 
 
 def test_load_prediction_summary():
     summary = {"total": 200, "correct": 80, "incorrect": 30, "pending": 70, "skipped": 20}
-    mock_conn = _mock_conn_and_cursor(summary, fetchone=True)
+    mock_pool, _ = _mock_pool_and_cursor(summary, fetchone=True)
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         result = load_prediction_summary()
 
     assert result["total"] == 200
@@ -90,9 +97,9 @@ def test_load_predictions_for_topics():
         {"prediction_text": "금리 인하", "is_correct": True},
         {"prediction_text": "환율 상승", "is_correct": False},
     ]
-    mock_conn = _mock_conn_and_cursor(rows)
+    mock_pool, _ = _mock_pool_and_cursor(rows)
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         result = load_predictions_for_topics()
 
     assert len(result) == 2
@@ -103,9 +110,9 @@ def test_load_monthly_trends():
         {"month": "2024-01", "total": 10, "verified": 8, "correct": 5},
         {"month": "2024-02", "total": 15, "verified": 12, "correct": 9},
     ]
-    mock_conn = _mock_conn_and_cursor(rows)
+    mock_pool, _ = _mock_pool_and_cursor(rows)
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         result = load_monthly_trends()
 
     assert len(result) == 2
@@ -113,15 +120,15 @@ def test_load_monthly_trends():
 
 def test_load_all_predictions():
     rows = [{"prediction_date": "2024-01-01", "prediction_text": "코스피 상승"}]
-    mock_conn = _mock_conn_and_cursor(rows)
+    mock_pool, _ = _mock_pool_and_cursor(rows)
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         result = load_all_predictions()
 
     assert len(result) == 1
 
 
-def test_fetchone_closes_on_error():
+def test_fetchone_returns_conn_on_error():
     mock_cursor = MagicMock()
     mock_cursor.execute.side_effect = Exception("SQL error")
     mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
@@ -130,10 +137,13 @@ def test_fetchone_closes_on_error():
     mock_conn = MagicMock()
     mock_conn.cursor.return_value = mock_cursor
 
-    with patch("src.dashboard.queries._get_conn", return_value=mock_conn):
+    mock_pool = MagicMock()
+    mock_pool.getconn.return_value = mock_conn
+
+    with patch("src.dashboard.queries._get_pool", return_value=mock_pool):
         try:
             _fetchone("BAD SQL")
         except Exception:
             pass
 
-    mock_conn.close.assert_called_once()
+    mock_pool.putconn.assert_called_once_with(mock_conn)

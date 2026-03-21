@@ -8,9 +8,12 @@ Usage:
 """
 
 import asyncio
+import json
 import logging
+from datetime import date
 from pathlib import Path
 
+import anthropic
 import asyncpg
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -81,90 +84,109 @@ class EventDispatcher:
         log.info("=== 일일 파이프라인 시작 ===")
 
         async with self.pool.acquire() as conn:
-            # 1. 활성 소스별 신규 글 수집 + 예측 추출
-            any_new = False
-            try:
-                collectors = await self._get_active_collectors(conn)
-                for collector in collectors:
-                    try:
-                        new_posts = await collector.check_new(conn)
-                        if new_posts:
-                            source_type = await conn.fetchval(
-                                "SELECT platform FROM sources WHERE name = $1",
-                                collector.source_name,
-                            ) or "blog"
-                            source_id = await conn.fetchval(
-                                "SELECT id FROM sources WHERE name = $1",
-                                collector.source_name,
-                            )
-                            for post in new_posts:
-                                # mer_posts에 저장
-                                from datetime import date as _date
-                                pub_date = None
-                                if post.published_at:
-                                    try:
-                                        pub_date = _date.fromisoformat(post.published_at)
-                                    except (ValueError, TypeError):
-                                        pub_date = None
-                                post_id = await conn.fetchval("""
-                                    INSERT INTO mer_posts (log_no, title, date, url, content_text, source_id)
-                                    VALUES ($1, $2, $3, $4, $5, $6)
-                                    ON CONFLICT (log_no) DO NOTHING
-                                    RETURNING id
-                                """, post.external_id, post.title,
-                                    pub_date, post.url,
-                                    post.content_text, source_id)
-                                if not post_id:
-                                    continue  # 이미 존재
-
-                                post_dict = {
-                                    "log_no": post.external_id,
-                                    "title": post.title,
-                                    "date": post.published_at,
-                                    "url": post.url,
-                                    "content_text": post.content_text,
-                                }
-                                extracted = await extract_and_save(
-                                    conn, self.embedder, post_dict,
-                                    source_type=source_type,
-                                )
-                                log.info(
-                                    f"  [{collector.source_name}] "
-                                    f"인사이트 {extracted['count']}개 추출 ({post.title[:40]})"
-                                )
-                            log.info(f"[{collector.source_name}] 신규 {len(new_posts)}건 처리 완료")
-                            any_new = True
-                    except Exception as e:
-                        log.error(f"[{collector.source_name}] 수집 오류: {e}")
-            except Exception as e:
-                log.error(f"소스 로딩 오류: {e}")
+            any_new = await self._step_collect(conn)
 
             if any_new:
                 await self.bm25_index.build(conn)
                 self.bm25_index.save(BM25_CACHE)
                 log.info("BM25 인덱스 갱신 완료")
 
-            # 2. 뉴스 헤드라인 수집
-            try:
-                news_collector = NewsCollector(conn)
-                news_count = await news_collector.run_daily()
-                log.info(f"뉴스 헤드라인 {news_count}건 수집 완료")
-            except Exception as e:
-                log.error(f"뉴스 수집 오류: {e}")
-
-            # 3a. 자동 검증 (헤드라인 매칭 → Haiku 판정)
-            try:
-                auto_verifier = AutoVerifier(conn)
-                auto_result = await auto_verifier.run(daily_limit=200)
-                log.info(
-                    f"자동 검증: {auto_result['auto_resolved']}건 확정, "
-                    f"비용 ${auto_result['cost_usd']:.4f}"
-                )
-            except Exception as e:
-                log.error(f"자동 검증 오류: {e}")
-
+            await self._step_news(conn)
+            await self._step_verify(conn)
 
         log.info("=== 일일 파이프라인 완료 ===")
+
+    async def _step_collect(self, conn: asyncpg.Connection) -> bool:
+        """Step 1: 활성 소스별 신규 글 수집 + 예측 추출. 반환: 신규 글 존재 여부."""
+        any_new = False
+        try:
+            collectors = await self._get_active_collectors(conn)
+        except (asyncpg.PostgresError, json.JSONDecodeError) as e:
+            log.error(f"소스 로딩 오류: {e}")
+            return False
+
+        for collector in collectors:
+            try:
+                new_posts = await collector.check_new(conn)
+                if not new_posts:
+                    continue
+
+                source_row = await conn.fetchrow(
+                    "SELECT id, platform FROM sources WHERE name = $1",
+                    collector.source_name,
+                )
+                source_type = (source_row["platform"] if source_row else None) or "blog"
+                source_id = source_row["id"] if source_row else None
+
+                for post in new_posts:
+                    await self._save_and_extract(conn, post, source_id, source_type, collector.source_name)
+
+                log.info(f"[{collector.source_name}] 신규 {len(new_posts)}건 처리 완료")
+                any_new = True
+            except (asyncpg.PostgresError, anthropic.APIError, ValueError) as e:
+                log.error(f"[{collector.source_name}] 수집 오류: {e}")
+
+        return any_new
+
+    async def _save_and_extract(
+        self,
+        conn: asyncpg.Connection,
+        post,
+        source_id: int | None,
+        source_type: str,
+        source_name: str,
+    ):
+        """단일 포스트 저장 + 인사이트 추출."""
+        pub_date = None
+        if post.published_at:
+            try:
+                pub_date = date.fromisoformat(post.published_at)
+            except (ValueError, TypeError):
+                pub_date = None
+
+        post_id = await conn.fetchval("""
+            INSERT INTO mer_posts (log_no, title, date, url, content_text, source_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (log_no) DO NOTHING
+            RETURNING id
+        """, post.external_id, post.title, pub_date, post.url, post.content_text, source_id)
+
+        if not post_id:
+            return  # 이미 존재
+
+        post_dict = {
+            "log_no": post.external_id,
+            "title": post.title,
+            "date": post.published_at,
+            "url": post.url,
+            "content_text": post.content_text,
+        }
+        extracted = await extract_and_save(conn, self.embedder, post_dict, source_type=source_type)
+        log.info(
+            f"  [{source_name}] "
+            f"인사이트 {extracted['count']}개 추출 ({post.title[:40]})"
+        )
+
+    async def _step_news(self, conn: asyncpg.Connection):
+        """Step 2: 뉴스 헤드라인 수집."""
+        try:
+            news_collector = NewsCollector(conn)
+            news_count = await news_collector.run_daily()
+            log.info(f"뉴스 헤드라인 {news_count}건 수집 완료")
+        except (asyncpg.PostgresError, OSError) as e:
+            log.error(f"뉴스 수집 오류: {e}")
+
+    async def _step_verify(self, conn: asyncpg.Connection):
+        """Step 3: 자동 검증 (헤드라인 매칭 → Haiku 판정)."""
+        try:
+            auto_verifier = AutoVerifier(conn)
+            auto_result = await auto_verifier.run(daily_limit=200)
+            log.info(
+                f"자동 검증: {auto_result['auto_resolved']}건 확정, "
+                f"비용 ${auto_result['cost_usd']:.4f}"
+            )
+        except (asyncpg.PostgresError, anthropic.APIError) as e:
+            log.error(f"자동 검증 오류: {e}")
 
     async def _get_active_collectors(self, conn: asyncpg.Connection):
         """sources 테이블에서 active 소스의 Collector 인스턴스 목록 반환."""
@@ -174,7 +196,6 @@ class EventDispatcher:
         collectors = []
         for row in rows:
             try:
-                import json
                 config = row["config"] if isinstance(row["config"], dict) else json.loads(row["config"] or "{}")
                 collector = get_collector(row["source_type"], row["name"], config)
                 collectors.append(collector)

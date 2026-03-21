@@ -7,7 +7,7 @@
 
 import functools
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import asyncpg
 
@@ -46,14 +46,12 @@ async def find_matching_headlines(
         return []
 
     # 날짜 범위: 예측 다음날 ~ 현재 (예측 당일 뉴스 제외, 오늘 뉴스 포함)
-    from datetime import datetime as _datetime
-
     if prediction_date:
-        date_start = _datetime.combine(prediction_date + timedelta(days=1), _datetime.min.time())
+        date_start = datetime.combine(prediction_date + timedelta(days=1), datetime.min.time())
     else:
         return []  # prediction_date NULL이면 매칭 건너뛰기
 
-    date_end = _datetime.now()
+    date_end = datetime.now()
 
     # GIN 인덱스 활용: keywords && ARRAY[...] (overlap 연산자)
     rows = await conn.fetch("""
@@ -103,13 +101,11 @@ async def find_matching_headlines_vector(
     embedder=None,
 ) -> list[dict]:
     """벡터 유사도로 헤드라인 매칭 (키워드 매칭 실패 시 fallback)."""
-    from datetime import datetime as _datetime
-
     if not prediction_date:
         return []
 
-    date_start = _datetime.combine(prediction_date + timedelta(days=1), _datetime.min.time())
-    date_end = _datetime.now()
+    date_start = datetime.combine(prediction_date + timedelta(days=1), datetime.min.time())
+    date_end = datetime.now()
 
     embedder = embedder or _get_embedder()
     query_text = f"{target_asset} {prediction_text}"

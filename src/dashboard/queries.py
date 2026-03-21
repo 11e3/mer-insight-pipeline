@@ -4,31 +4,40 @@ import os
 
 import psycopg2
 import psycopg2.extras
+import psycopg2.pool
 import streamlit as st
 
 
-def _get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+@st.cache_resource
+def _get_pool():
+    """커넥션 풀 생성 (Streamlit 앱 lifetime 동안 유지)."""
+    return psycopg2.pool.SimpleConnectionPool(
+        minconn=1, maxconn=5,
+        dsn=os.environ["DATABASE_URL"],
+    )
 
 
 def _fetchone(query):
-    conn = _get_conn()
+    pool = _get_pool()
+    conn = pool.getconn()
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(query)
-            return dict(cur.fetchone())
+            row = cur.fetchone()
+            return dict(row) if row else {}
     finally:
-        conn.close()
+        pool.putconn(conn)
 
 
 def _fetchall(query):
-    conn = _get_conn()
+    pool = _get_pool()
+    conn = pool.getconn()
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(query)
             return [dict(r) for r in cur.fetchall()]
     finally:
-        conn.close()
+        pool.putconn(conn)
 
 
 @st.cache_data(ttl=60)

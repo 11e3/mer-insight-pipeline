@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from datetime import date
 
 import anthropic
 import asyncpg
@@ -84,8 +85,8 @@ class AutoVerifier:
                     )
                     result["pending"] += 1
 
-            except Exception as e:
-                log.error(f"  #{match['prediction_id']}: API 오류 — {e}")
+            except (anthropic.APIError, asyncpg.PostgresError, KeyError) as e:
+                log.error(f"  #{match['prediction_id']}: 검증 오류 — {e}")
                 result["errors"] += 1
 
             if i < len(matches) - 1:
@@ -105,15 +106,13 @@ class AutoVerifier:
 
     async def _verify_single(self, match: dict) -> dict:
         """단일 예측에 대해 Haiku 호출 → verdict_data 반환."""
-        from datetime import date as _date
-
         headlines_text = "\n".join(
             f"{i+1}. {h['headline']} ({h['published_at']})"
             for i, h in enumerate(match["headlines"])
         )
 
         user_msg = AUTO_VERIFY_USER_TEMPLATE.format(
-            today=_date.today().isoformat(),
+            today=date.today().isoformat(),
             prediction_text=match["prediction_text"],
             target_asset=match.get("target_asset", "") or "",
             predicted_direction=match.get("predicted_direction", "neutral"),

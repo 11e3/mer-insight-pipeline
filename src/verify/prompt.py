@@ -46,8 +46,11 @@ AUTO_VERIFY_USER_TEMPLATE = """\
 """
 
 
-def parse_verdict_json(text: str) -> dict:
-    """LLM 응답에서 verdict JSON 추출."""
+def parse_llm_json(text: str, fallback: dict | None = None) -> dict:
+    """LLM 응답에서 JSON 추출 (마크다운 코드블록 제거 포함).
+
+    공통 유틸리티: realtime.py, auto_verifier 등에서 사용.
+    """
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
 
@@ -56,12 +59,19 @@ def parse_verdict_json(text: str) -> dict:
     except json.JSONDecodeError:
         pass
 
+    # JSON 객체 추출 시도
     for m in re.finditer(r"\{[^{}]+\}", text, re.DOTALL):
         try:
-            obj = json.loads(m.group())
-            if "verdict" in obj:
-                return obj
+            return json.loads(m.group())
         except json.JSONDecodeError:
             continue
 
-    return {"verdict": "PENDING", "reason": "JSON 파싱 실패"}
+    return fallback if fallback is not None else {}
+
+
+def parse_verdict_json(text: str) -> dict:
+    """LLM 응답에서 verdict JSON 추출."""
+    result = parse_llm_json(text)
+    if not result or "verdict" not in result:
+        return {"verdict": "PENDING", "reason": "JSON 파싱 실패"}
+    return result

@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import anthropic
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
@@ -155,7 +157,7 @@ async def test_run_api_error_continues():
         {**MATCH_CORRECT, "prediction_id": 2},
     ]
     good_resp = _mock_api_response('{"verdict": "CORRECT", "reason": "ok" }')
-    v.client.messages.create = AsyncMock(side_effect=[Exception("API error"), good_resp])
+    v.client.messages.create = AsyncMock(side_effect=[anthropic.APIError(message="API error", request=MagicMock(), body=None), good_resp])
 
     with patch("src.verify.auto_verifier.batch_match", AsyncMock(return_value=matches)):
         result = await v.run()

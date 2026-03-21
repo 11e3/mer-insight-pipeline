@@ -39,7 +39,7 @@ class NewsCollector:
                 if count > 0:
                     log.info(f"  [{feed.feed_id}] {count}건 삽입")
                 total += count
-            except Exception as e:
+            except (asyncpg.PostgresError, OSError) as e:
                 log.error(f"  [{feed.feed_id}] 수집 실패: {e}")
             await asyncio.sleep(_REQUEST_DELAY)
 
@@ -80,19 +80,19 @@ class NewsCollector:
         if not client_id or not client_secret:
             return 0
 
-        headers = {
+        session = req.Session()
+        session.headers.update({
             "X-Naver-Client-Id": client_id,
             "X-Naver-Client-Secret": client_secret,
-        }
+        })
         total = 0
 
         for query, lang, topic in self._NAVER_QUERIES:
             try:
                 resp = await asyncio.to_thread(
                     partial(
-                        req.get,
+                        session.get,
                         "https://openapi.naver.com/v1/search/news.json",
-                        headers=headers,
                         params={"query": query, "display": 100, "sort": "date"},
                         timeout=10,
                     )
@@ -124,14 +124,15 @@ class NewsCollector:
                         )
                         if result == "INSERT 0 1":
                             total += 1
-                    except Exception as e:
+                    except asyncpg.PostgresError as e:
                         log.debug(f"Naver INSERT 실패: {e}")
 
                 await asyncio.sleep(0.5)  # rate limit
 
-            except Exception as e:
+            except (asyncpg.PostgresError, OSError, ValueError) as e:
                 log.error(f"[naver:{query[:10]}] 수집 실패: {e}")
 
+        session.close()
         if total > 0:
             log.info(f"  [naver] {total}건 삽입")
         return total
@@ -143,7 +144,7 @@ class NewsCollector:
         try:
             dt = parsedate_to_datetime(date_str)
             return dt.replace(tzinfo=None)  # naive UTC 호환
-        except Exception:
+        except (ValueError, TypeError, IndexError):
             return None
 
     async def _collect_feed(self, feed: FeedSpec, cutoff: datetime) -> int:
@@ -191,7 +192,7 @@ class NewsCollector:
                 )
                 if result == "INSERT 0 1":
                     inserted += 1
-            except Exception as e:
+            except asyncpg.PostgresError as e:
                 log.debug(f"INSERT 실패: {e}")
 
         # 커서 업데이트

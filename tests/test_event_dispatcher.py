@@ -5,6 +5,9 @@ import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import anthropic
+import asyncpg
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
@@ -82,7 +85,8 @@ async def test_run_pipeline_with_new_posts():
         url="https://blog.naver.com/ranto28/111",
     )]
     collector = _make_collector(posts=posts)
-    mock_conn.fetchval = AsyncMock(return_value="blog")
+    mock_conn.fetchrow = AsyncMock(return_value={"id": 1, "platform": "blog"})
+    mock_conn.fetchval = AsyncMock(return_value=1)
 
     mock_verifier = MagicMock()
     mock_verifier.run = AsyncMock(return_value={"auto_resolved": 0, "pending": 0, "errors": 0, "cost_usd": 0})
@@ -104,7 +108,7 @@ async def test_run_pipeline_monitor_error():
     d, mock_conn = _make_dispatcher()
 
     collector = _make_collector()
-    collector.check_new = AsyncMock(side_effect=Exception("monitor error"))
+    collector.check_new = AsyncMock(side_effect=asyncpg.PostgresError("monitor error"))
 
     mock_verifier = MagicMock()
     mock_verifier.run = AsyncMock(return_value={"auto_resolved": 2, "pending": 0, "errors": 0, "cost_usd": 0})
@@ -124,7 +128,7 @@ async def test_run_pipeline_verifier_error():
     collector = _make_collector(posts=[])
 
     mock_verifier = MagicMock()
-    mock_verifier.run = AsyncMock(side_effect=Exception("verify error"))
+    mock_verifier.run = AsyncMock(side_effect=anthropic.APIError(message="verify error", request=MagicMock(), body=None))
 
     with patch.object(d, "_get_active_collectors", AsyncMock(return_value=[collector])), \
          patch("src.pipeline.event_dispatcher.NewsCollector") as MockNews, \

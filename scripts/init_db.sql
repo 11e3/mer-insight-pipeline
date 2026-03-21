@@ -76,11 +76,46 @@ CREATE TABLE IF NOT EXISTS mer_predictions (
     is_correct          BOOLEAN,
     skipped_at          DATE,
     expected_date       DATE,         -- 미래 예측의 예상 실현 시점 (해당 날짜까지 검증 건너뜀)
+    is_verifiable       BOOLEAN,      -- Haiku 분류: 검증 가능/불가 (NULL=미분류)
     created_at          TIMESTAMP DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_predictions_text
     ON mer_predictions (md5(prediction_text));
+CREATE INDEX IF NOT EXISTS idx_predictions_pending
+    ON mer_predictions (is_correct, is_verifiable)
+    WHERE is_correct IS NULL;
+
+-- ─── 뉴스 헤드라인 ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS news_headlines (
+    id          SERIAL PRIMARY KEY,
+    headline    TEXT NOT NULL,
+    source_url  TEXT NOT NULL,
+    source_name VARCHAR(200),
+    language    VARCHAR(10) DEFAULT 'ko',
+    published_at TIMESTAMP NOT NULL,
+    keywords    TEXT[],
+    feed_topic  VARCHAR(50),
+    embedding   vector(1024),
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_headlines_url
+    ON news_headlines (md5(source_url));
+CREATE INDEX IF NOT EXISTS idx_headlines_published
+    ON news_headlines (published_at);
+CREATE INDEX IF NOT EXISTS idx_headlines_keywords
+    ON news_headlines USING gin (keywords);
+CREATE INDEX IF NOT EXISTS idx_headlines_embedding
+    ON news_headlines USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64);
+
+-- ─── 뉴스 피드 커서 ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS news_feed_cursors (
+    feed_id         VARCHAR(100) PRIMARY KEY,
+    last_fetched_at TIMESTAMP,
+    item_count      INTEGER DEFAULT 0
+);
 
 -- ─── 실시간 이벤트 ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS events (

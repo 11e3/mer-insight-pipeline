@@ -5,6 +5,7 @@ EventDispatcher가 MER_NEW_POST 이벤트 처리 후 호출.
 
 import json
 import logging
+from datetime import date
 
 import anthropic
 import asyncpg
@@ -13,6 +14,7 @@ from src.config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from src.embed import Embedder, vec_str
 from src.extract.parse_results import INSIGHT_TYPE_MAP, extract_content
 from src.config.prompts import INSIGHT_USER_TEMPLATE, get_extraction_prompt
+from src.verify.prompt import parse_llm_json
 
 log = logging.getLogger(__name__)
 
@@ -56,19 +58,13 @@ async def extract_and_save(
             }],
         )
         raw_text = resp.content[0].text.strip()
-    except Exception as e:
+    except anthropic.APIError as e:
         log.error(f"인사이트 추출 API 오류: {e}")
         return result
 
     # JSON 파싱
-    try:
-        text = raw_text
-        if text.startswith("```"):
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
-        data = json.loads(text)
-    except json.JSONDecodeError:
+    data = parse_llm_json(raw_text)
+    if not data:
         log.error(f"인사이트 JSON 파싱 실패: {post['log_no']}")
         return result
 
@@ -107,16 +103,14 @@ async def extract_and_save(
                 exp_date = None
                 if item.get("expected_date"):
                     try:
-                        from datetime import date as _date
-                        exp_date = _date.fromisoformat(item["expected_date"])
+                        exp_date = date.fromisoformat(item["expected_date"])
                     except (ValueError, TypeError):
                         pass
 
                 pred_date = post.get("date")
                 if isinstance(pred_date, str):
                     try:
-                        from datetime import date as _d
-                        pred_date = _d.fromisoformat(pred_date)
+                        pred_date = date.fromisoformat(pred_date)
                     except (ValueError, TypeError):
                         pred_date = None
 

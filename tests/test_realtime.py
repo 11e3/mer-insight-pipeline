@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import anthropic
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
@@ -47,7 +49,7 @@ async def test_extract_and_save_api_error():
     conn.fetchval.return_value = 42
 
     with patch("src.extract.realtime.client") as mock_client:
-        mock_client.messages.create = AsyncMock(side_effect=Exception("API error"))
+        mock_client.messages.create = AsyncMock(side_effect=anthropic.APIError(message="API error", request=MagicMock(), body=None))
         from src.extract.realtime import extract_and_save
         result = await extract_and_save(conn, _make_mock_embedder(), _make_post())
 
