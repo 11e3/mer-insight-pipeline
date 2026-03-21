@@ -87,14 +87,14 @@ async def find_matching_headlines(
 
 VECTOR_SIMILARITY_THRESHOLD = 0.45  # cosine similarity 최소값
 
-_embedder = None
+_embedder_cache = None
 
 
 def _get_embedder():
-    global _embedder
-    if _embedder is None:
-        _embedder = get_embedder()
-    return _embedder
+    global _embedder_cache
+    if _embedder_cache is None:
+        _embedder_cache = get_embedder()
+    return _embedder_cache
 
 
 async def find_matching_headlines_vector(
@@ -104,6 +104,7 @@ async def find_matching_headlines_vector(
     prediction_date,
     *,
     max_results: int = 10,
+    embedder=None,
 ) -> list[dict]:
     """벡터 유사도로 헤드라인 매칭 (키워드 매칭 실패 시 fallback)."""
     from datetime import datetime as _datetime
@@ -114,7 +115,7 @@ async def find_matching_headlines_vector(
     date_start = _datetime.combine(prediction_date + timedelta(days=1), _datetime.min.time())
     date_end = _datetime.now()
 
-    embedder = _get_embedder()
+    embedder = embedder or _get_embedder()
     query_text = f"{target_asset} {prediction_text}"
     query_vec = embedder.embed_query_sync(query_text)
     query_str = vec_str(query_vec)
