@@ -65,13 +65,14 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - **로컬**: `event_dispatcher.py`가 APScheduler로 매일 01:00 단일 잡 실행
 - **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 수집 + 검증)
 
-### 예측 검증 (자동만)
-1. **실시간 자동**: `auto_verifier.py` — headline_matcher(키워드 + 벡터 fallback)로 매칭 → Haiku verdict + reason(헤드라인N 인용) → source_url은 최고 overlap 헤드라인에서 자동 할당
+### 예측 검증 (3경로, 자동만)
+1. **헤드라인 매칭 자동**: `auto_verifier.py` — headline_matcher(키워드 GIN + 벡터 fallback)로 매칭 → Haiku verdict + reason(헤드라인N 인용) → source_url은 최고 overlap 헤드라인에서 자동 할당
 2. **배치 자동**: `scripts/ops/batch_verify.py create/status/apply` — Batch API 50% 할인, apply 시 헤드라인N을 마크다운 링크로 치환
-- **source_url 필수** — URL 없는 CORRECT/INCORRECT는 DB 반영 안 함
+3. **Haiku 직접 판정**: `scripts/ops/reclassify_pending.py` — knowledge cutoff 이전 예측은 헤드라인 없이 Haiku가 자체 지식으로 판정 (source_url 없음, reason만)
+- **source_url 필수** — 헤드라인 매칭 검증에서 URL 없는 CORRECT/INCORRECT는 DB 반영 안 함 (Haiku 직접 판정은 예외)
 - **UPDATE WHERE is_correct IS NULL** — verdict 덮어쓰기 방지
 - **skipped_at 7일 쿨다운** — PENDING 판정 후 7일간 재시도 방지
-- **is_verifiable 분류** — Haiku Batch API로 검증 가능/불가 분류 완료 (2,187건 제외)
+- **is_verifiable 분류** — Haiku Batch API로 검증 가능/불가 분류 (2,778건 제외)
 - 수동 검증 스텝은 event_dispatcher에서 제거됨
 
 ### 뉴스 헤드라인 DB

@@ -22,10 +22,10 @@ Automated verification is even harder. Using API web_search costs $0.035/predict
 | | Value |
 |---|---|
 | Predictions tracked | 5,010 |
-| Auto-verified | 669 (73.1% accuracy) |
+| Auto-verified | 1,047 (69.1% accuracy) |
 | News headline DB | 54,461 |
-| Verification cost | ~$3 (total) |
-| Tests | 235, 90%+ coverage |
+| Verification cost | ~$5 (total) |
+| Tests | 248, 90%+ coverage |
 
 ---
 
@@ -97,11 +97,11 @@ Details: [Experiment Log](docs/verification-experiments.md)
 
 | Status | Count |
 |--------|-------|
-| CORRECT | 489 |
-| INCORRECT | 180 |
-| Verifiable PENDING | 1,124 |
-| Unverifiable (vague/conditional) | 2,187 |
-| Future (awaiting expected_date) | 968 |
+| CORRECT | 724 |
+| INCORRECT | 323 |
+| Verifiable PENDING | 150 |
+| Unverifiable (vague/conditional) | 2,778 |
+| Future (awaiting expected_date) | 1,118 |
 
 ---
 
