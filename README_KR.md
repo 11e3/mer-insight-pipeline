@@ -5,42 +5,63 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-경제 인플루언서의 예측을 자동 추출하고, 실제로 맞았는지 뉴스 DB로 검증하는 파이프라인.
+**금융 인플루언서의 예측은 실제로 얼마나 맞을까?**
 
-**[라이브 대시보드](https://insight-verify.streamlit.app/)** · [English](README_EN.md) · [실험 기록](docs/verification-experiments.md)
+한국어/영어 금융 블로그·뉴스레터에서 예측을 자동 추출하고, 88K+ 뉴스 헤드라인 DB로 검증하는 파이프라인. 수동 라벨링 없이 추출·매칭·판정까지 완전 자동화.
 
-<img src="docs/png/dashboard.png" alt="대시보드 스크린샷" width="100%">
-
----
-
-### 왜 이게 어려운가?
-
-한국어 경제 블로그에는 종목 코드도, 날짜도, 확신도도 없습니다. "유가가 오를 것이다"라는 문장에서 **무엇이 예측이고, 언제까지 검증해야 하고, 뭘 기준으로 맞다/틀리다를 판단하는지** — 이 구조화 자체가 기성 도구로 해결 안 되는 NLP 문제입니다.
-
-자동 검증은 더 어렵습니다. API web_search로 1건씩 검증하면 5,000건에 175달러. 6가지 방식을 실험한 끝에 뉴스 헤드라인 DB + 키워드/벡터 하이브리드 매칭 + Batch API로 비용을 **3달러로 87% 절감**했습니다.
-
-### 지표
-
-| | 값 |
-|---|---|
-| 추적 중인 예측 | 5,100건 (3개 소스) |
-| 자동 검증 완료 | 1,047건 (적중률 69.1%) |
-| 뉴스 헤드라인 DB | 54,461건 |
-| 검증 비용 | ~$5 (전체) |
-| 테스트 | 248개, 90%+ 커버리지 |
+**[라이브 대시보드](https://insight-verify.streamlit.app/)** · [English](README.md) · [실험 기록](docs/verification-experiments.md)
 
 ---
 
-## 아키텍처
+## 주요 발견
+
+| 지표 | 값 |
+|------|-----|
+| 전체 적중률 | **69.2%** (731건 정답 / 1,056건 검증) |
+| vs. 헤드라인 센티먼트 baseline | **+14.9pp** (baseline: 54.2%) |
+| 추적 중인 예측 | 5,180건 (3개 소스) |
+| 뉴스 헤드라인 DB | 88,713건 (2022–2026, 한국어 + 영어) |
+| 검증 비용 | **건당 $0.0045** — $0.035에서 87% 절감 |
+| 월 운영비 | ~$0.50 |
+
+동일 데이터셋에서 **헤드라인 센티먼트 baseline**을 실측: 키워드 매칭된 헤드라인의 긍정/부정 단어 수로 방향을 예측하면 **54.2%** (n=1,041). 블로거는 이보다 **+14.9pp** 높으며, 상승 예측에서 격차가 가장 큼 (77.8% vs 59.9%). 뉴스에 이미 반영된 정보 이상의 시그널이 있음을 시사.
+
+### 소스 리더보드
+
+| 소스 | 예측 | 검증 | 적중률 |
+|------|------|------|--------|
+| mer_ranto28 (한국 매크로 블로그) | 5,010 | 1,052 | **69.3%** |
+| arthur_hayes (Crypto Trader Digest) | 150 | 4 | 50.0%* |
+
+\* Hayes 검증 진행 중 — 대부분 장기 예측(2026–2028). 66건이 헤드라인과 매칭됐으나 근거 부족으로 PENDING 판정. expected_date가 지나면서 검증 건수가 누적될 예정.
+
+<details>
+<summary><strong>데이터 무결성 노트</strong></summary>
+
+초기 배치 검증에서 50건 블라인드 감사 결과 36% 오염률(매칭 부족으로 인한 false CORRECT) 확인. 전체 1,047건 verdict 리셋 후 엄격한 기준(MIN_KEYWORD_OVERLAP=3, source_url 필수)으로 1건씩 재검증. 현재 결과는 리셋 후 데이터.
+
+</details>
+
+---
+
+## 동작 원리
+
+```
+블로그/뉴스레터 → Claude 추출 → 구조화된 예측 (claim, keywords, expected_date)
+    → 88K 헤드라인 대상 키워드 GIN 매칭 → 실패 시 벡터 cosine fallback
+    → 매칭된 헤드라인 + 예측 → Haiku 판정 → CORRECT / INCORRECT / PENDING
+```
 
 ```mermaid
 flowchart TD
     subgraph 수집
-        BLOG[네이버 블로그] -->|RSS| MON[mer_monitor]
+        BLOG[네이버 블로그] -->|RSS| MON[source_collector]
+        SUB[Substack] -->|RSS| RSS[rss_collector]
         MON -->|Claude 추출| DB[(PostgreSQL + pgvector)]
+        RSS -->|Claude 추출| DB
         NEWS_RSS[Google News 33피드] --> NC[news_collector]
         NEWS_NAVER[Naver API 14쿼리] --> NC
-        NC --> NHL[(news_headlines 54K)]
+        NC --> NHL[(news_headlines 88K)]
     end
 
     subgraph 검증
@@ -55,31 +76,20 @@ flowchart TD
 
 **일일 파이프라인** (GitHub Actions, KST 01:00):
 
-1. 메르 블로그 신규 글 수집 + Claude 인사이트 추출
+1. 활성 소스에서 신규 글 수집 + Claude 인사이트 추출
 2. 뉴스 헤드라인 수집 (RSS 33피드 + Naver API)
 3. 자동 검증 (헤드라인 매칭 → Haiku 판정)
 
 ---
 
-## 검증 방식
+## 왜 이게 어려운가?
 
-뉴스 헤드라인 DB에서 예측과 관련된 기사를 찾고, Haiku가 판정합니다.
+금융 블로그에는 종목 코드도, 날짜도, 확신도도 없습니다. "유가가 오를 것이다"라는 문장에서 **무엇이 예측이고, 언제까지 검증해야 하고, 뭘 기준으로 맞다/틀리다를 판단하는지** — 이 구조화 자체가 기성 도구로 해결 안 되는 NLP 문제입니다.
 
-```
-예측 → 키워드 추출 (kiwipiepy) → GIN 매칭 → 실패 시 벡터 cosine fallback
-    → 매칭된 헤드라인 + 예측 → Haiku → CORRECT / INCORRECT / PENDING
-```
-
-| 항목 | 수치 |
-|------|------|
-| 매칭 방식 | 키워드 GIN + 벡터 cosine fallback |
-| 뉴스 소스 | Google News RSS 33피드 + Naver API 14쿼리 |
-| 헤드라인 | 54,461건 (2022~2026) |
-| 판정 모델 | Haiku 4.5 (Batch API, 50% 할인) |
-| 검증 비용 | 건당 $0.0045 |
+자동 검증은 더 어렵습니다. API web_search로 1건씩 검증하면 5,000건에 175달러. 6가지 방식을 실험한 끝에 뉴스 헤드라인 DB + 키워드/벡터 하이브리드 매칭 + Batch API로 비용을 **3달러로 87% 절감**했습니다.
 
 <details>
-<summary><strong>6가지 방식 비교 → 87% 비용 절감</strong> (클릭해서 펼치기)</summary>
+<summary><strong>6가지 방식 비교 → 87% 비용 절감</strong></summary>
 
 | 방식 | 일치율 | 비용/건 | 비고 |
 |------|--------|---------|------|
@@ -90,26 +100,25 @@ flowchart TD
 | API + web_search 1건씩 (Haiku) | 80% | $0.035 | 5,000건 = $175 |
 | **뉴스 DB + Batch API** ★ | **실전** | **$0.0045** | **5,000건 = ~$3** |
 
-77건 대상 실험 + 50건 블라인드 감사 → 데이터 오염 발견 → 전체 리셋 후 1건씩 재검증.
 자세한 내용: [실험 기록](docs/verification-experiments.md)
 
 </details>
 
-### 현재 현황
+### 현재 검증 현황
 
 | 상태 | 건수 |
 |------|------|
-| CORRECT | 724 |
-| INCORRECT | 323 |
-| 검증 대기 | 150 |
-| 검증 불가 (모호/조건부) | 2,778 |
-| 미래 대기 | 1,118 |
+| CORRECT | 731 |
+| INCORRECT | 325 |
+| 검증 대기 (PENDING) | 225 |
+| 검증 불가 (모호/조건부) | 2,793 |
+| 미래 대기 (expected_date 미도래) | 1,203 |
 
 ---
 
 ## 검색 인프라
 
-하이브리드 BM25 + pgvector 검색으로 25,090개 인사이트에서 관련 문맥을 검색합니다.
+하이브리드 BM25 + pgvector 검색으로 24,385개 인사이트에서 관련 문맥을 검색합니다.
 
 | α (BM25 가중치) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
@@ -117,7 +126,7 @@ flowchart TD
 | **0.6** (prod) | **0.200** | **1.000** | 0.968 |
 | 1.0 (BM25) | 0.196 | 0.980 | 0.935 |
 
-**α=0.6** — Recall 1.000 달성하는 유일한 설정.
+**α=0.6** — Recall 1.000을 달성하는 유일한 설정.
 
 ---
 
@@ -130,6 +139,7 @@ flowchart TD
 | DB | PostgreSQL 16 + pgvector (HNSW) |
 | 검색 | BM25 (kiwipiepy) + pgvector → RRF 융합 |
 | 뉴스 | Google News RSS + Naver API + feedparser |
+| NLP | kiwipiepy (한국어 형태소) + 복합 명사구 추출 (영어) |
 | 스케줄러 | GitHub Actions cron |
 | 대시보드 | Streamlit Cloud |
 
@@ -154,7 +164,7 @@ streamlit run src/dashboard/app.py     # 대시보드
 
 ```
 src/
-├── collect/     # 데이터 수집 (블로그, 뉴스 RSS, Naver API)
+├── collect/     # 데이터 수집 (블로그, Substack RSS, 뉴스)
 ├── extract/     # Claude 인사이트 추출 (Batch + 실시간)
 ├── verify/      # 자동 검증 (headline_matcher + auto_verifier)
 ├── search/      # 하이브리드 검색 (BM25 + pgvector)
@@ -162,9 +172,9 @@ src/
 ├── eval/        # 검색 품질 평가 (ablation, LLM judge)
 ├── pipeline/    # 일일 파이프라인 오케스트레이터
 ├── dashboard/   # Streamlit 대시보드
-└── config/      # 설정, 프롬프트
+└── config/      # 설정, 프롬프트 (한국어 + 영어)
 
-scripts/ops/     # 배치 검증, 뉴스 백필, 데이터 운영
+scripts/ops/     # 배치 검증, 뉴스 백필, Substack 백필, 데이터 운영
 ```
 
 ---

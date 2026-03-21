@@ -7,7 +7,7 @@
 
 **How accurate are financial influencers' predictions, really?**
 
-This system automatically extracts predictions from Korean financial blogs, then verifies them against an 88K+ news headline database. No manual labeling — fully automated extraction, matching, and verdict.
+This system automatically extracts predictions from financial blogs and newsletters (Korean + English), then verifies them against an 88K+ news headline database. No manual labeling — fully automated extraction, matching, and verdict.
 
 **[Live Dashboard](https://insight-verify.streamlit.app/)** · [한국어](README_KR.md) · [Experiment Log](docs/verification-experiments.md)
 
@@ -17,14 +17,23 @@ This system automatically extracts predictions from Korean financial blogs, then
 
 | Metric | Value |
 |--------|-------|
-| Overall accuracy | **69.3%** (729 correct / 1,052 verified) |
+| Overall accuracy | **69.2%** (731 correct / 1,056 verified) |
 | vs. headline sentiment baseline | **+14.9pp** (baseline: 54.2%) |
-| Predictions tracked | 5,100 across 3 sources |
-| News headline DB | 88,713 articles (2022–2026) |
+| Predictions tracked | 5,180 across 3 sources |
+| News headline DB | 88,713 articles (2022–2026, Korean + English) |
 | Verification cost | **$0.0045/prediction** — 87% reduction from $0.035 |
 | Monthly operating cost | ~$0.50 |
 
 I measured a **headline-sentiment baseline** on the same dataset: using keyword-matched headlines' bullish/bearish word counts to predict direction yields **54.2% accuracy** (n=1,041). The blogger beats this by **+14.9pp**, with the gap widest on bullish calls (77.8% vs 59.9%). This suggests the predictions carry genuine signal beyond what's already priced into the news cycle.
+
+### Source Leaderboard
+
+| Source | Predictions | Verified | Accuracy |
+|--------|------------|----------|----------|
+| mer_ranto28 (Korean macro blog) | 5,010 | 1,052 | **69.3%** |
+| arthur_hayes (Crypto Trader Digest) | 150 | 4 | 50.0%* |
+
+\* Hayes verification in progress — most predictions are long-term (2026–2028 expected dates). 66 predictions matched headlines but received PENDING verdicts due to insufficient evidence. Results will accumulate as expected dates pass.
 
 <details>
 <summary><strong>Data integrity note</strong></summary>
@@ -38,7 +47,7 @@ During early batch verification, a 50-case blind audit revealed 36% contaminatio
 ## How it Works
 
 ```
-Blog post → Claude extraction → structured predictions (claim, keywords, expected_date)
+Blog/newsletter → Claude extraction → structured predictions (claim, keywords, expected_date)
     → keyword GIN matching against 88K headlines → vector cosine fallback on miss
     → matched headlines + prediction → Haiku verdict → CORRECT / INCORRECT / PENDING
 ```
@@ -46,8 +55,10 @@ Blog post → Claude extraction → structured predictions (claim, keywords, exp
 ```mermaid
 flowchart TD
     subgraph Collection
-        BLOG[Naver Blog] -->|RSS| MON[mer_monitor]
+        BLOG[Naver Blog] -->|RSS| MON[source_collector]
+        SUB[Substack] -->|RSS| RSS[rss_collector]
         MON -->|Claude extraction| DB[(PostgreSQL + pgvector)]
+        RSS -->|Claude extraction| DB
         NEWS_RSS[Google News 33 feeds] --> NC[news_collector]
         NEWS_NAVER[Naver API 14 queries] --> NC
         NC --> NHL[(news_headlines 88K)]
@@ -65,7 +76,7 @@ flowchart TD
 
 **Daily pipeline** (GitHub Actions, KST 01:00):
 
-1. Collect new blog posts + extract insights via Claude
+1. Collect new posts from all active sources + extract insights via Claude
 2. Collect news headlines (33 RSS feeds + Naver API)
 3. Auto-verify (headline matching → Haiku verdict)
 
@@ -73,7 +84,7 @@ flowchart TD
 
 ## Why is this Hard?
 
-Korean financial blog posts contain no tickers, dates, or confidence levels. Figuring out **what counts as a prediction, when it should be verified, and what criteria determine correct vs. incorrect** — that structuring problem alone isn't solved by any off-the-shelf tool.
+Financial blog posts contain no tickers, dates, or confidence levels. Figuring out **what counts as a prediction, when it should be verified, and what criteria determine correct vs. incorrect** — that structuring problem alone isn't solved by any off-the-shelf tool.
 
 Automated verification is even harder. Using API web_search costs $0.035/prediction (5,000 = $175). After testing 6 different approaches, I settled on **news headline DB + keyword/vector hybrid matching + Batch API**.
 
@@ -97,17 +108,17 @@ Details: [Experiment Log](docs/verification-experiments.md)
 
 | Status | Count |
 |--------|-------|
-| CORRECT | 729 |
-| INCORRECT | 323 |
+| CORRECT | 731 |
+| INCORRECT | 325 |
 | Verifiable PENDING | 225 |
 | Unverifiable (vague/conditional) | 2,793 |
-| Future (awaiting expected_date) | 1,190 |
+| Future (awaiting expected_date) | 1,203 |
 
 ---
 
 ## Search Infrastructure
 
-Hybrid BM25 + pgvector search retrieves relevant context from 23,963 indexed insights.
+Hybrid BM25 + pgvector search retrieves relevant context from 24,385 indexed insights.
 
 | α (BM25 weight) | Precision@5 | Recall@5 | MRR |
 |----------------|-------------|----------|-----|
@@ -128,6 +139,7 @@ Hybrid BM25 + pgvector search retrieves relevant context from 23,963 indexed ins
 | DB | PostgreSQL 16 + pgvector (HNSW) |
 | Search | BM25 (kiwipiepy) + pgvector → RRF fusion |
 | News | Google News RSS + Naver API + feedparser |
+| NLP | kiwipiepy (Korean morphemes) + compound term extraction (English) |
 | Scheduler | GitHub Actions cron |
 | Dashboard | Streamlit Cloud |
 
@@ -152,7 +164,7 @@ streamlit run src/dashboard/app.py     # dashboard
 
 ```
 src/
-├── collect/     # Data collection (blog, news RSS, Naver API)
+├── collect/     # Data collection (blog, Substack RSS, news)
 ├── extract/     # Claude insight extraction (Batch + realtime)
 ├── verify/      # Auto-verification (headline_matcher + auto_verifier)
 ├── search/      # Hybrid search (BM25 + pgvector)
@@ -160,9 +172,9 @@ src/
 ├── eval/        # Search quality evaluation (ablation, LLM judge)
 ├── pipeline/    # Daily pipeline orchestrator
 ├── dashboard/   # Streamlit dashboard
-└── config/      # Settings, prompts
+└── config/      # Settings, prompts (Korean + English)
 
-scripts/ops/     # Batch verification, news backfill, data ops
+scripts/ops/     # Batch verification, news backfill, Substack backfill, data ops
 ```
 
 ---
