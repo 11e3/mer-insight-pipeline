@@ -62,6 +62,13 @@ BACKFILL_QUERIES = [
     ("ko", "저축은행 새마을금고 부실"),
     ("ko", "테슬라 일론머스크"),
     ("ko", "중국 GDP 경제성장"),
+    # 크립토
+    ("en", "Bitcoin BTC price"),
+    ("en", "Ethereum ETH price"),
+    ("en", "DeFi stablecoin USDT USDC"),
+    ("en", "crypto market altcoin"),
+    ("en", "on-chain whale exchange flow"),
+    ("ko", "비트코인 BTC 암호화폐"),
 ]
 
 _HEADERS = {
