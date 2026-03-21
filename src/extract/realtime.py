@@ -120,9 +120,13 @@ async def extract_and_save(
                     except (ValueError, TypeError):
                         pred_date = None
 
-                _dir_map = {"bullish": "up", "bearish": "down", "mixed": "neutral", "flat": "neutral"}
-                raw_dir = (item.get("direction") or "neutral").lower()
-                direction = _dir_map.get(raw_dir, raw_dir) if raw_dir not in ("up", "down", "neutral") else raw_dir
+                _dir_map = {
+                    "bullish": "up", "bearish": "down", "mixed": "neutral",
+                    "flat": "neutral", "sideways": "neutral", "positive": "up",
+                    "negative": "down", "long": "up", "short": "down",
+                }
+                raw_dir = (item.get("direction") or "neutral").lower().strip()
+                direction = _dir_map.get(raw_dir, "neutral") if raw_dir not in ("up", "down", "neutral") else raw_dir
 
                 await conn.execute("""
                     INSERT INTO mer_predictions
