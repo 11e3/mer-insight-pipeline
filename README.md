@@ -9,6 +9,8 @@
 
 **[라이브 대시보드](https://mer-insight-pipeline.streamlit.app/)** · [English](README_EN.md) · [실험 기록](docs/verification-experiments.md)
 
+<img src="docs/png/dashboard.png" alt="대시보드 스크린샷" width="100%">
+
 ---
 
 ### 왜 이게 어려운가?
