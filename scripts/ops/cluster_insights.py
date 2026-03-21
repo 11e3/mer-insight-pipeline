@@ -38,7 +38,7 @@ async def load_embeddings(conn: asyncpg.Connection, insight_type: str | None):
 
     rows = await conn.fetch(f"""
         SELECT id, insight_type, content, embedding
-        FROM mer_insights
+        FROM insights
         {where}
         ORDER BY id
     """)
@@ -89,7 +89,7 @@ async def update_db(
         for row_id in id_to_cluster
     ]
     await conn.executemany(
-        "UPDATE mer_insights SET cluster_id=$2, is_canonical=$3 WHERE id=$1",
+        "UPDATE insights SET cluster_id=$2, is_canonical=$3 WHERE id=$1",
         records,
     )
     print(f"  DB 업데이트: {len(records)}개")

@@ -221,7 +221,7 @@ async def test_save_post():
     await m._save_post(conn, post)
     conn.execute.assert_called_once()
     sql = conn.execute.call_args[0][0]
-    assert "INSERT INTO mer_posts" in sql
+    assert "INSERT INTO posts" in sql
 
 
 # ─── SourceCollector Protocol ─────────────────────────────────────────────────

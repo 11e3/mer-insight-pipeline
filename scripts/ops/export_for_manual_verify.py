@@ -49,7 +49,7 @@ async def main():
     rows = await conn.fetch("""
         SELECT id, prediction_text, predicted_direction,
                target_asset, prediction_date
-        FROM mer_predictions
+        FROM predictions
         WHERE is_correct IS NULL
         ORDER BY prediction_date DESC
     """)

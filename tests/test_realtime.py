@@ -101,7 +101,7 @@ async def test_extract_and_save_success():
 
 
 async def test_extract_and_save_prediction_with_verifiable():
-    """verifiable prediction이면 mer_predictions에도 삽입."""
+    """verifiable prediction이면 predictions에도 삽입."""
     conn = AsyncMock()
     # First fetchval = post_id, second = insight_id, third = source_id
     conn.fetchval.side_effect = [42, 100, 1]
@@ -128,7 +128,7 @@ async def test_extract_and_save_prediction_with_verifiable():
         result = await extract_and_save(conn, _make_mock_embedder(), _make_post())
 
     assert result["count"] == 1
-    # Should have called execute for mer_predictions insert
+    # Should have called execute for predictions insert
     assert conn.execute.call_count >= 1
 
 

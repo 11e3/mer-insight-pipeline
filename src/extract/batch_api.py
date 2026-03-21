@@ -49,9 +49,9 @@ async def fetch_unprocessed_posts(conn: asyncpg.Connection) -> list[dict]:
     """아직 인사이트가 없는 포스트 목록 반환."""
     rows = await conn.fetch("""
         SELECT p.log_no, p.title, p.date::text, p.url, p.content_text
-        FROM mer_posts p
+        FROM posts p
         WHERE NOT EXISTS (
-            SELECT 1 FROM mer_insights i WHERE i.post_id = p.id
+            SELECT 1 FROM insights i WHERE i.post_id = p.id
         )
         ORDER BY p.date DESC NULLS LAST
     """)
@@ -115,7 +115,7 @@ async def create_retokenize_batch(results_jsonl: str, model: str = MODEL_SONNET)
     async with connect() as conn:
         rows = await conn.fetch("""
             SELECT log_no, title, date::text, url, content_text
-            FROM mer_posts
+            FROM posts
             WHERE log_no = ANY($1::text[])
         """, list(truncated_log_nos))
 

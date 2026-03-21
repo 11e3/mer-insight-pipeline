@@ -1,4 +1,4 @@
-"""Populate topic column in mer_predictions based on keyword matching."""
+"""Populate topic column in predictions based on keyword matching."""
 import asyncio
 import os
 
@@ -39,15 +39,15 @@ def classify(text: str) -> str:
 async def main():
     conn = await asyncpg.connect(os.environ["DATABASE_URL"])
 
-    rows = await conn.fetch("SELECT id, prediction_text FROM mer_predictions")
+    rows = await conn.fetch("SELECT id, prediction_text FROM predictions")
     updates = [(classify(r["prediction_text"] or ""), r["id"]) for r in rows]
 
     await conn.executemany(
-        "UPDATE mer_predictions SET topic = $1 WHERE id = $2", updates
+        "UPDATE predictions SET topic = $1 WHERE id = $2", updates
     )
 
     stats = await conn.fetch(
-        "SELECT topic, COUNT(*) as cnt FROM mer_predictions GROUP BY topic ORDER BY cnt DESC"
+        "SELECT topic, COUNT(*) as cnt FROM predictions GROUP BY topic ORDER BY cnt DESC"
     )
     for s in stats:
         print(f"  {s['topic']}: {s['cnt']}")

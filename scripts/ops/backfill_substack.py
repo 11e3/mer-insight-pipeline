@@ -126,7 +126,7 @@ async def backfill(source_name: str, dry_run: bool = False):
         # 기존 URL 조회
         existing = set()
         rows = await conn.fetch(
-            "SELECT url FROM mer_posts WHERE source_id = $1", source["id"]
+            "SELECT url FROM posts WHERE source_id = $1", source["id"]
         )
         for r in rows:
             existing.add(r["url"])
@@ -170,7 +170,7 @@ async def backfill(source_name: str, dry_run: bool = False):
                 log.warning(f"  본문 부족 ({len(content)}자), 스킵")
                 continue
 
-            # mer_posts에 저장
+            # posts에 저장
             from datetime import date as _date
             pub_date = None
             if post_meta["date"]:
@@ -180,7 +180,7 @@ async def backfill(source_name: str, dry_run: bool = False):
                     pass
 
             post_id = await conn.fetchval("""
-                INSERT INTO mer_posts (log_no, title, date, url, content_text, source_id)
+                INSERT INTO posts (log_no, title, date, url, content_text, source_id)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 ON CONFLICT (log_no) DO NOTHING
                 RETURNING id

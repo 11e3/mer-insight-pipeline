@@ -1,5 +1,5 @@
 """
-mer_insights 테이블의 embedding 컬럼 채우기.
+insights 테이블의 embedding 컬럼 채우기.
 
 Usage:
     python -m src.embed.backfill
@@ -20,7 +20,7 @@ async def fill_embeddings():
 
     async with connect() as conn:
         rows = await conn.fetch("""
-            SELECT id, content FROM mer_insights
+            SELECT id, content FROM insights
             WHERE embedding IS NULL
             ORDER BY id
         """)
@@ -41,7 +41,7 @@ async def fill_embeddings():
             vecs = await embedder.embed_passages(batch_texts)
             for rid, vec in zip(batch_ids, vecs):
                 await conn.execute(
-                    "UPDATE mer_insights SET embedding = $1::vector WHERE id = $2",
+                    "UPDATE insights SET embedding = $1::vector WHERE id = $2",
                     vec_str(vec), rid,
                 )
             total += len(batch_ids)

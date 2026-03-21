@@ -65,7 +65,7 @@ class AutoVerifier:
                 if verdict in ("CORRECT", "INCORRECT") and source_url:
                     is_correct = verdict == "CORRECT"
                     status = await self.conn.execute("""
-                        UPDATE mer_predictions
+                        UPDATE predictions
                         SET is_correct = $1,
                             actual_outcome = $2,
                             source_url = $3,
@@ -80,7 +80,7 @@ class AutoVerifier:
                 else:
                     # PENDING → skipped_at 마킹 (7일간 재시도 방지)
                     await self.conn.execute(
-                        "UPDATE mer_predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
+                        "UPDATE predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
                         match["prediction_id"],
                     )
                     result["pending"] += 1

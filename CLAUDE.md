@@ -99,7 +99,7 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 
 ### 검증 데이터 리셋 이력
 - 2026-03-19: 배치 검증 오염(36%, 50건 블라인드 감사) 확인 → 전체 verdict 리셋
-- 백업: `mer_predictions_verdict_backup_20260319` 테이블
+- 백업: `predictions_verdict_backup_20260319` 테이블
 - 리셋 후 정책: 배치 크기 20건, source_url 필수, grouped/ import 금지
 
 ### DB 연결 패턴
@@ -108,7 +108,7 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 
 ### Source Abstraction Layer
 - `sources` 테이블: source_type, name, platform, config
-- `mer_posts`, `mer_predictions`에 `source_id` FK 추가
+- `posts`, `predictions`에 `source_id` FK 추가
 - `SourceCollector` 프로토콜 (`src/collect/source_protocol.py`)
 - `get_collector()` 팩토리 (`src/collect/factory.py`)
 - `MerMonitor`가 `SourceCollector` 구현체
@@ -137,7 +137,7 @@ src/
 │   ├── source_protocol.py   # SourceCollector 프로토콜
 │   ├── factory.py            # get_collector() 팩토리
 │   ├── mer_monitor.py       # 블로그 RSS 감시 (SourceCollector 구현)
-│   ├── posts.py             # JSON → mer_posts 적재
+│   ├── posts.py             # JSON → posts 적재
 │   ├── date_parser.py       # 메르 블로그 날짜 파싱
 │   ├── news_collector.py    # 뉴스 헤드라인 수집 (RSS 33피드 + Naver API 14쿼리)
 │   ├── feeds.py             # RSS 피드 정의
@@ -175,7 +175,7 @@ scripts/
 │   ├── export_*.py      # 예측 내보내기 (round1~5)
 │   ├── import_*.py      # 수동 검증 결과 가져오기
 │   ├── fill_*.py        # expected_date 등 필드 채우기
-│   ├── migrate_predictions.py  # mer_insights → mer_predictions 소급 적재
+│   ├── migrate_predictions.py  # insights → predictions 소급 적재
 │   ├── populate_topics.py      # 주제 일괄 분류
 │   ├── cluster_insights.py     # DBSCAN 중복 제거
 │   └── regroup_by_topic.py     # 주제별 재분류

@@ -42,7 +42,7 @@ class RSSCollector:
         # DB에서 기존 URL 조회
         existing_urls = set()
         rows = await conn.fetch(
-            "SELECT url FROM mer_posts WHERE source_id = (SELECT id FROM sources WHERE name = $1)",
+            "SELECT url FROM posts WHERE source_id = (SELECT id FROM sources WHERE name = $1)",
             self.source_name,
         )
         for r in rows:

@@ -52,7 +52,7 @@ async def main():
 
             # 이미 처리된 건 스킵
             existing = await conn.fetchval(
-                "SELECT is_correct FROM mer_predictions WHERE id = $1", pred_id
+                "SELECT is_correct FROM predictions WHERE id = $1", pred_id
             )
             if existing is not None:
                 skipped += 1
@@ -63,19 +63,19 @@ async def main():
 
             if verdict == "CORRECT":
                 await conn.execute(
-                    "UPDATE mer_predictions SET is_correct = TRUE, actual_outcome = $1, verification_date = CURRENT_DATE WHERE id = $2",
+                    "UPDATE predictions SET is_correct = TRUE, actual_outcome = $1, verification_date = CURRENT_DATE WHERE id = $2",
                     reason, pred_id,
                 )
                 correct += 1
             elif verdict == "INCORRECT":
                 await conn.execute(
-                    "UPDATE mer_predictions SET is_correct = FALSE, actual_outcome = $1, verification_date = CURRENT_DATE WHERE id = $2",
+                    "UPDATE predictions SET is_correct = FALSE, actual_outcome = $1, verification_date = CURRENT_DATE WHERE id = $2",
                     reason, pred_id,
                 )
                 incorrect += 1
             else:
                 await conn.execute(
-                    "UPDATE mer_predictions SET is_verifiable = FALSE WHERE id = $1",
+                    "UPDATE predictions SET is_verifiable = FALSE WHERE id = $1",
                     pred_id,
                 )
                 unverifiable += 1

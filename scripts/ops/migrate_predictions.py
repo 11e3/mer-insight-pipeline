@@ -1,5 +1,5 @@
 """
-mer_insights (prediction 타입, 최근 1년) → mer_predictions 마이그레이션.
+insights (prediction 타입, 최근 1년) → predictions 마이그레이션.
 
 Usage:
     python -m scripts.migrate_predictions
@@ -26,11 +26,11 @@ async def main():
     try:
         rows = await conn.fetch("""
             SELECT mi.id, mi.structured_data, mp.date
-            FROM mer_insights mi
-            JOIN mer_posts mp ON mi.post_id = mp.id
+            FROM insights mi
+            JOIN posts mp ON mi.post_id = mp.id
             WHERE mi.insight_type = 'prediction'
               AND NOT EXISTS (
-                SELECT 1 FROM mer_predictions mp2
+                SELECT 1 FROM predictions mp2
                 WHERE mp2.insight_id = mi.id
               )
             ORDER BY mp.date DESC
@@ -58,7 +58,7 @@ async def main():
                 continue
 
             await conn.execute("""
-                INSERT INTO mer_predictions
+                INSERT INTO predictions
                     (insight_id, prediction_text, predicted_direction,
                      target_asset, prediction_date)
                 VALUES ($1, $2, $3, $4, $5)

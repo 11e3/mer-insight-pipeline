@@ -93,8 +93,8 @@ class HybridSearcher:
 
         rows = await self._conn.fetch("""
             SELECT mi.id, mi.content, mi.structured_data, mi.insight_type, mp.date
-            FROM mer_insights mi
-            JOIN mer_posts mp ON mi.post_id = mp.id
+            FROM insights mi
+            JOIN posts mp ON mi.post_id = mp.id
             WHERE mi.id = ANY($1::int[])
         """, ids)
 

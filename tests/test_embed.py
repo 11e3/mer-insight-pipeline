@@ -111,4 +111,4 @@ async def test_fill_embeddings_with_rows():
 
     assert mock_conn.execute.call_count == 2
     sql = mock_conn.execute.call_args_list[0][0][0]
-    assert "UPDATE mer_insights SET embedding" in sql
+    assert "UPDATE insights SET embedding" in sql

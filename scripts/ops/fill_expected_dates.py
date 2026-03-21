@@ -54,7 +54,7 @@ async def main():
 
     rows = await conn.fetch("""
         SELECT id, prediction_text, prediction_date
-        FROM mer_predictions
+        FROM predictions
         WHERE is_correct IS NULL AND expected_date IS NULL
     """)
 
@@ -66,19 +66,19 @@ async def main():
 
     if updates:
         await conn.executemany(
-            "UPDATE mer_predictions SET expected_date = $2 WHERE id = $1",
+            "UPDATE predictions SET expected_date = $2 WHERE id = $1",
             updates,
         )
 
     # 통계
     total_pending = await conn.fetchval(
-        "SELECT COUNT(*) FROM mer_predictions WHERE is_correct IS NULL"
+        "SELECT COUNT(*) FROM predictions WHERE is_correct IS NULL"
     )
     with_date = await conn.fetchval(
-        "SELECT COUNT(*) FROM mer_predictions WHERE is_correct IS NULL AND expected_date IS NOT NULL"
+        "SELECT COUNT(*) FROM predictions WHERE is_correct IS NULL AND expected_date IS NOT NULL"
     )
     skippable = await conn.fetchval(
-        "SELECT COUNT(*) FROM mer_predictions WHERE is_correct IS NULL AND expected_date > CURRENT_DATE"
+        "SELECT COUNT(*) FROM predictions WHERE is_correct IS NULL AND expected_date > CURRENT_DATE"
     )
 
     print(f"파싱 결과: {len(updates)}건에 expected_date 설정")

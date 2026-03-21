@@ -52,7 +52,7 @@ class MerMonitor:
         existing = {
             r["log_no"] for r in
             await conn.fetch(
-                "SELECT log_no FROM mer_posts WHERE log_no = ANY($1)",
+                "SELECT log_no FROM posts WHERE log_no = ANY($1)",
                 log_nos
             )
         }
@@ -155,7 +155,7 @@ class MerMonitor:
             "SELECT id FROM sources WHERE name = $1", self.source_name
         )
         await conn.execute("""
-            INSERT INTO mer_posts (log_no, title, date, url, content_text, word_count, source_id)
+            INSERT INTO posts (log_no, title, date, url, content_text, word_count, source_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (log_no) DO NOTHING
         """,

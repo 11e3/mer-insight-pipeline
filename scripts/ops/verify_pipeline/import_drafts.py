@@ -50,7 +50,7 @@ async def main():
 
         if verdict == "CORRECT":
             await conn.execute(
-                """UPDATE mer_predictions
+                """UPDATE predictions
                    SET is_correct = true, actual_outcome = $1, source_url = $2,
                        verification_date = $3
                    WHERE id = $4""",
@@ -59,7 +59,7 @@ async def main():
             correct += 1
         elif verdict == "INCORRECT":
             await conn.execute(
-                """UPDATE mer_predictions
+                """UPDATE predictions
                    SET is_correct = false, actual_outcome = $1, source_url = $2,
                        verification_date = $3
                    WHERE id = $4""",
@@ -70,7 +70,7 @@ async def main():
             pending += 1
 
     stats = await conn.fetch(
-        "SELECT is_correct, COUNT(*) FROM mer_predictions "
+        "SELECT is_correct, COUNT(*) FROM predictions "
         "GROUP BY is_correct ORDER BY is_correct"
     )
     await conn.close()

@@ -1,5 +1,5 @@
 """
-Batch API 결과 JSONL 파싱 → mer_insights 테이블 적재.
+Batch API 결과 JSONL 파싱 → insights 테이블 적재.
 
 Usage:
     python -m src.extract.parse_results <results.jsonl>
@@ -44,7 +44,7 @@ async def parse_and_insert(jsonl_path: str):
 
 async def _parse_and_insert_inner(conn, jsonl_path: str):
     # log_no → post_id 캐시
-    rows = await conn.fetch("SELECT log_no, id FROM mer_posts")
+    rows = await conn.fetch("SELECT log_no, id FROM posts")
     log_no_map = {r["log_no"]: r["id"] for r in rows}
 
     total_insights = 0
@@ -98,7 +98,7 @@ async def _parse_and_insert_inner(conn, jsonl_path: str):
             for item in items:
                 content = extract_content(item, insight_type)
                 await conn.execute("""
-                    INSERT INTO mer_insights
+                    INSERT INTO insights
                         (post_id, insight_type, content, structured_data)
                     VALUES ($1, $2, $3, $4)
                     ON CONFLICT (post_id, insight_type, md5(content)) DO NOTHING

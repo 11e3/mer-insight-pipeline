@@ -32,15 +32,15 @@ async def main():
 
     if updates:
         await conn.executemany(
-            "UPDATE mer_predictions SET expected_date = $2 WHERE id = $1 AND expected_date IS NULL",
+            "UPDATE predictions SET expected_date = $2 WHERE id = $1 AND expected_date IS NULL",
             updates,
         )
 
     total_skip = await conn.fetchval(
-        "SELECT COUNT(*) FROM mer_predictions WHERE is_correct IS NULL AND expected_date > CURRENT_DATE"
+        "SELECT COUNT(*) FROM predictions WHERE is_correct IS NULL AND expected_date > CURRENT_DATE"
     )
     total_pending = await conn.fetchval(
-        "SELECT COUNT(*) FROM mer_predictions WHERE is_correct IS NULL"
+        "SELECT COUNT(*) FROM predictions WHERE is_correct IS NULL"
     )
 
     print(f"이유에서 파싱: {len(updates)}건 expected_date 설정")

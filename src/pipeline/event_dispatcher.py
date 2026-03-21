@@ -145,7 +145,7 @@ class EventDispatcher:
                 pub_date = None
 
         post_id = await conn.fetchval("""
-            INSERT INTO mer_posts (log_no, title, date, url, content_text, source_id)
+            INSERT INTO posts (log_no, title, date, url, content_text, source_id)
             VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (log_no) DO NOTHING
             RETURNING id

@@ -152,7 +152,7 @@ async def batch_match(
     prefetch = limit * 5
     rows = await conn.fetch("""
         SELECT id, prediction_text, target_asset, predicted_direction, prediction_date, expected_date
-        FROM mer_predictions
+        FROM predictions
         WHERE is_correct IS NULL
           AND is_verifiable IS NOT FALSE
           AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)

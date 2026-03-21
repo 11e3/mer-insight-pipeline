@@ -40,7 +40,7 @@ class BM25Index:
 
     def __init__(self):
         self._bm25: BM25Okapi | None = None
-        self._doc_ids: list[int] = []       # corpus 순서 ↔ mer_insights.id 매핑
+        self._doc_ids: list[int] = []       # corpus 순서 ↔ insights.id 매핑
 
     # ─── 빌드 ──────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ class BM25Index:
         log.info("BM25 인덱스 빌드 시작...")
         rows = await conn.fetch("""
             SELECT id, content
-            FROM mer_insights
+            FROM insights
             WHERE insight_type IN ('rule', 'evaluation', 'macro_view')
               AND (is_canonical IS NULL OR is_canonical = TRUE)
             ORDER BY id

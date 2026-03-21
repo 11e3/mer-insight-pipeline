@@ -1,5 +1,5 @@
 """
-새 포스트 실시간 인사이트 추출 + mer_insights 저장 + 임베딩 생성.
+새 포스트 실시간 인사이트 추출 + insights 저장 + 임베딩 생성.
 EventDispatcher가 MER_NEW_POST 이벤트 처리 후 호출.
 """
 
@@ -36,13 +36,13 @@ async def extract_and_save(
     source_type: str = "blog",
 ) -> dict:
     """
-    단건 포스트의 인사이트를 추출하여 mer_insights에 저장.
+    단건 포스트의 인사이트를 추출하여 insights에 저장.
     반환값: {"count": int, "primary_topic": str, "post_summary": str}
     """
     result = {"count": 0, "primary_topic": "기타", "post_summary": ""}
 
     post_id = await conn.fetchval(
-        "SELECT id FROM mer_posts WHERE log_no = $1", post["log_no"]
+        "SELECT id FROM posts WHERE log_no = $1", post["log_no"]
     )
     if not post_id:
         log.warning(f"post_id 없음: {post['log_no']}")
@@ -81,7 +81,7 @@ async def extract_and_save(
     result["primary_topic"] = data.get("primary_topic", "기타")
     result["post_summary"]   = data.get("post_summary", "")
 
-    # mer_insights 삽입 + 임베딩 생성
+    # insights 삽입 + 임베딩 생성
     count = 0
     for key, insight_type in INSIGHT_TYPE_MAP.items():
         items = data.get(key, [])
@@ -95,7 +95,7 @@ async def extract_and_save(
             vec = vec_str(vecs[0])
 
             insight_id = await conn.fetchval("""
-                INSERT INTO mer_insights
+                INSERT INTO insights
                     (post_id, insight_type, content, structured_data, embedding)
                 VALUES ($1, $2, $3, $4, $5::vector)
                 ON CONFLICT (post_id, insight_type, md5(content)) DO NOTHING
@@ -107,7 +107,7 @@ async def extract_and_save(
                 json.dumps(item, ensure_ascii=False),
                 vec,
             )
-            # prediction 타입이면 mer_predictions에도 삽입
+            # prediction 타입이면 predictions에도 삽입
             if insight_type == "prediction" and insight_id and item.get("verifiable"):
                 # expected_date 파싱
                 exp_date = None
@@ -134,11 +134,11 @@ async def extract_and_save(
 
                 # source_id 조회
                 source_id = await conn.fetchval(
-                    "SELECT source_id FROM mer_posts WHERE id = $1", post_id
+                    "SELECT source_id FROM posts WHERE id = $1", post_id
                 )
 
                 await conn.execute("""
-                    INSERT INTO mer_predictions
+                    INSERT INTO predictions
                         (insight_id, prediction_text, predicted_direction,
                          target_asset, prediction_date, expected_date, source_id)
                     VALUES ($1, $2, $3, $4, $5, $6, $7)

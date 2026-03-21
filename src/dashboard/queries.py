@@ -51,7 +51,7 @@ def load_prediction_summary():
             COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable = false) AS unverifiable,
             COUNT(*) FILTER (WHERE is_correct IS NULL AND expected_date > CURRENT_DATE) AS future,
             COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable IS NULL AND expected_date IS NULL) AS unclassified
-        FROM mer_predictions
+        FROM predictions
     """)
 
 
@@ -59,7 +59,7 @@ def load_prediction_summary():
 def load_predictions_for_topics():
     return _fetchall("""
         SELECT prediction_text, is_correct
-        FROM mer_predictions
+        FROM predictions
         WHERE is_verifiable IS NOT FALSE
     """)
 
@@ -72,7 +72,7 @@ def load_monthly_trends():
             COUNT(*) AS total,
             COUNT(*) FILTER (WHERE is_correct IS NOT NULL) AS verified,
             COUNT(*) FILTER (WHERE is_correct = TRUE) AS correct
-        FROM mer_predictions
+        FROM predictions
         WHERE skipped_at IS NULL AND prediction_date IS NOT NULL
         GROUP BY to_char(prediction_date, 'YYYY-MM')
         ORDER BY month
@@ -88,9 +88,9 @@ def load_all_predictions():
             mp.verification_date, mp.is_verifiable, mp.expected_date,
             p.url AS post_url,
             COALESCE(s.name, 'mer_ranto28') AS source_name
-        FROM mer_predictions mp
-        LEFT JOIN mer_insights mi ON mi.id = mp.insight_id
-        LEFT JOIN mer_posts p ON p.id = mi.post_id
+        FROM predictions mp
+        LEFT JOIN insights mi ON mi.id = mp.insight_id
+        LEFT JOIN posts p ON p.id = mi.post_id
         LEFT JOIN sources s ON s.id = mp.source_id
         ORDER BY mp.prediction_date DESC
     """)
@@ -100,7 +100,7 @@ def load_all_predictions():
 def load_sources():
     return _fetchall("""
         SELECT name, source_type, platform, url, is_active,
-            (SELECT COUNT(*) FROM mer_predictions WHERE source_id = sources.id) AS prediction_count
+            (SELECT COUNT(*) FROM predictions WHERE source_id = sources.id) AS prediction_count
         FROM sources
         ORDER BY name
     """)
@@ -117,7 +117,7 @@ def load_leaderboard():
             COUNT(*) FILTER (WHERE mp.is_correct = FALSE) AS incorrect,
             COUNT(*) FILTER (WHERE mp.is_correct IS NULL AND mp.is_verifiable = true) AS pending,
             COUNT(*) FILTER (WHERE mp.is_correct IS NULL AND mp.expected_date > CURRENT_DATE) AS future
-        FROM mer_predictions mp
+        FROM predictions mp
         LEFT JOIN sources s ON s.id = mp.source_id
         GROUP BY s.name
         ORDER BY correct DESC

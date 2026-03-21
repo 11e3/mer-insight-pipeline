@@ -42,7 +42,7 @@ async def test_load_posts_basic(tmp_path):
 
     mock_conn.execute.assert_called_once()
     args = mock_conn.execute.call_args[0]
-    assert "INSERT INTO mer_posts" in args[0]
+    assert "INSERT INTO posts" in args[0]
     assert args[1] == "1234567890"
 
 

@@ -1,5 +1,5 @@
 """
-스크래핑된 JSON 파일들을 PostgreSQL mer_posts 테이블에 적재.
+스크래핑된 JSON 파일들을 PostgreSQL posts 테이블에 적재.
 
 Usage:
     python -m src.collect.posts
@@ -38,7 +38,7 @@ async def load_posts(json_dir: str = RAW_JSON_DIR):
 
             try:
                 await conn.execute("""
-                    INSERT INTO mer_posts
+                    INSERT INTO posts
                         (log_no, title, date, url, content_text, image_urls, tags, word_count)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     ON CONFLICT (log_no) DO UPDATE SET

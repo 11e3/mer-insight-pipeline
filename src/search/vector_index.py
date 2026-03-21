@@ -28,7 +28,7 @@ class VectorIndex:
         rows = await self.conn.fetch("""
             SELECT id,
                    1 - (embedding <=> $1::vector) AS similarity
-            FROM mer_insights
+            FROM insights
             WHERE embedding IS NOT NULL
               AND insight_type IN ('rule', 'evaluation', 'macro_view')
               AND (is_canonical IS NULL OR is_canonical = TRUE)

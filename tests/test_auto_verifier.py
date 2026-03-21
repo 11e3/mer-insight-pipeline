@@ -111,7 +111,7 @@ async def test_run_pending_skips_db():
     assert result["pending"] == 1
     # PENDING 시 skipped_at만 마킹 (is_correct는 변경 안 함)
     conn.execute.assert_called_once_with(
-        "UPDATE mer_predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
+        "UPDATE predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
         MATCH_CORRECT["prediction_id"],
     )
 

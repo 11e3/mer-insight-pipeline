@@ -40,7 +40,7 @@ class PredictionVerifier:
         rows = await self.conn.fetch("""
             SELECT id, prediction_text, predicted_direction,
                    target_asset, prediction_date, expected_date
-            FROM mer_predictions
+            FROM predictions
             WHERE is_correct IS NULL
               AND (expected_date IS NULL OR expected_date <= CURRENT_DATE)
             ORDER BY prediction_date, id

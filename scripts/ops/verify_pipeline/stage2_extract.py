@@ -90,7 +90,7 @@ async def run(tracker: CostTracker, dry_run: bool = False) -> list[dict]:
     conn = await asyncpg.connect(os.environ["DATABASE_URL"])
     rows = await conn.fetch(
         "SELECT id, prediction_text, target_asset, prediction_date "
-        "FROM mer_predictions WHERE is_correct IS NULL"
+        "FROM predictions WHERE is_correct IS NULL"
     )
     await conn.close()
     pred_by_id = {r["id"]: r for r in rows}

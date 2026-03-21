@@ -24,14 +24,14 @@ def fetch_metrics(dsn: str) -> dict:
                     COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable = true) AS verifiable_pending,
                     COUNT(*) FILTER (WHERE is_correct IS NULL AND is_verifiable = false) AS unverifiable,
                     COUNT(*) FILTER (WHERE is_correct IS NULL AND expected_date > CURRENT_DATE) AS future
-                FROM mer_predictions
+                FROM predictions
             """)
             pred = dict(cur.fetchone())
 
             cur.execute("SELECT COUNT(*) AS cnt FROM news_headlines")
             headlines = cur.fetchone()["cnt"]
 
-            cur.execute("SELECT COUNT(*) AS cnt FROM mer_predictions WHERE is_correct IS NOT NULL")
+            cur.execute("SELECT COUNT(*) AS cnt FROM predictions WHERE is_correct IS NOT NULL")
             verified = cur.fetchone()["cnt"]
 
     finally:

@@ -58,7 +58,7 @@ async def main():
 
         if verdict == "CORRECT":
             await conn.execute(
-                """UPDATE mer_predictions
+                """UPDATE predictions
                    SET is_correct = true, actual_outcome = $1, source_url = $2,
                        verification_date = $3
                    WHERE id = $4""",
@@ -67,7 +67,7 @@ async def main():
             correct_count += 1
         elif verdict == "INCORRECT":
             await conn.execute(
-                """UPDATE mer_predictions
+                """UPDATE predictions
                    SET is_correct = false, actual_outcome = $1, source_url = $2,
                        verification_date = $3
                    WHERE id = $4""",
@@ -79,13 +79,13 @@ async def main():
             exp = r.get("expected_date")
             if exp:
                 await conn.execute(
-                    "UPDATE mer_predictions SET expected_date = $1 WHERE id = $2 AND expected_date IS NULL",
+                    "UPDATE predictions SET expected_date = $1 WHERE id = $2 AND expected_date IS NULL",
                     date.fromisoformat(exp), r["id"],
                 )
 
     # Summary
     stats = await conn.fetch(
-        "SELECT is_correct, COUNT(*) FROM mer_predictions GROUP BY is_correct ORDER BY is_correct"
+        "SELECT is_correct, COUNT(*) FROM predictions GROUP BY is_correct ORDER BY is_correct"
     )
     print("\n=== Import 완료 ===")
     print(f"이번 import: CORRECT={correct_count}, INCORRECT={incorrect_count}, PENDING(skip)={pending_count}, source_url 누락 스킵={skipped_no_url}")

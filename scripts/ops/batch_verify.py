@@ -200,7 +200,7 @@ async def apply():
             if verdict in ("CORRECT", "INCORRECT") and source_url:
                 is_correct = verdict == "CORRECT"
                 status_str = await conn.execute("""
-                    UPDATE mer_predictions
+                    UPDATE predictions
                     SET is_correct = $1, actual_outcome = $2, source_url = $3, verification_date = CURRENT_DATE
                     WHERE id = $4 AND is_correct IS NULL
                 """, is_correct, reason, source_url, prediction_id)
@@ -211,7 +211,7 @@ async def apply():
             else:
                 # PENDING → skipped_at 마킹 (7일간 재시도 방지)
                 await conn.execute(
-                    "UPDATE mer_predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
+                    "UPDATE predictions SET skipped_at = CURRENT_DATE WHERE id = $1",
                     prediction_id,
                 )
                 pending += 1

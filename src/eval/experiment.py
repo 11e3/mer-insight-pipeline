@@ -42,7 +42,7 @@ async def _avg_embedding(conn: asyncpg.Connection, relevant_ids: list[int]) -> s
     dimension 불일치 없음.
     """
     rows = await conn.fetch(
-        "SELECT embedding FROM mer_insights WHERE id = ANY($1) AND embedding IS NOT NULL",
+        "SELECT embedding FROM insights WHERE id = ANY($1) AND embedding IS NOT NULL",
         relevant_ids,
     )
     if not rows:
@@ -61,7 +61,7 @@ async def _vector_search_by_vec(
     """미리 계산된 벡터 문자열로 pgvector 검색."""
     rows = await conn.fetch("""
         SELECT id, 1 - (embedding <=> $1::vector) AS similarity
-        FROM mer_insights
+        FROM insights
         WHERE embedding IS NOT NULL
           AND insight_type IN ('rule', 'evaluation', 'macro_view')
           AND (is_canonical IS NULL OR is_canonical = TRUE)

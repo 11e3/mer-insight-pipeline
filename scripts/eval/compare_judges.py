@@ -24,7 +24,7 @@ async def main():
     rows = await conn.fetch("""
         SELECT id, prediction_text, predicted_direction, target_asset,
                prediction_date, is_correct, actual_outcome
-        FROM mer_predictions
+        FROM predictions
         WHERE is_correct IS NOT NULL
         ORDER BY verification_date DESC
         LIMIT 100

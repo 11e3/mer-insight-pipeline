@@ -76,8 +76,8 @@ async def sample_insights(conn: asyncpg.Connection, target_n: int) -> list[dict]
         SELECT mi.id, mi.content, mi.insight_type,
                COALESCE(mi.cluster_id, -1) AS cluster_id,
                mp.date
-        FROM mer_insights mi
-        JOIN mer_posts mp ON mi.post_id = mp.id
+        FROM insights mi
+        JOIN posts mp ON mi.post_id = mp.id
         WHERE mi.insight_type = ANY($1::text[])
           AND (mi.is_canonical IS NULL OR mi.is_canonical = TRUE)
         ORDER BY mi.insight_type, cluster_id, RANDOM()

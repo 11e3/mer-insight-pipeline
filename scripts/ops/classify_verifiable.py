@@ -49,7 +49,7 @@ async def create():
     conn = await asyncpg.connect(DATABASE_URL)
     rows = await conn.fetch("""
         SELECT id, prediction_text, target_asset, predicted_direction
-        FROM mer_predictions
+        FROM predictions
         WHERE is_correct IS NULL AND expected_date IS NULL AND is_verifiable IS NULL
         ORDER BY id
     """)
@@ -148,7 +148,7 @@ async def apply():
                 is_v = False
 
             await conn.execute(
-                "UPDATE mer_predictions SET is_verifiable = $1 WHERE id = $2",
+                "UPDATE predictions SET is_verifiable = $1 WHERE id = $2",
                 is_v, pred_id,
             )
             if is_v:
