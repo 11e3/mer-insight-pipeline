@@ -65,20 +65,20 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - **로컬**: `event_dispatcher.py`가 APScheduler로 매일 01:00 단일 잡 실행
 - **GCP**: `run_job.py`로 전체 파이프라인 1회 실행 (메르 글 수집 + 검증)
 
-### 예측 검증 (3계층)
-1. **자동 (헤드라인 매칭)**: `auto_verifier.py` — headline_matcher로 매칭 → Haiku verdict only (source_url은 코드에서 자동 할당, 모델에 URL 반환 요구하지 않음)
-2. **배치 자동**: `scripts/ops/batch_verify.py create/status/apply` — Batch API 50% 할인
-3. **수동**: `verifier.py`가 나머지를 내보내기 → claude.ai에서 검증 → `import_manual_verdicts.py`
+### 예측 검증 (자동만)
+1. **실시간 자동**: `auto_verifier.py` — headline_matcher(키워드 + 벡터 fallback)로 매칭 → Haiku verdict + reason(헤드라인N 인용) → source_url은 최고 overlap 헤드라인에서 자동 할당
+2. **배치 자동**: `scripts/ops/batch_verify.py create/status/apply` — Batch API 50% 할인, apply 시 헤드라인N을 마크다운 링크로 치환
 - **source_url 필수** — URL 없는 CORRECT/INCORRECT는 DB 반영 안 함
-- **UPDATE WHERE is_correct IS NULL** — 수동 verdict 덮어쓰기 방지
-- **grouped/ 폴더 import 금지** — 오염 원인 확인됨
-- 수동 배치 크기 20건 제한 (ID 밀림 방지)
+- **UPDATE WHERE is_correct IS NULL** — verdict 덮어쓰기 방지
+- **skipped_at 7일 쿨다운** — PENDING 판정 후 7일간 재시도 방지
+- **is_verifiable 분류** — Haiku Batch API로 검증 가능/불가 분류 완료 (2,187건 제외)
+- 수동 검증 스텝은 event_dispatcher에서 제거됨
 
 ### 뉴스 헤드라인 DB
-- `news_headlines` 테이블: 헤드라인 + source_url + keywords(TEXT[] GIN) + published_at
-- 수집: `src/collect/news_collector.py` — Google News RSS 15개 피드, 일일 자동 수집
+- `news_headlines` 테이블: 헤드라인 + source_url + keywords(TEXT[] GIN) + embedding(vector 1024) + published_at
+- 수집: `src/collect/news_collector.py` — Google News RSS 33개 피드 + Naver News API 14개 쿼리, 일일 자동 수집
 - 키워드: `src/collect/keyword_extractor.py` — kiwipiepy(한국어) + regex(영어), LLM 없음
-- 매칭: `src/verify/headline_matcher.py` — prediction ↔ headline 키워드 GIN 매칭
+- 매칭: `src/verify/headline_matcher.py` — 1차 키워드 GIN 매칭 → 2차 벡터 유사도 fallback (cosine ≥ 0.45)
 - 백필: `scripts/ops/backfill_news.py --start 2022-01 --end 2025-12`
 - event_dispatcher에서 매일 자동 수집 (파이프라인 step 2)
 
@@ -94,7 +94,7 @@ python scripts/eval/expand_eval_dataset.py  # ✓
 - `claim`: yes/no로 답할 수 있는 검증 가능한 명제
 - `search_keywords`: 뉴스 검색용 키워드 3-5개
 - `expected_date`: 검증 가능 시점 YYYY-MM-DD
-- 기존 5,020건은 구형식 (claim/keywords 없음), 신규 글부터 적용
+- 기존 5,010건은 구형식 (claim/keywords 없음), 신규 글부터 적용
 
 ### 검증 데이터 리셋 이력
 - 2026-03-19: 배치 검증 오염(36%, 50건 블라인드 감사) 확인 → 전체 verdict 리셋
@@ -138,13 +138,13 @@ src/
 │   ├── mer_monitor.py       # 블로그 RSS 감시 (SourceCollector 구현)
 │   ├── posts.py             # JSON → mer_posts 적재
 │   ├── date_parser.py       # 메르 블로그 날짜 파싱
-│   ├── news_collector.py    # 뉴스 헤드라인 RSS 수집 (15개 피드)
+│   ├── news_collector.py    # 뉴스 헤드라인 수집 (RSS 33피드 + Naver API 14쿼리)
 │   ├── feeds.py             # RSS 피드 정의
 │   └── keyword_extractor.py # 키워드 추출 (kiwipiepy + regex)
 ├── verify/         # 예측 검증
 │   ├── verifier.py          # PredictionVerifier (내보내기 + 텔레그램)
 │   ├── auto_verifier.py     # AutoVerifier (Haiku 1건씩 자동 판정)
-│   ├── headline_matcher.py  # 예측 ↔ 헤드라인 키워드 매칭
+│   ├── headline_matcher.py  # 예측 ↔ 헤드라인 하이브리드 매칭 (키워드 GIN + 벡터 fallback)
 │   └── prompt.py            # 상수 (배치 크기)
 ├── search/         # 하이브리드 검색
 │   ├── bm25_index.py    # kiwipiepy 형태소 분석 + rank-bm25 + pickle 캐시
@@ -187,7 +187,7 @@ scripts/
 
 | 잡 이름 | 동작 | 스케줄 |
 |---------|------|--------|
-| `daily_pipeline` | 메르 글 수집 + 검증 대기 내보내기 + 알림 | 매일 01:00 |
+| `daily_pipeline` | 메르 글 수집 + 뉴스 수집 + 자동 검증 | 매일 01:00 (GitHub Actions cron) |
 
 ## 환경변수
 
@@ -195,8 +195,10 @@ scripts/
 |------|------|------|
 | `DATABASE_URL` | ✓ | PostgreSQL 연결 문자열 |
 | `ANTHROPIC_API_KEY` | ✓ | Claude API 키 |
-| `GCP_PROJECT_ID` | 선택 | Vertex AI 임베딩 활성화 |
-| `GCP_LOCATION` | 선택 | Vertex AI 리전 (기본: us-central1) |
+| `NAVER_CLIENT_ID` | 선택 | 네이버 뉴스 API (뉴스 수집 보강) |
+| `NAVER_CLIENT_SECRET` | 선택 | 네이버 뉴스 API |
+| `TELEGRAM_BOT_TOKEN` | 선택 | 텔레그램 알림 봇 토큰 |
+| `TELEGRAM_CHAT_ID` | 선택 | 텔레그램 채팅 ID |
 
 ## 검색 실험 결과 (search_experiment.json 기준)
 
