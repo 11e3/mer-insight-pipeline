@@ -70,6 +70,18 @@ def test_extract_content_evaluation():
     assert "실적 개선" in result
 
 
+def test_extract_content_evaluation_english_key():
+    """영문 프롬프트의 'assessment' 키도 처리."""
+    item = {
+        "entity_name": "BTC",
+        "assessment": "positive",
+        "reasoning": "on-chain metrics bullish",
+    }
+    result = extract_content(item, "evaluation")
+    assert "BTC" in result
+    assert "positive" in result
+
+
 def test_extract_content_evaluation_truncated():
     item = {
         "entity_name": "A",
@@ -85,6 +97,12 @@ def test_extract_content_evaluation_truncated():
 def test_extract_content_macro_view_with_key():
     item = {"mer_interpretation": "금리 인하 사이클 시작"}
     assert extract_content(item, "macro_view") == "금리 인하 사이클 시작"
+
+
+def test_extract_content_macro_view_english_key():
+    """영문 프롬프트의 'author_interpretation' 키도 처리."""
+    item = {"author_interpretation": "Fed liquidity cycle turning"}
+    assert extract_content(item, "macro_view") == "Fed liquidity cycle turning"
 
 
 def test_extract_content_macro_view_without_key():

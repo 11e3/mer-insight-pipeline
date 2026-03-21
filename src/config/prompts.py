@@ -203,7 +203,7 @@ Return empty arrays for insight types not found in the post.
         {
             "entity_name": "asset/protocol/policy name",
             "entity_type": "company/asset/policy/sector",
-            "mer_assessment": "positive/negative/neutral/mixed",
+            "assessment": "positive/negative/neutral/mixed",
             "reasoning": "assessment reasoning",
             "key_metrics_cited": {"metric": "value"},
             "sector": "sector"
@@ -212,7 +212,7 @@ Return empty arrays for insight types not found in the post.
     "macro_views": [
         {
             "macro_theme": "macro theme",
-            "mer_interpretation": "author's interpretation",
+            "author_interpretation": "author's interpretation",
             "related_assets": ["related assets"],
             "implied_action": "implied action/strategy",
             "global_context": "global context"

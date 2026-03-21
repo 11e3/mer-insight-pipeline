@@ -155,3 +155,43 @@ async def test_extract_and_save_code_block_json():
         result = await extract_and_save(conn, _make_mock_embedder(), _make_post())
 
     assert result["count"] == 1
+
+
+# ─── 영문 소스 (Substack) 테스트 ─────────────────────────────────────────────
+
+async def test_extract_english_source_uses_english_template():
+    """source_type='substack'이면 영문 user template 사용."""
+    conn = AsyncMock()
+    conn.fetchval.return_value = 42
+
+    data = {
+        "primary_topic": "crypto",
+        "post_summary": "BTC analysis",
+        "rules": [],
+        "predictions": [{
+            "prediction": "BTC will reach $150K",
+            "direction": "up",
+            "target_asset": "BTC",
+            "verifiable": True,
+        }],
+        "evaluations": [],
+        "macro_views": [],
+    }
+    mock_resp = MagicMock()
+    mock_resp.content = [MagicMock(text=json.dumps(data))]
+
+    with patch("src.extract.realtime.client") as mock_client:
+        mock_client.messages.create = AsyncMock(return_value=mock_resp)
+        from src.extract.realtime import extract_and_save
+        result = await extract_and_save(
+            conn, _make_mock_embedder(),
+            {"log_no": "hayes-001", "title": "BTC Outlook", "date": "2026-03-01",
+             "url": "https://cryptohayes.substack.com/p/test", "content_text": "BTC content"},
+            source_type="substack",
+        )
+
+    assert result["primary_topic"] == "crypto"
+    # user message should use English template
+    call_args = mock_client.messages.create.call_args
+    user_content = call_args.kwargs["messages"][0]["content"]
+    assert "Analyze the following" in user_content

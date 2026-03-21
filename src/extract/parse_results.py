@@ -28,11 +28,11 @@ def extract_content(item: dict, insight_type: str) -> str:
         return item.get("prediction", json.dumps(item, ensure_ascii=False)[:200])
     if insight_type == "evaluation":
         name = item.get("entity_name", "")
-        assessment = item.get("mer_assessment", "")
+        assessment = item.get("mer_assessment") or item.get("assessment", "")
         reasoning = item.get("reasoning", "")
         return f"{name} ({assessment}): {reasoning}"[:300]
     if insight_type == "macro_view":
-        return item.get("mer_interpretation", json.dumps(item, ensure_ascii=False)[:200])
+        return item.get("mer_interpretation") or item.get("author_interpretation", json.dumps(item, ensure_ascii=False)[:200])
     return json.dumps(item, ensure_ascii=False)[:200]
 
 

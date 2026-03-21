@@ -13,7 +13,14 @@ import asyncpg
 from src.config.settings import ANTHROPIC_API_KEY, MODEL_HAIKU
 from src.embed import Embedder, vec_str
 from src.extract.parse_results import INSIGHT_TYPE_MAP, extract_content
-from src.config.prompts import INSIGHT_USER_TEMPLATE, get_extraction_prompt
+from src.config.prompts import (
+    ENGLISH_USER_TEMPLATE,
+    INSIGHT_USER_TEMPLATE,
+    get_extraction_prompt,
+)
+
+# 영문 소스 타입 (ENGLISH_USER_TEMPLATE 사용)
+_ENGLISH_SOURCE_TYPES = {"substack", "web"}
 from src.verify.prompt import parse_llm_json
 
 log = logging.getLogger(__name__)
@@ -49,7 +56,10 @@ async def extract_and_save(
             system=get_extraction_prompt(source_type),
             messages=[{
                 "role": "user",
-                "content": INSIGHT_USER_TEMPLATE.format(
+                "content": (
+                    ENGLISH_USER_TEMPLATE if source_type in _ENGLISH_SOURCE_TYPES
+                    else INSIGHT_USER_TEMPLATE
+                ).format(
                     title=post.get("title", ""),
                     date=post.get("date") or "",
                     url=post.get("url") or "",

@@ -18,6 +18,12 @@ INSERT INTO sources (source_type, name, platform, url)
 VALUES ('blog', 'mer_ranto28', 'naver_blog', 'https://blog.naver.com/ranto28')
 ON CONFLICT (name) DO NOTHING;
 
+-- Arthur Hayes (Crypto Trader Digest)
+INSERT INTO sources (source_type, name, platform, url, config)
+VALUES ('substack', 'arthur_hayes', 'substack', 'https://cryptohayes.substack.com',
+        '{"feed_url": "https://cryptohayes.substack.com/feed"}'::jsonb)
+ON CONFLICT (name) DO NOTHING;
+
 -- ─── 포스트 원본 ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS mer_posts (
     id          SERIAL PRIMARY KEY,
