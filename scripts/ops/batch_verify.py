@@ -24,8 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.config.settings import ANTHROPIC_API_KEY, DATABASE_URL
 from src.verify.headline_matcher import batch_match
-from src.verify.prompt import AUTO_VERIFY_MODEL, AUTO_VERIFY_SYSTEM_PROMPT, AUTO_VERIFY_USER_TEMPLATE
-from src.verify.auto_verifier import AutoVerifier
+from src.verify.prompt import AUTO_VERIFY_MODEL, AUTO_VERIFY_SYSTEM_PROMPT, AUTO_VERIFY_USER_TEMPLATE, parse_verdict_json
 
 BATCH_DIR = Path("data/batch_verify")
 
@@ -190,7 +189,7 @@ async def apply():
                     raw_text = block.get("text", "")
                     break
 
-            verdict_data = AutoVerifier._parse_json(raw_text)
+            verdict_data = parse_verdict_json(raw_text)
             verdict = verdict_data.get("verdict", "PENDING")
             reason = verdict_data.get("reason", "")
 

@@ -1,4 +1,7 @@
-"""예측 검증 상수."""
+"""예측 검증 상수 및 유틸리티."""
+
+import json
+import re
 
 BATCH_SIZE = 20  # 수동 검증용 내보내기 배치 크기 (ID 밀림 방지)
 
@@ -41,3 +44,24 @@ AUTO_VERIFY_USER_TEMPLATE = """\
 [매칭된 뉴스 헤드라인]
 {headlines_text}
 """
+
+
+def parse_verdict_json(text: str) -> dict:
+    """LLM 응답에서 verdict JSON 추출."""
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    for m in re.finditer(r"\{[^{}]+\}", text, re.DOTALL):
+        try:
+            obj = json.loads(m.group())
+            if "verdict" in obj:
+                return obj
+        except json.JSONDecodeError:
+            continue
+
+    return {"verdict": "PENDING", "reason": "JSON 파싱 실패"}

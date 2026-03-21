@@ -72,6 +72,7 @@ class NewsCollector:
     async def _collect_naver(self) -> int:
         """Naver News API로 최신 뉴스 수집."""
         import os
+        from functools import partial
         import requests as req
 
         client_id = os.environ.get("NAVER_CLIENT_ID")
@@ -88,10 +89,11 @@ class NewsCollector:
         for query, lang, topic in self._NAVER_QUERIES:
             try:
                 resp = await asyncio.to_thread(
-                    lambda q=query: req.get(
+                    partial(
+                        req.get,
                         "https://openapi.naver.com/v1/search/news.json",
                         headers=headers,
-                        params={"query": q, "display": 100, "sort": "date"},
+                        params={"query": query, "display": 100, "sort": "date"},
                         timeout=10,
                     )
                 )

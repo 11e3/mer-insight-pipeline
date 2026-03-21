@@ -11,6 +11,7 @@ for _var in ("DATABASE_URL", "ANTHROPIC_API_KEY"):
     os.environ.setdefault(_var, "test")
 
 from src.verify.auto_verifier import AutoVerifier
+from src.verify.prompt import parse_verdict_json
 
 
 def _make_verifier():
@@ -198,17 +199,17 @@ async def test_cost_tracking():
 
 def test_parse_json_clean():
     """정상 JSON 파싱."""
-    result = AutoVerifier._parse_json('{"verdict": "CORRECT", "reason": "ok" }')
+    result = parse_verdict_json('{"verdict": "CORRECT", "reason": "ok" }')
     assert result["verdict"] == "CORRECT"
 
 
 def test_parse_json_code_block():
     """코드블록 감싸진 JSON."""
-    result = AutoVerifier._parse_json('```json\n{"verdict": "INCORRECT", "reason": "no" }\n```')
+    result = parse_verdict_json('```json\n{"verdict": "INCORRECT", "reason": "no" }\n```')
     assert result["verdict"] == "INCORRECT"
 
 
 def test_parse_json_garbage():
     """파싱 불가 시 PENDING 반환."""
-    result = AutoVerifier._parse_json("this is not json")
+    result = parse_verdict_json("this is not json")
     assert result["verdict"] == "PENDING"

@@ -1,9 +1,7 @@
 """헤드라인 매칭 기반 자동 검증 — Haiku 1건씩 호출."""
 
 import asyncio
-import json
 import logging
-import re
 
 import anthropic
 import asyncpg
@@ -18,6 +16,7 @@ from src.verify.prompt import (
     DAILY_LIMIT,
     HAIKU_INPUT_COST_PER_M,
     HAIKU_OUTPUT_COST_PER_M,
+    parse_verdict_json,
 )
 
 log = logging.getLogger(__name__)
@@ -132,30 +131,8 @@ class AutoVerifier:
 
         raw = resp.content[0].text.strip()
         # JSON 파싱
-        data = self._parse_json(raw)
+        data = parse_verdict_json(raw)
         data["_input_tokens"] = resp.usage.input_tokens
         data["_output_tokens"] = resp.usage.output_tokens
         return data
 
-    @staticmethod
-    def _parse_json(text: str) -> dict:
-        """응답에서 JSON 추출."""
-        # 코드블록 제거
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
-
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            pass
-
-        # fallback: flat JSON 객체 찾기 (중첩 없는 스키마)
-        for m in re.finditer(r"\{[^{}]+\}", text, re.DOTALL):
-            try:
-                obj = json.loads(m.group())
-                if "verdict" in obj:
-                    return obj
-            except json.JSONDecodeError:
-                continue
-
-        return {"verdict": "PENDING", "reason": "JSON 파싱 실패"}
