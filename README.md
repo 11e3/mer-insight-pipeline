@@ -24,7 +24,7 @@ This system automatically extracts predictions from Korean financial blogs, then
 | Verification cost | **$0.0045/prediction** — 87% reduction from $0.035 |
 | Monthly operating cost | ~$0.50 |
 
-We measured a **headline-sentiment baseline** on the same dataset: using keyword-matched headlines' bullish/bearish word counts to predict direction yields **54.2% accuracy** (n=1,041). The blogger beats this by **+14.9pp**, with the gap widest on bullish calls (77.8% vs 59.9%). This suggests the predictions carry genuine signal beyond what's already priced into the news cycle.
+I measured a **headline-sentiment baseline** on the same dataset: using keyword-matched headlines' bullish/bearish word counts to predict direction yields **54.2% accuracy** (n=1,041). The blogger beats this by **+14.9pp**, with the gap widest on bullish calls (77.8% vs 59.9%). This suggests the predictions carry genuine signal beyond what's already priced into the news cycle.
 
 <details>
 <summary><strong>Data integrity note</strong></summary>
@@ -75,7 +75,7 @@ flowchart TD
 
 Korean financial blog posts contain no tickers, dates, or confidence levels. Figuring out **what counts as a prediction, when it should be verified, and what criteria determine correct vs. incorrect** — that structuring problem alone isn't solved by any off-the-shelf tool.
 
-Automated verification is even harder. Using API web_search costs $0.035/prediction (5,000 = $175). After testing 6 different approaches, we settled on **news headline DB + keyword/vector hybrid matching + Batch API**.
+Automated verification is even harder. Using API web_search costs $0.035/prediction (5,000 = $175). After testing 6 different approaches, I settled on **news headline DB + keyword/vector hybrid matching + Batch API**.
 
 <details>
 <summary><strong>6 approaches compared → 87% cost reduction</strong></summary>
