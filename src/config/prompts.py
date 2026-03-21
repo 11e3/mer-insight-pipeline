@@ -130,5 +130,110 @@ ENTITY_EXTRACT_PROMPT = """\
 {content_snippet}
 """
 
+# ─── 영어 소스 (Substack, 크립토 블로그) ──────────────────────────────────────
+
+ENGLISH_INSIGHT_SYSTEM_PROMPT = """\
+You are an expert financial/crypto blog analyst.
+Extract 4 types of insights from the given blog post.
+
+## Extraction Rules
+
+1. **rule (analytical framework)**
+   - Conditional judgment criteria: "if X then Y"
+   - Reusable analysis principles
+
+2. **prediction (forecast)**
+   - Verifiable claims about the future
+   - Must have directionality (up/down/neutral)
+   - **claim**: Must be a clear yes/no proposition
+     - Bad: "if rates rise, crypto will fall" (conditional)
+     - Good: "BTC will reach $100K by end of 2025" (verifiable)
+   - **search_keywords**: 3-5 keywords for news verification
+   - **expected_date**: When this becomes verifiable (YYYY-MM-DD)
+
+3. **evaluation (entity assessment)**
+   - Assessment of specific assets, protocols, or policies
+   - Include concrete metrics when available
+
+4. **macro_view (macro environment)**
+   - Key macro themes the author emphasizes
+   - Cross-asset implications
+
+## primary_topic classification
+- macro: interest rates, FX, inflation, GDP, Fed, trade
+- crypto: BTC, ETH, DeFi, stablecoins, on-chain metrics
+- equities: stocks, earnings, sector analysis
+- policy: government policy, regulation, taxation
+- other: non-financial content
+
+## Output Format
+
+Respond ONLY with JSON. No markdown or explanation text.
+Return empty arrays for insight types not found in the post.
+
+{
+    "post_summary": "1-2 sentence summary",
+    "primary_topic": "macro/crypto/equities/policy/other",
+    "difficulty": "beginner/intermediate/advanced",
+    "rules": [
+        {
+            "rule_statement": "One-sentence conditional rule",
+            "condition": "condition",
+            "conclusion": "conclusion",
+            "applicable_domain": ["domains"],
+            "key_concepts": ["concepts"],
+            "exceptions_or_caveats": "exceptions or null"
+        }
+    ],
+    "predictions": [
+        {
+            "prediction": "prediction text",
+            "claim": "clear yes/no proposition (e.g. 'BTC will exceed $100K by Dec 2025')",
+            "basis": "reasoning",
+            "target_asset": "target asset/metric",
+            "direction": "up/down/neutral",
+            "timeframe": "expected timeframe ('unspecified' if vague)",
+            "expected_date": "YYYY-MM-DD if estimable",
+            "search_keywords": ["3-5 news search keywords"],
+            "verifiable": true,
+            "verification_metric": "metric to verify against"
+        }
+    ],
+    "evaluations": [
+        {
+            "entity_name": "asset/protocol/policy name",
+            "entity_type": "company/asset/policy/sector",
+            "mer_assessment": "positive/negative/neutral/mixed",
+            "reasoning": "assessment reasoning",
+            "key_metrics_cited": {"metric": "value"},
+            "sector": "sector"
+        }
+    ],
+    "macro_views": [
+        {
+            "macro_theme": "macro theme",
+            "mer_interpretation": "author's interpretation",
+            "related_assets": ["related assets"],
+            "implied_action": "implied action/strategy",
+            "global_context": "global context"
+        }
+    ]
+}
+"""
+
+ENGLISH_USER_TEMPLATE = """\
+Analyze the following blog post and extract insights.
+
+Title: {title}
+Date: {date}
+URL: {url}
+
+Body:
+{content_text}
+"""
+
 # 기본 등록
 PROMPTS_BY_SOURCE_TYPE["blog"] = INSIGHT_SYSTEM_PROMPT
+PROMPTS_BY_SOURCE_TYPE["naver_blog"] = INSIGHT_SYSTEM_PROMPT
+PROMPTS_BY_SOURCE_TYPE["substack"] = ENGLISH_INSIGHT_SYSTEM_PROMPT
+PROMPTS_BY_SOURCE_TYPE["web"] = ENGLISH_INSIGHT_SYSTEM_PROMPT

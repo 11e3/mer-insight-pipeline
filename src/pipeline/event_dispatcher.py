@@ -90,7 +90,7 @@ class EventDispatcher:
                         new_posts = await collector.check_new(conn)
                         if new_posts:
                             source_type = await conn.fetchval(
-                                "SELECT source_type FROM sources WHERE name = $1",
+                                "SELECT platform FROM sources WHERE name = $1",
                                 collector.source_name,
                             ) or "blog"
                             for post in new_posts:
