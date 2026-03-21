@@ -81,35 +81,65 @@ def _extract_ko(text: str, max_kw: int) -> list[str]:
     return result
 
 
+# 복합 명사구 — 하나의 키워드로 매칭해야 precision이 올라감
+_EN_COMPOUND_TERMS = {
+    # 중앙은행/통화정책
+    "federal reserve", "interest rate", "rate cut", "rate hike", "rate cuts", "rate hikes",
+    "quantitative easing", "quantitative tightening", "balance sheet",
+    "monetary policy", "monetary easing", "monetary tightening",
+    "bank of japan", "bank of england", "european central bank",
+    "yield curve", "treasury yield", "treasury bond",
+    "basis points", "fed funds",
+    # 크립토
+    "bitcoin etf", "ethereum etf", "spot etf",
+    "on-chain", "hash rate", "market cap",
+    "defi protocol", "stablecoin issuer",
+    "crypto market", "crypto exchange",
+    # 매크로
+    "trade war", "tariff war", "fiscal deficit", "fiscal policy",
+    "credit market", "credit spread",
+    "dollar index", "real yield", "risk premium",
+    "gdp growth", "cpi inflation",
+    "oil price", "gold price", "silver price",
+    # 자산
+    "s&p 500", "sp500", "nasdaq", "dow jones",
+    "real estate", "housing market",
+}
+
+
 def _extract_en(text: str, max_kw: int) -> list[str]:
-    # 1. 대문자 약어/티커 보존 (BTC, ETH, DeFi, S&P 등)
-    tickers = re.findall(r"\b[A-Z][A-Z0-9&]{1,9}\b", text)
-
-    # 2. 일반 단어 추출
-    tokens = re.findall(r"[A-Za-z][A-Za-z\-']{1,}", text)
-
-    # 3. 숫자+단위 (100K, $50K, 3.5% 등)
-    numbers = re.findall(r"\$?[\d,]+\.?\d*[KkMmBb%]?\b", text)
+    text_lower = text.lower()
 
     seen: set[str] = set()
     result: list[str] = []
 
-    # 티커 우선 (원형 유지)
+    # 1. 복합 명사구 매칭 (최우선)
+    for term in _EN_COMPOUND_TERMS:
+        if term in text_lower and term not in seen:
+            seen.add(term)
+            result.append(term)
+
+    # 2. 대문자 약어/티커 보존 (BTC, ETH, DeFi, S&P 등)
+    tickers = re.findall(r"\b[A-Z][A-Z0-9&]{1,9}\b", text)
     for t in tickers:
         kw = t.upper()
         if kw not in seen and len(kw) >= 2:
             seen.add(kw)
             result.append(kw)
 
-    # 일반 단어
+    # 3. 일반 단어 추출 (소문자, 불용어 제거)
+    tokens = re.findall(r"[A-Za-z][A-Za-z\-']{1,}", text)
     for t in tokens:
         kw = t.lower()
-        if kw not in _EN_STOPWORDS and len(kw) >= 2:
+        if kw not in _EN_STOPWORDS and len(kw) >= 3:
             if kw not in seen and kw.upper() not in seen:
-                seen.add(kw)
-                result.append(kw)
+                # 이미 복합어에 포함된 단어는 스킵 (중복 방지)
+                if not any(kw in compound for compound in seen if " " in compound):
+                    seen.add(kw)
+                    result.append(kw)
 
-    # 숫자 (가격, 비율)
+    # 4. 숫자+단위 (100K, $50K, 3.5% 등)
+    numbers = re.findall(r"\$?[\d,]+\.?\d*[KkMmBb%]?\b", text)
     for n in numbers:
         if n not in seen and len(n) >= 2:
             seen.add(n)

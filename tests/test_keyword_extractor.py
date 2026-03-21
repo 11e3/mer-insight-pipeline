@@ -19,9 +19,9 @@ def test_korean_max_kw():
 
 def test_english_basic():
     kw = extract_keywords("Federal Reserve cuts interest rate by 25 basis points", "en")
-    assert "federal" in kw
-    assert "reserve" in kw
-    assert "interest" in kw
+    assert "federal reserve" in kw
+    assert "interest rate" in kw
+    assert "basis points" in kw
     assert "the" not in kw
 
 
